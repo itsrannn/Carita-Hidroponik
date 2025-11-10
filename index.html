@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Carita Hidroponik</title>
+
+    <link rel="stylesheet" href="css/style.css" />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <div id="header-include"></div>
+
+    <section id="Home" class="hero-section">
+      <div class="container">
+        <div id="hero-slider" class="hero-slider">
+          <div class="slide-item active">
+            <img
+              src="img/Flyer 1.jpg"
+              alt="Promo Diskon 12.12"
+              class="hero-img"
+            />
+            <div class="hero-content">
+              <h1 class="hero-title">DISKON 30% UNTUK SEMUA BENIH!</h1>
+              <p class="hero-subtitle">
+                Rayakan panen akhir tahun dengan benih unggul terbaik.
+              </p>
+              <a href="#Product" class="btn btn-accent btn-lg">Lihat Benih</a>
+            </div>
+          </div>
+
+          <div class="slide-item">
+            <img
+              src="img/Flyer 2.jpg"
+              alt="Nutrisi A-B Mix Baru"
+              class="hero-img"
+            />
+            <div class="hero-content">
+              <h1 class="hero-title">NUTRISI A-B MIX KEMBALI STOK!</h1>
+              <p class="hero-subtitle">
+                Formula lengkap untuk pertumbuhan tanaman yang optimal. Jangan
+                sampai kehabisan lagi.
+              </p>
+              <a href="#Product" class="btn btn-accent btn-lg"
+                >Pesan Sekarang</a
+              >
+            </div>
+          </div>
+
+          <div class="slide-item">
+            <img
+              src="img/Flyer 3.jpg"
+              alt="Starter Kit untuk Pemula"
+              class="hero-img"
+            />
+            <div class="hero-content">
+              <h1 class="hero-title">MULAI HIDROPONIK DENGAN MUDAH</h1>
+              <p class="hero-subtitle">
+                Paket lengkap untuk pemula, termasuk panduan praktis dan
+                instalasi mini.
+              </p>
+              <a href="#Product" class="btn btn-accent btn-lg">Dapatkan Kit</a>
+            </div>
+          </div>
+
+          <button class="slider-arrow prev" aria-label="Previous Slide">
+            <i data-feather="chevron-left"></i>
+          </button>
+          <button class="slider-arrow next" aria-label="Next Slide">
+            <i data-feather="chevron-right"></i>
+          </button>
+
+          <div class="slider-dots"></div>
+        </div>
+        <div class="layout container" x-data="products()" x-init="init()">
+          <aside class="sidebar" id="categorySidebar">
+            <div class="sidebar-header">
+              <h4>Kategori Produk</h4>
+              <button
+                id="sidebar-collapse"
+                class="collapse-btn"
+                aria-expanded="true"
+                aria-controls="categoryList"
+              >
+                −
+              </button>
+            </div>
+
+            <nav id="categoryList" class="category-list">
+              <ul>
+                <li>
+                  <a
+                    href="#"
+                    @click.prevent="selectedCategory = 'all'"
+                    :class="{ 'active': selectedCategory === 'all' }"
+                    >Semua Produk</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    @click.prevent="selectedCategory = 'benih'"
+                    :class="{ 'active': selectedCategory === 'benih' }"
+                    >Benih</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    @click.prevent="selectedCategory = 'nutrisi'"
+                    :class="{ 'active': selectedCategory === 'nutrisi' }"
+                    >Nutrisi & Pupuk</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    @click.prevent="selectedCategory = 'media'"
+                    :class="{ 'active': selectedCategory === 'media' }"
+                    >Media Tanam</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    @click.prevent="selectedCategory = 'peralatan'"
+                    :class="{ 'active': selectedCategory === 'peralatan' }"
+                    >Peralatan</a
+                  >
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    @click.prevent="selectedCategory = 'promo'"
+                    :class="{ 'active': selectedCategory === 'promo' }"
+                    >Promo & Bundling</a
+                  >
+                </li>
+              </ul>
+            </nav>
+            <div class="sidebar-footer">
+              <p class="small muted">
+                Butuh bantuan? <a href="contact.html">Hubungi kami</a>
+              </p>
+            </div>
+          </aside>
+
+          <main class="main-content">
+            <section class="search-bar desktop-only">
+              <input
+                type="search"
+                id="search-box-home"
+                placeholder="Cari Benih, Alat, atau Pupuk..."
+                x-model="searchTerm"
+              />
+              <label for="search-box-home"><i data-feather="search"></i></label>
+            </section>
+            <section id="Product" class="page-header">
+              <div class="header-left">
+                <h1>Produk Unggulan</h1>
+                <p class="muted">
+                  Pilihan terbaik untuk kebun hidroponik dan hobi berkebun.
+                </p>
+              </div>
+              <div class="header-actions">
+                <label class="sort">
+                  <span class="muted">Sort by</span>
+                  <select id="sortSelect" x-model="sortOption">
+                    <option value="default">Default</option>
+                    <option value="price-asc">Price ↑</option>
+                    <option value="price-desc">Price ↓</option>
+                  </select>
+                </label>
+              </div>
+            </section>
+            <section id="productsGrid" class="products-grid">
+              <template x-for="item in paginatedItems()" :key="item.id">
+                <a
+                  :href="'product detail.html?id=' + item.id"
+                  class="product-link"
+                >
+                  <article class="product-card">
+                    <figure class="product-media">
+                      <img
+                        :src="item.img ? item.img : 'img/general/default.jpg'"
+                        :alt="item.name"
+                      />
+                    </figure>
+                    <div class="product-body">
+                      <h3 class="product-title" x-text="item.name"></h3>
+                      <div class="product-meta">
+                        <div
+                          class="price"
+                          x-text="formatRupiah(item.price)"
+                        ></div>
+                        <button
+                          class="btn-sm add-cart"
+                          @click.prevent.stop="$store.cart.add(item)"
+                        >
+                          <i data-feather="shopping-bag"></i>
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                </a>
+              </template>
+            </section>
+
+            <nav class="pagination">
+              <a
+                href="#"
+                @click.prevent="goToPage(currentPage - 1)"
+                x-show="currentPage > 1"
+                aria-label="Previous Page"
+                >&laquo;</a
+              >
+
+              <template x-for="page in totalPages()" :key="page">
+                <a
+                  href="#"
+                  @click.prevent="goToPage(page)"
+                  :class="{ 'active': page === currentPage }"
+                  x-text="page"
+                  :aria-current="page === currentPage ? 'page' : false"
+                ></a>
+              </template>
+
+              <a
+                href="#"
+                @click.prevent="goToPage(currentPage + 1)"
+                x-show="currentPage < totalPages()"
+                aria-label="Next Page"
+                >&raquo;</a
+              >
+            </nav>
+          </main>
+        </div>
+      </div>
+    </section>
+    <section class="news-section container">
+      <h2 class="section-title">🌱 Status Berita & Tutorial Terbaru</h2>
+      <div class="news-grid" id="index-news-container"></div>
+    </section>
+    <section class="preview">
+      <h2>Tentang Carita Hidroponik</h2>
+      <p>
+        Carita Hidroponik menyediakan benih, nutrisi, dan perlengkapan
+        hidroponik berkualitas untuk pemula dan profesional.
+      </p>
+    </section>
+
+    <div id="footer-include"></div>
+
+    <script src="https://unpkg.com/feather-icons"></script>
+
+    <script src="js/app.js"></script>
+    <script src="js/include.js"></script>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js"
+      defer
+    ></script>
+
+    <script src="js/script.js"></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => feather.replace());
+    </script>
+  </body>
+</html>

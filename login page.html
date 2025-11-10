@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Keranjang Saya - Carita Hidroponik</title>
+
+    <!-- ========== STYLE ========== -->
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/login page.css" />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <!-- ========== HEADER INCLUDE ========== -->
+    <div id="header-include"></div>
+
+    <!-- ================== Login Section ================== -->
+    <section class="login">
+      <!-- Login Form start -->
+      <div class="container">
+        <section>
+          <div class="login-form active" id="login-form">
+            <form action="login register.php" method="post">
+              <input type="hidden" name="login" value="1" />
+              <h1>Login</h1>
+              <div class="input-box">
+                <input type="email" name="email" placeholder="Email" required />
+                <i data-feather="mail"></i>
+              </div>
+
+              <div class="input-box">
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Password"
+                  required
+                />
+                <i data-feather="lock"></i>
+              </div>
+              <div class="remember-forgot">
+                <label><input type="checkbox" />Remember me</label>
+                <a href="#">Forgot Password?</a>
+              </div>
+              <button type="submit" class="btn">Login</button>
+              <div class="register-link">
+                <p>
+                  Don't have an account?
+                  <a href="#" onclick="showForm('register-form')">Register</a>
+                </p>
+              </div>
+            </form>
+          </div>
+        </section>
+        <section>
+          <div class="login-form" id="register-form">
+            <form action="login register.php" method="post">
+              <input type="hidden" name="register" value="1" />
+              <h1>Register</h1>
+
+              <div class="input-box">
+                <input type="text" name="name" placeholder="Name" required />
+                <i data-feather="user"></i>
+              </div>
+
+              <div class="input-box">
+                <input type="email" name="email" placeholder="Email" required />
+                <i data-feather="mail"></i>
+              </div>
+
+              <div class="input-box">
+                <input
+                  type="password"
+                  name="password"
+                  placeholder="Password"
+                  required
+                />
+                <i data-feather="lock"></i>
+              </div>
+
+              <div class="remember-forgot">
+                <label><input type="checkbox" /> Remember me</label>
+              </div>
+
+              <button type="submit" class="btn">Register</button>
+
+              <div class="register-link">
+                <p>
+                  Already have an account?
+                  <a href="#" onclick="showForm('login-form')">Login</a>
+                </p>
+              </div>
+            </form>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- ========== FOOTER INCLUDE ========== -->
+    <div id="footer-include"></div>
+
+    <!-- ================== SCRIPTS ================== -->
+    <!-- Feather icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+
+    <script src="app.js"></script>
+    <script src="js/include.js"></script>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js"
+      defer
+    ></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => feather.replace());
+    </script>
+    <script src="script.js"></script>
+
+    <script>
+      function showForm(formIdToShow) {
+        document.querySelectorAll(".login-form").forEach((form) => {
+          form.classList.remove("active");
+        });
+
+        const targetForm = document.getElementById(formIdToShow);
+        if (targetForm) {
+          targetForm.classList.add("active");
+        }
+      }
+    </script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => feather.replace());
+    </script>
+  </body>
+</html>

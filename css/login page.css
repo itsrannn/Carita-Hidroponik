@@ -1,0 +1,189 @@
+/* ================== LOGIN PAGE (Modern E-commerce Style) ================== */
+.login {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 90vh;
+  background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+  padding: 2rem 1rem;
+}
+
+.login .container {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  padding: 2.5rem;
+  backdrop-filter: blur(10px);
+  animation: fadeIn 0.4s ease;
+}
+
+.login h1 {
+  text-align: center;
+  color: var(--green);
+  font-family: var(--font-heading);
+  margin-bottom: 1.5rem;
+  font-size: 1.9rem;
+}
+
+/* ===== FORM ===== */
+.login-form {
+  display: none;
+  align-items: center;
+}
+
+.login-form.active {
+  display: block;
+  animation: fadeIn 0.4s ease;
+}
+
+.login .btn {
+  width: auto;
+  min-width: 100px;
+  padding: 0.8rem 2rem;
+  background: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.25s;
+  margin-top: 0.5rem;
+  align-items: center;
+}
+
+/* ===== INPUT BOX ===== */
+.input-box {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.input-box input {
+  width: 100%;
+  padding: 0.9rem 1rem 0.9rem 2.8rem; /* ruang kiri buat icon */
+  border: 1.5px solid #ccc;
+  border-radius: 10px;
+  font-size: 1rem;
+  outline: none;
+  color: #333;
+  background-color: #fff;
+  transition: 0.2s ease;
+}
+
+.input-box input::placeholder {
+  color: #999;
+}
+
+.input-box input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.15);
+}
+
+/* Feather icon di dalam box */
+.input-box i,
+.input-box svg {
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  width: 20px;
+  height: 20px;
+  stroke-width: 2px;
+  pointer-events: none;
+  transition: color 0.2s ease;
+}
+
+.input-box input:focus + i,
+.input-box input:focus + svg {
+  color: var(--accent);
+  stroke: var(--accent);
+}
+
+/* ===== REMEMBER & FORGOT ===== */
+.remember-forgot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.remember-forgot a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.remember-forgot a:hover {
+  color: var(--green);
+}
+
+/* ===== BUTTON ===== */
+.login .btn {
+  background: var(--green);
+  color: #fff;
+  padding: 0.9rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.login .btn:hover {
+  background: var(--accent);
+  transform: translateY(-2px);
+}
+
+/* ===== REGISTER LINK ===== */
+.register-link {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  color: #444;
+}
+
+.register-link a {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.register-link a:hover {
+  color: var(--green);
+}
+
+/* ===== ANIMATION ===== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 480px) {
+  .login .container {
+    padding: 2rem 1.5rem;
+  }
+
+  .login h1 {
+    font-size: 1.6rem;
+  }
+
+  .input-box input {
+    padding: 0.8rem 1rem 0.8rem 2.5rem;
+    font-size: 0.95rem;
+  }
+
+  .login .btn {
+    font-size: 0.95rem;
+  }
+}

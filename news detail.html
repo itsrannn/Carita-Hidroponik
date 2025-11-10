@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/news detail.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@300;400;600&family=Roboto:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <!-- ========== HEADER INCLUDE ========== -->
+    <div id="header-include"></div>
+
+    <!-- ======== KONTEN UTAMA DETAIL BERITA ======== -->
+    <main class="main-content news-detail-page">
+      <div class="container">
+        <div class="news-layout">
+          <!-- Kolom Kiri: Artikel Utama -->
+          <article class="news-article-content">
+            <!-- Judul Berita (diisi oleh JS) -->
+            <h1 id="news-title">Memuat Berita...</h1>
+
+            <!-- Meta Penulis & Tanggal (diisi oleh JS) -->
+            <div class="news-meta">
+              <span>By <strong id="news-author">Tim Redaksi</strong></span>
+              <span>|</span>
+              <span id="news-date"></span>
+            </div>
+
+            <!-- Konten Hero: Gambar/Video (diisi oleh JS) -->
+            <div class="news-hero" id="news-hero-content">
+              <!-- Placeholder saat memuat -->
+              <img
+                src="https://placehold.co/1200x600/f0f0f0/999?text=Loading..."
+                alt="Loading Placeholder"
+              />
+            </div>
+
+            <!-- Isi Artikel Lengkap (diisi oleh JS) -->
+            <div class="news-body" id="news-body">
+              <p>
+                Sedang memuat isi artikel. Pastikan file
+                <code>app.js</code> terhubung dan fungsi
+                <code>loadNewsById</code> berfungsi dengan baik.
+              </p>
+            </div>
+
+            <div class="share-buttons">
+              <h4>Bagikan Artikel Ini:</h4>
+              <a href="#" class="btn btn-icon-only"
+                ><i data-feather="facebook"></i
+              ></a>
+              <a href="#" class="btn btn-icon-only"
+                ><i data-feather="twitter"></i
+              ></a>
+              <a href="#" class="btn btn-icon-only"
+                ><i data-feather="mail"></i
+              ></a>
+            </div>
+          </article>
+
+          <!-- Kolom Kanan: Sidebar -->
+          <aside class="news-sidebar">
+            <div class="sidebar-widget">
+              <h4>Produk Terkait</h4>
+              <div id="related-products-list">
+                <!-- Data ini bisa diisi secara dinamis, tapi untuk saat ini, pakai data statis -->
+                <a href="product-detail.html?id=2" class="sidebar-product">
+                  <img
+                    src="https://placehold.co/80x80/c7eacb/333?text=Tomat"
+                    alt="Benih Tomat Cherry"
+                  />
+                  <div>
+                    <h5>Benih Tomat Cherry</h5>
+                    <span>Rp 12.000</span>
+                  </div>
+                </a>
+                <a href="product-detail.html?id=5" class="sidebar-product">
+                  <img
+                    src="https://placehold.co/80x80/c7eacb/333?text=Pupuk"
+                    alt="Pupuk Organik"
+                  />
+                  <div>
+                    <h5>Pupuk Organik (5kg)</h5>
+                    <span>Rp 25.000</span>
+                  </div>
+                </a>
+              </div>
+            </div>
+
+            <div class="sidebar-widget">
+              <h4>Berita Terbaru</h4>
+              <ul id="related-news-list" class="sidebar-news-list">
+                <!-- Ini bisa diisi oleh JS dengan mengambil 3 berita terbaru dari allNewsData -->
+                <li>
+                  <a href="news detail.html?id=nutrisi-ab-mix"
+                    >Mengapa Nutrisi AB Mix Penting</a
+                  >
+                </li>
+                <li><a href="#">Teknik NFT vs DFT, Mana yang Terbaik?</a></li>
+                <li><a href="#">5 Kesalahan Pemula Hidroponik</a></li>
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+    <!-- ======== AKHIR KONTEN UTAMA ======== -->
+
+    <div id="notification" class="notification"></div>
+    <!-- Tambahkan Notifikasi -->
+
+    <!-- ========== FOOTER INCLUDE ========== -->
+    <div id="footer-include"></div>
+
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="js/app.js" type="module"></script>
+    <script src="js/include.js"></script>
+    <!-- Tambahkan type="module" -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js"
+      defer
+    ></script>
+    <script src="js/script.js"></script>
+
+    <script>
+      // Script untuk memuat berita saat halaman detail dibuka
+      document.addEventListener("DOMContentLoaded", () => {
+        feather.replace();
+
+        // 1. Dapatkan ID berita dari URL, misalnya: "news detail.html?id=pakcoy-pemula"
+        const urlParams = new URLSearchParams(window.location.search);
+        const newsId = urlParams.get("id");
+
+        // 2. Panggil fungsi yang ada di app.js
+        if (window.loadNewsById && newsId) {
+          window.loadNewsById(newsId);
+        } else if (!newsId) {
+          // Jika tidak ada ID di URL
+          document.getElementById("news-title").innerText =
+            "Parameter ID Berita Hilang";
+          document.getElementById("news-body").innerHTML =
+            "<p>Untuk melihat detail berita, Anda perlu menyertakan parameter <code>?id=[ID_BERITA]</code> di URL.</p>";
+        }
+      });
+    </script>
+  </body>
+</html>

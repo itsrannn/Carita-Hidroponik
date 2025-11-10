@@ -1,0 +1,149 @@
+/* ================== MY ACCOUNT ================== */
+.my-account {
+  background-color: var(--bg);
+  padding: 2rem 7% 3rem;
+  color: var(--text-color);
+}
+
+.my-account .account-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0rem;
+}
+
+.my-account .feather-icons {
+  color: var(--green);
+  margin-right: 0.6rem;
+  font-size: 1.4rem;
+  stroke-width: 2.5px;
+}
+
+.my-account .container {
+  background: #fff;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.my-account h2 {
+  color: var(--accent);
+  margin-bottom: 1.5rem;
+  text-align: left;
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1.8rem;
+  margin-left: 0.5rem;
+}
+
+.account-form .form-group {
+  margin-bottom: 1.2rem;
+}
+
+.account-form label {
+  font-weight: 600;
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+.account-form p {
+  background: #f9f9f9;
+  padding: 0.7rem 1rem;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+}
+
+.account-form .btn {
+  background: #d62828;
+  color: #fff;
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.account-form .btn:hover {
+  background: #b81f1f;
+  transform: scale(1.05);
+}
+
+.order-history-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.order-history {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.order-history th,
+.order-history td {
+  border: 1px solid #ddd;
+  padding: 0.8rem 1rem;
+  text-align: left;
+}
+
+.order-history th {
+  background: var(--primary);
+  color: #000000;
+  font-weight: 900;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.order-history td .btn {
+  background: #d62828;
+  color: #fff;
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.order-history td .btn:hover {
+  background-color: #b81f1f;
+  transform: scale(1.05);
+}
+
+.td-center {
+  text-align: center;
+}
+
+.logout-container {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.logout-btn {
+  background: #d62828;
+  color: #fff;
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.logout-btn:hover {
+  background: #b81f1f;
+  transform: scale(1.05);
+}
+
+/* error message */
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-size: 16px;
+}

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Carita Hidroponik</title>
+
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/contact.css" />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <!-- ========== HEADER INCLUDE ========== -->
+    <div id="header-include"></div>
+
+    <main class="contact-page">
+      <div class="container">
+        <h1>Hubungi Kami</h1>
+        <p>
+          Kami senang mendengar dari Anda! Jika Anda memiliki pertanyaan, saran,
+          atau membutuhkan bantuan, jangan ragu untuk menghubungi kami melalui
+          formulir di bawah ini atau melalui informasi kontak kami.
+        </p>
+
+        <div class="contact-grid">
+          <form class="contact-form">
+            <label for="name">Nama Lengkap</label>
+            <input type="text" id="name" name="name" required />
+
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required />
+
+            <label for="message">Pesan</label>
+            <textarea id="message" name="message" rows="5" required></textarea>
+
+            <button type="submit" class="btn-primary">Kirim Pesan</button>
+          </form>
+
+          <div class="contact-info">
+            <h2>Informasi Kontak</h2>
+            <p>
+              Email:
+              <a href="mailto:info@caritahidroponik.com"
+                >info@caritahidroponik.com</a
+              >
+            </p>
+            <p>
+              WhatsApp:
+              <a href="https://wa.me/628213969880" target="_blank"
+                >+62 821-3969-8804</a
+              >
+            </p>
+            <p>Alamat: Jl. Contoh No.123, Jakarta, Indonesia</p>
+            <div class="social-icons">
+              <a href="#" aria-label="Instagram"
+                ><i data-feather="instagram"></i
+              ></a>
+              <a href="#" aria-label="Facebook"
+                ><i data-feather="facebook"></i
+              ></a>
+              <a href="#" aria-label="YouTube"
+                ><i data-feather="youtube"></i
+              ></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <!-- ========== FOOTER INCLUDE ========== -->
+    <div id="footer-include"></div>
+
+    <script src="https://unpkg.com/feather-icons"></script>
+
+    <script src="js/app.js"></script>
+    <script src="js/include.js"></script>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js"
+      defer
+    ></script>
+
+    <script src="js/script.js"></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => feather.replace());
+    </script>
+  </body>
+</html>

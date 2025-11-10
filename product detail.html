@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Carita Hidroponik | Detail Produk</title>
+
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/product detail.css" />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <!-- ========== HEADER INCLUDE ========== -->
+    <div id="header-include"></div>
+
+    <!-- ================== Product Detail Section ================== -->
+    <addression class="product-detail-banner">
+      <div class="container">
+        <nav class="breadcrumb">
+          <a href="index.html">Home</a>
+          <span class="breadcrumb-separator">/</span>
+          <a href="index.html#Product">Produk</a>
+          <span class="breadcrumb-separator">/</span>
+          <span id="breadcrumb-product-name">Detail Produk</span>
+        </nav>
+      </div>
+    </addression>
+
+    <main class="container">
+      <!-- SECTION HEAD -->
+      <section class="product-detail-head">
+        <div class="product-detail-img">
+          <img id="product-image" src="" alt="Gambar Produk" />
+        </div>
+        <div class="product-detail-info">
+          <h2 id="product-category" class="badge-category">...</h2>
+          <h1 id="product-title" class="product-detail-title">Memuat...</h1>
+          <p id="product-price" class="product-detail-price">Rp 0</p>
+          <p id="product-char" class="product-detail-desc-short">Memuat...</p>
+          <button id="main-add-to-cart-btn" class="btn-sm add-cart">
+            <i data-feather="shopping-bag"></i> Tambah ke Keranjang
+          </button>
+        </div>
+      </section>
+
+      <!-- SECTION DESKRIPSI -->
+      <section class="product-detail-description">
+        <h2>Deskripsi Produk</h2>
+
+        <p id="product-desc">Memuat deskripsi...</p>
+      </section>
+
+
+      <section class="related-products">
+        <h2>Produk Terkait</h2>
+
+        <div id="related-products-grid" class="products-grid">
+        
+      </section>
+    </main>
+
+    <!-- ========== FOOTER INCLUDE ========== -->
+    <div id="footer-include"></div>
+
+    <!-- ================== Script ================== -->
+
+    <script src="https://unpkg.com/feather-icons"></script>
+    
+    <script src="js/app.js"></script>
+    <script src="js/include.js"></script>
+
+   
+    <script
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js"
+      defer
+    ></script>
+
+   
+    <script src="js/script.js"></script>
+
+    
+    <script>
+      
+      function formatRupiah(value) {
+        if (!value) return "Rp 0";
+        return "Rp " + value.toLocaleString("id-ID");
+      }
+     
+      function addRelatedToCart(event, productId) {
+        event.preventDefault(); 
+        event.stopPropagation(); 
+
+        const productToAdd = allProducts.find((p) => p.id === productId);
+
+       
+        if (productToAdd && Alpine.store("cart")) {
+          Alpine.store("cart").add(productToAdd);
+          const button = event.target.closest("button");
+          button.innerHTML = '<i data-feather="check"></i> Added';
+          button.disabled = true; 
+          feather.replace();
+        }
+      }
+      
+      document.addEventListener("DOMContentLoaded", () => {
+        feather.replace();
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = parseInt(urlParams.get("id")); 
+        if (productId && typeof allProducts !== "undefined") {
+          const product = allProducts.find((p) => p.id === productId);
+          if (product) {
+            document.title = "Carita Hidroponik | " + product.name; // Ganti judul tab browser
+            document.getElementById("breadcrumb-product-name").textContent =
+              product.name;
+
+            document.getElementById("product-image").src = product.img;
+            document.getElementById("product-image").alt = product.name;
+            document.getElementById("product-category").textContent =
+              product.category.toUpperCase();
+            document.getElementById("product-title").textContent = product.name;
+            document.getElementById("product-price").textContent = formatRupiah(
+              product.price
+            );
+            document.getElementById("product-char").innerHTML = product.char;
+
+            document.getElementById("product-desc").textContent = product.desc;
+
+                        const mainAddBtn = document.getElementById("main-add-to-cart-btn");
+            mainAddBtn.onclick = () => {
+              if (Alpine.store("cart")) {
+                Alpine.store("cart").add(product);
+                mainAddBtn.innerHTML =
+                  '<i data-feather="check"></i> Ditambahkan';
+                mainAddBtn.disabled = true; 
+                feather.replace();
+              }
+            };
+
+            // --- LOGIKA PRODUK TERKAIT ---
+
+            const currentCategory = product.category;
+            const currentProductId = product.id;
+            const relatedGrid = document.getElementById(
+              "related-products-grid"
+            );
+            relatedGrid.innerHTML = ""; // Kosongkan grid
+
+            // Filter produk: kategori SAMA, ID BEDA
+            const relatedProducts = allProducts
+              .filter(
+                (item) =>
+                  item.category === currentCategory &&
+                  item.id !== currentProductId
+              )
+              .slice(0, 3); // Ambil maksimal 3 produk
+
+            // Tampilkan produk terkait
+            if (relatedProducts.length > 0) {
+              relatedProducts.forEach((item) => {
+                const itemHTML = `
+                <a href="product detail.html?id=${
+                  item.id
+                }" class="product-link">
+                  <article class="product-card">
+                    <figure class="product-media">
+                      <img src="${
+                        item.img ? item.img : "img/general/default.jpg"
+                      }" alt="${item.name}">
+                    </figure>
+                    <div class="product-body">
+                      <h3 class="product-title">${item.name}</h3>
+                      <div class="product-meta">
+                        <div class="price">${formatRupiah(item.price)}</div>
+                        <!-- Panggil fungsi addRelatedToCart saat diklik -->
+                        <button class="btn-sm add-cart" onclick="addRelatedToCart(event, ${
+                          item.id
+                        })">
+                          <i data-feather="shopping-bag"></i> Add
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                </a>
+                `;
+                relatedGrid.innerHTML += itemHTML;
+              });
+            } else {
+              relatedGrid.innerHTML =
+                "<p class='muted' style='text-align: center; grid-column: 1 / -1;'>Tidak ada produk terkait lainnya.</p>";
+            }
+            feather.replace();
+          } else {
+            document.getElementById("product-title").textContent =
+              "Produk Tidak Ditemukan";
+            document.getElementById("product-desc").textContent =
+              "Maaf, produk yang Anda cari tidak ada.";
+          }
+        } else if (!productId) {
+          document.getElementById("product-title").textContent =
+            "Produk Tidak Valid";
+          document.getElementById("product-desc").textContent =
+            "Silakan kembali ke halaman produk dan pilih salah satu.";
+        }
+      });
+    </script>
+  </body>
+</html>

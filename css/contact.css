@@ -1,0 +1,132 @@
+.notification {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: var(--accent); /* Warna hijau gelap */
+        color: white;
+        padding: 10px 15px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        z-index: 3000;
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+      }
+      .notification.show {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* CSS BARU UNTUK HALAMAN KONTAK (TAMBAHKAN KE style.css) */
+      .contact-page {
+        padding: 40px 0;
+        min-height: 80vh;
+      }
+
+      .contact-page h1 {
+        text-align: center;
+        margin-bottom: 10px;
+        color: var(--primary); /* Asumsi warna utama Anda */
+      }
+
+      .contact-page > p {
+        text-align: center;
+        margin-bottom: 40px;
+        max-width: 700px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+
+      /* ================== CONTACT INFO STYLES (Modern) ================== */
+      .contact-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 40px;
+        padding: 20px 0;
+      }
+
+      @media (min-width: 768px) {
+        .contact-grid {
+          grid-template-columns: 1.5fr 1fr; /* Form lebih lebar dari Info */
+          align-items: flex-start;
+        }
+      }
+
+      .contact-form {
+        background-color: #f9f9f9;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      .contact-form label {
+        display: block;
+        margin-bottom: 5px;
+        margin-top: 15px;
+        font-weight: 600;
+        color: var(--primary);
+      }
+
+      .contact-form input[type="text"],
+      .contact-form input[type="email"],
+      .contact-form textarea {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        box-sizing: border-box;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+      }
+
+      .contact-form input:focus,
+      .contact-form textarea:focus {
+        border-color: var(--accent);
+        outline: none;
+      }
+
+      .contact-form textarea {
+        resize: vertical;
+      }
+
+      .contact-form .btn-primary {
+        margin-top: 20px;
+        width: 100%;
+        padding: 12px;
+        font-size: 1.1rem;
+      }
+
+      .contact-info {
+        padding: 20px 0;
+      }
+
+      .contact-info h2 {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+        color: var(--accent);
+        border-bottom: 2px solid var(--accent);
+        padding-bottom: 5px;
+      }
+
+      .contact-info p {
+        margin-bottom: 15px;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+      }
+
+      .contact-info a {
+        color: var(--accent);
+        text-decoration: none;
+        margin-left: 5px;
+      }
+
+      .contact-info .social-icons {
+        margin-top: 20px;
+      }
+
+      .contact-info .social-icons a {
+        margin-right: 15px;
+        font-size: 1.5rem;
+        color: var(--primary);
+      }
