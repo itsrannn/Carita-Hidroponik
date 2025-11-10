@@ -350,3 +350,33 @@ function initHeroSlider() {
   updateSlider();
   startAutoPlay();
 }
+// ==================== Fungsi untuk Memuat Detail Berita ====================
+function loadNewsById(id) {
+  const news = allNews.find((n) => n.id == id); // Gunakan '==' untuk perbandingan longgar
+
+  if (!news) {
+    document.getElementById("news-title").innerText = "Berita Tidak Ditemukan";
+    document.getElementById("news-body").innerHTML =
+      "<p>Maaf, berita yang Anda cari tidak dapat ditemukan. Silakan kembali ke halaman utama.</p>";
+    return;
+  }
+
+  // Isi konten ke dalam elemen HTML
+  document.getElementById("news-title").innerText = news.title;
+  document.getElementById("news-date").innerText = news.date;
+
+  // Placeholder untuk penulis jika tidak ada di data
+  document.getElementById("news-author").innerText = news.author || "Tim Redaksi";
+
+  // Konten Hero (Gambar)
+  const heroContainer = document.getElementById("news-hero-content");
+  heroContainer.innerHTML = `<img src="${news.image}" alt="${news.title}" />`;
+
+  // Isi body berita (jika ada, jika tidak, tampilkan summary)
+  const bodyContent =
+    news.fullContent || `<p>${news.summary}</p><p><i>(Konten lengkap belum tersedia.)</i></p>`;
+  document.getElementById("news-body").innerHTML = bodyContent;
+}
+
+// Ekspor fungsi agar bisa diakses dari file lain (misalnya, dari <script> di HTML)
+window.loadNewsById = loadNewsById;
