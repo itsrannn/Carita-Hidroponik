@@ -168,6 +168,14 @@ window.products = function () {
       this.$watch("sortOption", () => {
         this.currentPage = 1;
       });
+
+      // Awasi perubahan pada 'currentPage' untuk me-render ulang ikon
+      this.$watch('currentPage', () => {
+        // Tunggu hingga DOM diperbarui oleh Alpine, baru ganti ikon
+        this.$nextTick(() => {
+          feather.replace();
+        });
+      });
     },
     // --- AKHIR TAMBAHAN ---
 
