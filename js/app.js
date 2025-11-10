@@ -228,12 +228,9 @@ document.addEventListener("alpine:init", () => {
     quantity: 0,
 
     init() {
-      this.updateTotals();
+      this.updateTotalsAndSave();
       // Watch for changes and save to localStorage
-      this.$watch('items', () => {
-        localStorage.setItem('cartItems', JSON.stringify(this.items));
-        this.updateTotals();
-      });
+      this.$watch('items', () => this.updateTotalsAndSave());
     },
 
     add(newItem) {
@@ -247,7 +244,7 @@ document.addEventListener("alpine:init", () => {
           quantity: 1,
         });
       }
-      this.updateAndSave();
+      this.updateTotalsAndSave();
     },
 
     remove(id) {
@@ -259,10 +256,10 @@ document.addEventListener("alpine:init", () => {
       } else {
         this.items = this.items.filter((i) => i.id !== id);
       }
-      this.updateAndSave();
+      this.updateTotalsAndSave();
     },
 
-    updateAndSave() {
+    updateTotalsAndSave() {
       this.quantity = this.items.reduce((sum, i) => sum + i.quantity, 0);
       this.total = this.items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
       localStorage.setItem('cartItems', JSON.stringify(this.items));
