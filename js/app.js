@@ -245,23 +245,18 @@ document.addEventListener("alpine:init", () => {
       this.updateTotalsAndSave();
     },
 
-    remove(id) {
+    remove(id, force = false) {
       const item = this.items.find((i) => i.id === id);
       if (!item) return;
 
-      if (item.quantity > 1) {
-        item.quantity--;
-      } else {
-        // Remove the item completely if quantity is 1 or less
+      // If force is true (from trash button) or quantity is 1, remove the item
+      if (force || item.quantity === 1) {
         this.items = this.items.filter((i) => i.id !== id);
+      } else {
+        // Otherwise, just decrement the quantity
+        item.quantity--;
       }
       this.updateTotalsAndSave();
-    },
-
-    // New method to remove all units of an item
-    removeAll(id) {
-        this.items = this.items.filter((i) => i.id !== id);
-        this.updateTotalsAndSave();
     },
 
     updateTotalsAndSave() {
