@@ -246,17 +246,13 @@ document.addEventListener("alpine:init", () => {
 
       if (existing) {
         existing.quantity++;
-        existing.total = existing.quantity * existing.price;
       } else {
         this.items.push({
           ...newItem,
           quantity: 1,
-          total: newItem.price,
         });
       }
-
-      this.updateTotals();
-      localStorage.setItem('cartItems', JSON.stringify(this.items));
+      this.updateAndSave();
     },
 
     remove(id) {
@@ -265,18 +261,16 @@ document.addEventListener("alpine:init", () => {
 
       if (item.quantity > 1) {
         item.quantity--;
-        item.total = item.quantity * item.price;
       } else {
         this.items = this.items.filter((i) => i.id !== id);
       }
-
-      this.updateTotals();
-      localStorage.setItem('cartItems', JSON.stringify(this.items));
+      this.updateAndSave();
     },
 
-    updateTotals() {
+    updateAndSave() {
       this.quantity = this.items.reduce((sum, i) => sum + i.quantity, 0);
-      this.total = this.items.reduce((sum, i) => sum + i.total, 0);
+      this.total = this.items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+      localStorage.setItem('cartItems', JSON.stringify(this.items));
     },
   });
 
