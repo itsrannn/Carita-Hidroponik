@@ -53,7 +53,7 @@
                       <button class="quantity-btn" @click="cart.add(item)" aria-label="Tambah">+</button>
                     </div>
                     <div class="cart-item-total" x-text="`Rp ${(item.quantity * item.price).toLocaleString('id-ID')}`"></div>
-                    <button class="cart-item-remove" @click="cart.items = cart.items.filter(i => i.id !== item.id); cart.updateTotals()" aria-label="Hapus item">
+                    <button class="cart-item-remove" @click="cart.removeAll(item.id)" aria-label="Hapus item">
                       <i data-feather="trash-2"></i>
                     </button>
                   </div>
