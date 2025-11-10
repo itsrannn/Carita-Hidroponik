@@ -223,14 +223,14 @@ window.products = function () {
 // ==================== Alpine Store: Cart ====================
 document.addEventListener("alpine:init", () => {
   Alpine.store("cart", {
-    items: JSON.parse(localStorage.getItem('cartItems')) || [],
+    items: [],
     total: 0,
     quantity: 0,
 
     init() {
+      // Load from localStorage and then calculate totals
+      this.items = JSON.parse(localStorage.getItem('cartItems')) || [];
       this.updateTotalsAndSave();
-      // Watch for changes and save to localStorage
-      this.$watch('items', () => this.updateTotalsAndSave());
     },
 
     add(newItem) {
@@ -239,10 +239,8 @@ document.addEventListener("alpine:init", () => {
       if (existing) {
         existing.quantity++;
       } else {
-        this.items.push({
-          ...newItem,
-          quantity: 1,
-        });
+        // Add new item with quantity 1
+        this.items.push({ ...newItem, quantity: 1 });
       }
       this.updateTotalsAndSave();
     },
@@ -254,14 +252,24 @@ document.addEventListener("alpine:init", () => {
       if (item.quantity > 1) {
         item.quantity--;
       } else {
+        // Remove the item completely if quantity is 1 or less
         this.items = this.items.filter((i) => i.id !== id);
       }
       this.updateTotalsAndSave();
     },
 
+    // New method to remove all units of an item
+    removeAll(id) {
+        this.items = this.items.filter((i) => i.id !== id);
+        this.updateTotalsAndSave();
+    },
+
     updateTotalsAndSave() {
+      // Calculate total quantity and price
       this.quantity = this.items.reduce((sum, i) => sum + i.quantity, 0);
       this.total = this.items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+
+      // Save to localStorage
       localStorage.setItem('cartItems', JSON.stringify(this.items));
     },
   });
