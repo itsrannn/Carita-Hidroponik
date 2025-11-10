@@ -14,6 +14,9 @@
       href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@300;400;600&display=swap"
       rel="stylesheet"
     />
+
+    <!-- Supabase Client -->
+    <script type="module" src="js/supabase-client.js"></script>
   </head>
 
   <body>
@@ -27,18 +30,14 @@
         <h2>My Account</h2>
       </div>
       <div class="container">
-        <form class="account-form">
+        <form class="account-form" id="profile-form">
           <div class="form-group">
-            <label>Name</label>
-            <p>Randika Firmansyah</p>
+            <label for="profile-name">Name</label>
+            <input type="text" id="profile-name" placeholder="Your name" />
           </div>
           <div class="form-group">
-            <label>Email</label>
-            <p>randikafirmansyah222@gmail.com</p>
-          </div>
-          <div class="form-group">
-            <label>Password</label>
-            <p>********</p>
+            <label for="profile-email">Email</label>
+            <input type="email" id="profile-email" disabled />
           </div>
           <button type="submit" class="btn">Update Profile</button>
         </form>
@@ -49,30 +48,30 @@
         <h2>Shipping Address</h2>
       </div>
       <div class="container">
-        <form class="account-form">
+        <form class="account-form" id="address-form">
           <div class="form-group">
-            <label>Alamat</label>
-            <p>Jl. Raya Cilebut No.123</p>
+            <label for="address-street">Alamat</label>
+            <input type="text" id="address-street" placeholder="Jl. Raya Cilebut No.123" />
           </div>
           <div class="form-group">
-            <label>Provinsi</label>
-            <p>Jawa Timur</p>
+            <label for="address-province">Provinsi</label>
+            <input type="text" id="address-province" placeholder="Jawa Timur" />
           </div>
           <div class="form-group">
-            <label>Kota/Kabupaten</label>
-            <p>Kabupaten Malang</p>
+            <label for="address-city">Kota/Kabupaten</label>
+            <input type="text" id="address-city" placeholder="Kabupaten Malang" />
           </div>
           <div class="form-group">
-            <label>Kecamatan</label>
-            <p>Turen</p>
+            <label for="address-district">Kecamatan</label>
+            <input type="text" id="address-district" placeholder="Turen" />
           </div>
           <div class="form-group">
-            <label>Desa/Kelurahan</label>
-            <p>Sedayu</p>
+            <label for="address-village">Desa/Kelurahan</label>
+            <input type="text" id="address-village" placeholder="Sedayu" />
           </div>
           <div class="form-group">
-            <label>Postal Code</label>
-            <p>65175</p>
+            <label for="address-postal-code">Postal Code</label>
+            <input type="text" id="address-postal-code" placeholder="65175" />
           </div>
           <button type="submit" class="btn">Update Address</button>
         </form>
@@ -141,6 +140,96 @@
     <script src="js/script.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", () => feather.replace());
+    </script>
+
+    <script type="module">
+      import { supabase } from './js/supabase-client.js';
+
+      document.addEventListener('DOMContentLoaded', async () => {
+        const profileForm = document.getElementById('profile-form');
+        const addressForm = document.getElementById('address-form');
+        const logoutButton = document.querySelector('.logout-btn');
+
+        // Check for active session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          window.location.href = 'login page.html';
+          return;
+        }
+
+        const user = session.user;
+
+        // Fetch profile data
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching profile:', error);
+          return;
+        }
+
+        // Populate forms
+        document.getElementById('profile-name').value = profile.full_name || '';
+        document.getElementById('profile-email').value = user.email;
+        document.getElementById('address-street').value = profile.address || '';
+        document.getElementById('address-province').value = profile.province || '';
+        document.getElementById('address-city').value = profile.city || '';
+        document.getElementById('address-district').value = profile.district || '';
+        document.getElementById('address-village').value = profile.village || '';
+        document.getElementById('address-postal-code').value = profile.postal_code || '';
+
+        // Handle profile update
+        profileForm.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          const fullName = document.getElementById('profile-name').value;
+          const { error } = await supabase
+            .from('profiles')
+            .update({ full_name: fullName })
+            .eq('id', user.id);
+
+          if (error) {
+            alert(`Error updating profile: ${error.message}`);
+          } else {
+            alert('Profile updated successfully!');
+          }
+        });
+
+        // Handle address update
+        addressForm.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          const address = {
+            address: document.getElementById('address-street').value,
+            province: document.getElementById('address-province').value,
+            city: document.getElementById('address-city').value,
+            district: document.getElementById('address-district').value,
+            village: document.getElementById('address-village').value,
+            postal_code: document.getElementById('address-postal-code').value,
+          };
+          const { error } = await supabase
+            .from('profiles')
+            .update(address)
+            .eq('id', user.id);
+
+          if (error) {
+            alert(`Error updating address: ${error.message}`);
+          } else {
+            alert('Address updated successfully!');
+          }
+        });
+
+        // Handle logout
+        logoutButton.addEventListener('click', async () => {
+          const { error } = await supabase.auth.signOut();
+          if (error) {
+            console.error('Error signing out:', error);
+          } else {
+            window.location.href = 'login page.html';
+          }
+        });
+      });
     </script>
     <!-- Feather Icons -->
     <script>

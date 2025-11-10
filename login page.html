@@ -13,6 +13,9 @@
       href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@300;400;600&display=swap"
       rel="stylesheet"
     />
+
+    <!-- Supabase Client -->
+    <script type="module" src="js/supabase-client.js"></script>
   </head>
 
   <body>
@@ -25,7 +28,7 @@
       <div class="container">
         <section>
           <div class="login-form active" id="login-form">
-            <form action="login register.php" method="post">
+            <form>
               <input type="hidden" name="login" value="1" />
               <h1>Login</h1>
               <div class="input-box">
@@ -58,7 +61,7 @@
         </section>
         <section>
           <div class="login-form" id="register-form">
-            <form action="login register.php" method="post">
+            <form>
               <input type="hidden" name="register" value="1" />
               <h1>Register</h1>
 
@@ -131,6 +134,56 @@
           targetForm.classList.add("active");
         }
       }
+    </script>
+
+    <script type="module">
+      import { supabase } from './js/supabase-client.js';
+
+      document.addEventListener('DOMContentLoaded', () => {
+        const loginForm = document.querySelector('#login-form form');
+        const registerForm = document.querySelector('#register-form form');
+
+        loginForm.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          const email = loginForm.email.value;
+          const password = loginForm.password.value;
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+
+          if (error) {
+            alert(`Error: ${error.message}`);
+          } else {
+            window.location.href = 'my account.html';
+          }
+        });
+
+        registerForm.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          const name = registerForm.name.value;
+          const email = registerForm.email.value;
+          const password = registerForm.password.value;
+
+          const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                full_name: name,
+              }
+            }
+          });
+
+          if (error) {
+            alert(`Error: ${error.message}`);
+          } else {
+            // On successful sign-up, Supabase automatically logs the user in.
+            // Redirect to the account page.
+            window.location.href = 'my account.html';
+          }
+        });
+      });
     </script>
     <script>
       document.addEventListener("DOMContentLoaded", () => feather.replace());
