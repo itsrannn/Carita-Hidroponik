@@ -6,31 +6,16 @@ document.addEventListener('alpine:init', () => {
             full_name: '',
             address: '',
             postal_code: '',
-            province_id: '',
-            regency_id: '',
-            district_id: '',
-            village_id: ''
+            province: '',
+            regency: '',
+            district: '',
+            village: ''
         },
         loading: false,
 
         // --- UI State ---
         editProfileMode: false,
         editAddressMode: false,
-
-        // --- Address Dropdown Data ---
-        provinces: [],
-        regencies: [],
-        districts: [],
-        villages: [],
-
-        // --- Selected Address Values ---
-        selectedProvince: '',
-        selectedRegency: '',
-        selectedDistrict: '',
-        selectedVillage: '',
-
-        // --- API Base URL ---
-        apiBaseUrl: 'https://emsifa.github.io/api-wilayah-indonesia/api',
 
         // --- Initialization ---
         async init() {
@@ -42,35 +27,6 @@ document.addEventListener('alpine:init', () => {
             }
             this.user = session.user;
             await this.getProfile();
-
-            // Load provinces for the dropdown
-            this.loadProvinces();
-
-            // --- Watchers for Cascading Dropdowns ---
-            this.$watch('selectedProvince', (provinceId) => {
-                this.selectedRegency = '';
-                this.regencies = [];
-                if (provinceId) this.loadRegencies(provinceId);
-            });
-
-            this.$watch('selectedRegency', (regencyId) => {
-                this.selectedDistrict = '';
-                this.districts = [];
-                if (regencyId) this.loadDistricts(regencyId);
-            });
-
-            this.$watch('selectedDistrict', (districtId) => {
-                this.selectedVillage = '';
-                this.villages = [];
-                if (districtId) this.loadVillages(districtId);
-            });
-
-            // Watcher to pre-fill dropdowns when entering edit mode
-            this.$watch('editAddressMode', (isEditing) => {
-                if (isEditing) {
-                    this.loadAddressFromProfile();
-                }
-            });
         },
 
         // --- Profile and Address Management ---
@@ -79,7 +35,7 @@ document.addEventListener('alpine:init', () => {
             try {
                 const { data, error, status } = await supabase
                     .from('profiles')
-                    .select(`full_name, address, postal_code, province_id, regency_id, district_id, village_id`)
+                    .select(`full_name, address, postal_code, province, regency, district, village`)
                     .eq('id', this.user.id)
                     .single();
                 if (error && status !== 406) throw error;
@@ -116,10 +72,10 @@ document.addEventListener('alpine:init', () => {
                     id: this.user.id,
                     address: this.profile.address,
                     postal_code: this.profile.postal_code,
-                    province_id: this.selectedProvince,
-                    regency_id: this.selectedRegency,
-                    district_id: this.selectedDistrict,
-                    village_id: this.selectedVillage,
+                    province: this.profile.province,
+                    regency: this.profile.regency,
+                    district: this.profile.district,
+                    village: this.profile.village,
                     updated_at: new Date()
                 });
                 if (error) throw error;
@@ -129,51 +85,6 @@ document.addEventListener('alpine:init', () => {
                 alert('Error updating address: ' + error.message);
             } finally {
                 this.loading = false;
-            }
-        },
-
-        // --- Cascading Dropdown Methods ---
-        async loadProvinces() {
-            try {
-                const response = await fetch(`${this.apiBaseUrl}/provinces.json`);
-                this.provinces = await response.json();
-            } catch (error) { console.error('Error loading provinces:', error); }
-        },
-        async loadRegencies(provinceId) {
-            try {
-                const response = await fetch(`${this.apiBaseUrl}/regencies/${provinceId}.json`);
-                this.regencies = await response.json();
-            } catch (error) { console.error('Error loading regencies:', error); }
-        },
-        async loadDistricts(regencyId) {
-            try {
-                const response = await fetch(`${this.apiBaseUrl}/districts/${regencyId}.json`);
-                this.districts = await response.json();
-            } catch (error) { console.error('Error loading districts:', error); }
-        },
-        async loadVillages(districtId) {
-            try {
-                const response = await fetch(`${this.apiBaseUrl}/villages/${districtId}.json`);
-                this.villages = await response.json();
-            } catch (error) { console.error('Error loading villages:', error); }
-        },
-
-        async loadAddressFromProfile() {
-            if (!this.profile.province_id) return;
-
-            this.selectedProvince = this.profile.province_id;
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            if (this.profile.regency_id) {
-                this.selectedRegency = this.profile.regency_id;
-                await new Promise(resolve => setTimeout(resolve, 500));
-            }
-            if (this.profile.district_id) {
-                this.selectedDistrict = this.profile.district_id;
-                await new Promise(resolve => setTimeout(resolve, 500));
-            }
-            if (this.profile.village_id) {
-                this.selectedVillage = this.profile.village_id;
             }
         },
 

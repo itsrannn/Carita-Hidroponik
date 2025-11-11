@@ -12,13 +12,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
 </head>
 
-<body x-data="accountPage" @alpine:init="$store.cart.init()" x-init="init()" x-cloak>
+<body x-data="accountPage" @alpine:init="$store.cart.init()" x-init="init()">
   <div id="header-include"></div>
 
-  <main class="main-content" x-show="!loading">
+  <main class="main-content my-account">
     <div class="container">
       <h1 class="page-title">Akun Saya</h1>
-      <div class="account-layout">
+      <div class="account-layout" x-init="getProfile()">
         <aside class="account-sidebar">
           <nav class="account-nav">
             <ul>
@@ -40,7 +40,7 @@
               <button class="btn btn-sm btn-outline" @click="editProfileMode = !editProfileMode" x-text="editProfileMode ? 'Batal' : 'Ubah Profil'"></button>
             </div>
             <div class="section-body">
-              <form @submit.prevent="updateProfile">
+              <form class="account-form" @submit.prevent="updateProfile">
                 <div class="form-group">
                   <label for="fullName">Nama Lengkap</label>
                   <input type="text" id="fullName" x-model="profile.full_name" :disabled="!editProfileMode" />
@@ -66,42 +66,22 @@
               <button class="btn btn-sm btn-outline" @click="editAddressMode = !editAddressMode" x-text="editAddressMode ? 'Batal' : 'Ubah Alamat'"></button>
             </div>
             <div class="section-body">
-              <form @submit.prevent="updateAddress">
+              <form class="account-form" @submit.prevent="updateAddress">
                 <div class="form-group">
                   <label for="province">Provinsi</label>
-                  <select id="province" x-model="selectedProvince" :disabled="!editAddressMode">
-                    <option value="">Pilih Provinsi</option>
-                    <template x-for="province in provinces" :key="province.id">
-                      <option :value="province.id" x-text="province.name"></option>
-                    </template>
-                  </select>
+                  <input type="text" id="province" x-model="profile.province" :disabled="!editAddressMode" />
                 </div>
                 <div class="form-group">
                   <label for="regency">Kota/Kabupaten</label>
-                  <select id="regency" x-model="selectedRegency" :disabled="!editAddressMode || !regencies.length">
-                    <option value="">Pilih Kota/Kabupaten</option>
-                    <template x-for="regency in regencies" :key="regency.id">
-                      <option :value="regency.id" x-text="regency.name"></option>
-                    </template>
-                  </select>
+                  <input type="text" id="regency" x-model="profile.regency" :disabled="!editAddressMode" />
                 </div>
                 <div class="form-group">
                   <label for="district">Kecamatan</label>
-                  <select id="district" x-model="selectedDistrict" :disabled="!editAddressMode || !districts.length">
-                    <option value="">Pilih Kecamatan</option>
-                    <template x-for="district in districts" :key="district.id">
-                      <option :value="district.id" x-text="district.name"></option>
-                    </template>
-                  </select>
+                  <input type="text" id="district" x-model="profile.district" :disabled="!editAddressMode" />
                 </div>
                 <div class="form-group">
                   <label for="village">Kelurahan/Desa</label>
-                  <select id="village" x-model="selectedVillage" :disabled="!editAddressMode || !villages.length">
-                    <option value="">Pilih Kelurahan/Desa</option>
-                    <template x-for="village in villages" :key="village.id">
-                      <option :value="village.id" x-text="village.name"></option>
-                    </template>
-                  </select>
+                  <input type="text" id="village" x-model="profile.village" :disabled="!editAddressMode" />
                 </div>
                 <div class="form-group">
                   <label for="address">Nama Jalan, Gedung, No. Rumah</label>
