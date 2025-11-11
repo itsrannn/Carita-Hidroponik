@@ -148,7 +148,10 @@
           event.preventDefault();
           const email = loginForm.email.value;
           const password = loginForm.password.value;
-          const { data, error } = await supabase.auth.signInWithPassword({
+          const {
+            data: { user },
+            error,
+          } = await supabase.auth.signInWithPassword({
             email,
             password,
           });
@@ -156,7 +159,22 @@
           if (error) {
             alert(`Error: ${error.message}`);
           } else {
-            window.location.href = 'my account.html';
+            // Cek role setelah login berhasil
+            const { data: profile, error: profileError } = await supabase
+              .from('users')
+              .select('role')
+              .eq('id', user.id)
+              .single();
+
+            if (profileError || !profile) {
+              alert(
+                'Gagal memeriksa role Anda. Silakan hubungi support.'
+              );
+            } else if (profile.role === 'admin') {
+              window.location.href = 'admin.html'; // Arahkan admin ke dashboard
+            } else {
+              window.location.href = 'my account.html'; // Arahkan customer ke halaman akun
+            }
           }
         });
 
@@ -166,22 +184,38 @@
           const email = registerForm.email.value;
           const password = registerForm.password.value;
 
-          const { data, error } = await supabase.auth.signUp({
+          const {
+            data: { user },
+            error,
+          } = await supabase.auth.signUp({
             email,
             password,
             options: {
               data: {
                 full_name: name,
-              }
-            }
+              },
+            },
           });
 
           if (error) {
             alert(`Error: ${error.message}`);
           } else {
-            // On successful sign-up, Supabase automatically logs the user in.
-            // Redirect to the account page.
-            window.location.href = 'my account.html';
+            // Setelah user terbuat di `auth.users`, buat profilnya di tabel `users`
+            const { error: insertError } = await supabase.from('users').insert([
+              {
+                id: user.id, // Pastikan ID sama dengan di auth.users
+                nama: name,
+                email: email,
+                role: 'customer', // Set role default
+              },
+            ]);
+
+            if (insertError) {
+              alert(`Registrasi berhasil, namun gagal membuat profil: ${insertError.message}`);
+            } else {
+              // Arahkan ke halaman akun setelah semuanya berhasil
+              window.location.href = 'my account.html';
+            }
           }
         });
       });

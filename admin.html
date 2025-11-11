@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Admin Dashboard - Carita Hidroponik</title>
+
+    <!-- ========== STYLE ========== -->
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/admin.css" />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@300;400;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <!-- ========== HEADER INCLUDE ========== -->
+    <div id="header-include"></div>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="main-content">
+      <section class="admin-section">
+        <div class="container">
+          <h2 class="section-title">Admin Dashboard</h2>
+          <div id="order-list">
+            <!-- Orders will be loaded here -->
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- ========== FOOTER INCLUDE ========== -->
+    <div id="footer-include"></div>
+
+    <!-- ========== SCRIPTS ========== -->
+    <!-- Load Supabase library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+    <!-- Load our custom Supabase client -->
+    <script src="js/supabase-client.js"></script>
+
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="js/app.js"></script>
+    <script src="js/include.js"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js"
+      defer
+    ></script>
+    <script src="js/script.js"></script>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', async () => {
+        // --- Cek Role Admin ---
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+
+        if (userError || !user) {
+          alert('Anda harus login untuk mengakses halaman ini.');
+          window.location.href = 'login page.html';
+          return;
+        }
+
+        // Ambil profil user dari tabel 'users'
+        const { data: profile, error: profileError } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', user.id)
+          .single(); // .single() untuk mendapatkan satu baris
+
+        if (profileError || !profile) {
+          console.error('Error fetching user profile:', profileError);
+          alert('Gagal memverifikasi role Anda. Silakan coba login kembali.');
+          window.location.href = 'login page.html';
+          return;
+        }
+
+        // Jika role BUKAN 'admin', tendang ke halaman login
+        if (profile.role !== 'admin') {
+          alert('Hanya admin yang dapat mengakses halaman ini.');
+          window.location.href = 'login page.html';
+          return;
+        }
+        // --- Akhir Cek Role Admin ---
+
+        const orderList = document.getElementById('order-list');
+
+        async function fetchOrders() {
+          const { data: orders, error } = await supabase
+            .from('pesanan')
+            .select('*')
+            .eq('status', 'pending');
+
+          if (error) {
+            console.error('Error fetching orders:', error);
+            orderList.innerHTML = '<p>Gagal memuat pesanan.</p>';
+            return;
+          }
+
+          if (orders.length === 0) {
+            orderList.innerHTML = '<p>Tidak ada pesanan yang menunggu persetujuan.</p>';
+            return;
+          }
+
+          orderList.innerHTML = orders
+            .map(
+              (order) => `
+            <div class="order-card" id="order-${order.id_pesanan}">
+              <h3>Pesanan #${order.id_pesanan}</h3>
+              <p><strong>User ID:</strong> ${order.user_id}</p>
+              <p><strong>Total Harga:</strong> Rp ${order.total_harga.toLocaleString(
+                'id-ID'
+              )}</p>
+              <p><strong>Tanggal:</strong> ${new Date(
+                order.tanggal_pesanan
+              ).toLocaleDateString('id-ID')}</p>
+              <h4>Detail Produk:</h4>
+              <ul>
+                ${order.detail_produk
+                  .map(
+                    (item) => `
+                  <li>${item.name} (${item.quantity}x) - Rp ${item.price.toLocaleString(
+                      'id-ID'
+                    )}</li>
+                `
+                  )
+                  .join('')}
+              </ul>
+              <div class="order-actions">
+                <button class="btn btn-accept" data-id="${
+                  order.id_pesanan
+                }">Terima</button>
+                <button class="btn btn-reject" data-id="${
+                  order.id_pesanan
+                }">Tolak</button>
+              </div>
+            </div>
+          `
+            )
+            .join('');
+        }
+
+        async function updateOrderStatus(orderId, newStatus) {
+          const { error } = await supabase
+            .from('pesanan')
+            .update({ status: newStatus })
+            .eq('id_pesanan', orderId);
+
+          if (error) {
+            alert(`Gagal mengupdate status pesanan: ${error.message}`);
+          } else {
+            alert(`Pesanan berhasil di${newStatus === 'accepted' ? 'terima' : 'tolak'}.`);
+            // Refresh list
+            await fetchOrders();
+          }
+        }
+
+        orderList.addEventListener('click', (event) => {
+          const target = event.target;
+          const orderId = target.dataset.id;
+
+          if (!orderId) return;
+
+          if (target.classList.contains('btn-accept')) {
+            if (confirm('Apakah Anda yakin ingin menerima pesanan ini?')) {
+              updateOrderStatus(orderId, 'accepted');
+            }
+          } else if (target.classList.contains('btn-reject')) {
+            if (confirm('Apakah Anda yakin ingin menolak pesanan ini?')) {
+              updateOrderStatus(orderId, 'rejected');
+            }
+          }
+        });
+
+        await fetchOrders();
+      });
+    </script>
+  </body>
+</html>
