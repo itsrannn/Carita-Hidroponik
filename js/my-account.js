@@ -1,3 +1,6 @@
+import { supabase } from './supabase-client.js';
+import { createProfileForNewUser } from './database.js';
+
 document.addEventListener('alpine:init', () => {
     Alpine.data('accountPage', () => ({
         // --- User and Profile Data ---

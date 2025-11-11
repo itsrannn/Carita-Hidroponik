@@ -1,11 +1,12 @@
 // js/database.js
+import { supabase } from './supabase-client.js';
 
 /**
  * Creates a public profile for a new user.
  *
  * @param {object} user The user object from Supabase auth.
  */
-const createProfileForNewUser = async (user) => {
+export const createProfileForNewUser = async (user) => {
   const { data, error } = await supabase
     .from('profiles')
     .insert([
@@ -20,6 +21,3 @@ const createProfileForNewUser = async (user) => {
 
   return data;
 };
-
-// Make sure supabase is defined before this script is executed.
-// This could be done by including supabase-client.js before this script.
