@@ -30,7 +30,7 @@ document.addEventListener('alpine:init', () => {
         selectedVillage: '',
 
         // --- API Base URL ---
-        apiBaseUrl: 'https://wilayah.id/api',
+        apiBaseUrl: 'https://emsifa.github.io/api-wilayah-indonesia/api',
 
         // --- Initialization ---
         async init() {
@@ -133,28 +133,28 @@ document.addEventListener('alpine:init', () => {
         },
 
         // --- Cascading Dropdown Methods ---
-        loadProvinces() {
-            this.provinces = provinces;
+        async loadProvinces() {
+            try {
+                const response = await fetch(`${this.apiBaseUrl}/provinces.json`);
+                this.provinces = await response.json();
+            } catch (error) { console.error('Error loading provinces:', error); }
         },
         async loadRegencies(provinceId) {
             try {
                 const response = await fetch(`${this.apiBaseUrl}/regencies/${provinceId}.json`);
-                const data = await response.json();
-                this.regencies = data;
+                this.regencies = await response.json();
             } catch (error) { console.error('Error loading regencies:', error); }
         },
         async loadDistricts(regencyId) {
             try {
                 const response = await fetch(`${this.apiBaseUrl}/districts/${regencyId}.json`);
-                const data = await response.json();
-                this.districts = data;
+                this.districts = await response.json();
             } catch (error) { console.error('Error loading districts:', error); }
         },
         async loadVillages(districtId) {
             try {
                 const response = await fetch(`${this.apiBaseUrl}/villages/${districtId}.json`);
-                const data = await response.json();
-                this.villages = data;
+                this.villages = await response.json();
             } catch (error) { console.error('Error loading villages:', error); }
         },
 
@@ -162,7 +162,6 @@ document.addEventListener('alpine:init', () => {
             if (!this.profile.province_id) return;
 
             this.selectedProvince = this.profile.province_id;
-            // Wait for regencies to load
             await new Promise(resolve => setTimeout(resolve, 500));
 
             if (this.profile.regency_id) {

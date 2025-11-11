@@ -12,10 +12,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
 </head>
 
-<body x-data="accountPage" @alpine:init="$store.cart.init()" x-init="init()">
+<body x-data="accountPage" @alpine:init="$store.cart.init()" x-init="init()" x-cloak>
   <div id="header-include"></div>
 
-  <main class="main-content">
+  <main class="main-content" x-show="!loading">
     <div class="container">
       <h1 class="page-title">Akun Saya</h1>
       <div class="account-layout">
@@ -133,7 +133,6 @@
   <script src="js/include.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js" defer></script>
   <script src="js/supabase-client.js"></script>
-  <script src="js/provinces.js"></script>
   <script src="js/my-account.js"></script>
   <script src="js/script.js"></script>
 </body>
