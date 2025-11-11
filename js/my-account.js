@@ -38,8 +38,18 @@ document.addEventListener('alpine:init', () => {
                     .select(`full_name, address, postal_code, province, regency, district, village`)
                     .eq('id', this.user.id)
                     .single();
+
                 if (error && status !== 406) throw error;
-                if (data) this.profile = { ...this.profile, ...data };
+
+                if (data) {
+                    this.profile = { ...this.profile, ...data };
+                } else {
+                    // If no profile exists, create one
+                    const newProfile = await createProfileForNewUser(this.user);
+                    if (newProfile) {
+                        this.profile = { ...this.profile, ...newProfile[0] };
+                    }
+                }
             } catch (error) {
                 alert('Error loading profile: ' + error.message);
             } finally {
