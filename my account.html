@@ -73,19 +73,39 @@
               <form class="account-form" @submit.prevent="updateAddress">
                 <div class="form-group">
                   <label for="province">Provinsi</label>
-                  <input type="text" id="province" x-model="profile.province" :disabled="!editAddressMode" />
+                  <select id="province" x-model="selectedProvince" @change="fetchRegencies" :disabled="!editAddressMode">
+                    <option value="">Pilih Provinsi</option>
+                    <template x-for="province in provinces" :key="province.id">
+                      <option :value="province.id" x-text="province.name"></option>
+                    </template>
+                  </select>
                 </div>
                 <div class="form-group">
                   <label for="regency">Kota/Kabupaten</label>
-                  <input type="text" id="regency" x-model="profile.regency" :disabled="!editAddressMode" />
+                  <select id="regency" x-model="selectedRegency" @change="fetchDistricts" :disabled="!editAddressMode || !selectedProvince">
+                    <option value="">Pilih Kota/Kabupaten</option>
+                    <template x-for="regency in regencies" :key="regency.id">
+                      <option :value="regency.id" x-text="regency.name"></option>
+                    </template>
+                  </select>
                 </div>
                 <div class="form-group">
                   <label for="district">Kecamatan</label>
-                  <input type="text" id="district" x-model="profile.district" :disabled="!editAddressMode" />
+                  <select id="district" x-model="selectedDistrict" @change="fetchVillages" :disabled="!editAddressMode || !selectedRegency">
+                    <option value="">Pilih Kecamatan</option>
+                    <template x-for="district in districts" :key="district.id">
+                      <option :value="district.id" x-text="district.name"></option>
+                    </template>
+                  </select>
                 </div>
                 <div class="form-group">
                   <label for="village">Kelurahan/Desa</label>
-                  <input type="text" id="village" x-model="profile.village" :disabled="!editAddressMode" />
+                  <select id="village" x-model="selectedVillage" @change="updateProfileVillage" :disabled="!editAddressMode || !selectedDistrict">
+                    <option value="">Pilih Kelurahan/Desa</option>
+                    <template x-for="village in villages" :key="village.id">
+                      <option :value="village.id" x-text="village.name"></option>
+                    </template>
+                  </select>
                 </div>
                 <div class="form-group">
                   <label for="address">Nama Jalan, Gedung, No. Rumah</label>
