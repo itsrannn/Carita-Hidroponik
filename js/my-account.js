@@ -25,7 +25,7 @@ document.addEventListener('alpine:init', () => {
         async init() {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
-                window.location.href = '/login page.html';
+                window.location.href = 'login page.html';
                 return;
             }
             this.user = session.user;
