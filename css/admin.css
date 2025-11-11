@@ -1,0 +1,187 @@
+/* =================================
+   Admin Dashboard Styles
+   ================================= */
+
+/* General Section Styling */
+.admin-section {
+  padding: 3rem 1rem;
+  background-color: #f9fafb; /* Latar belakang sedikit abu-abu */
+  min-height: 80vh;
+}
+
+.admin-section .container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-title {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 2rem;
+  color: var(--primary-color);
+  font-weight: 700;
+}
+
+/* Table Container */
+.order-table-container {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  overflow: hidden; /* Penting untuk border-radius */
+  border: 1px solid #e5e7eb;
+}
+
+/* Table Styling */
+.order-table {
+  width: 100%;
+  border-collapse: collapse; /* Menghilangkan spasi antar sel */
+}
+
+/* Table Header */
+.order-table thead {
+  background-color: var(--primary-color);
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.85rem;
+}
+
+.order-table th {
+  padding: 1rem 1.5rem;
+  text-align: left;
+  font-weight: 600;
+}
+
+/* Table Body */
+.order-table tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+  transition: background-color 0.2s ease;
+}
+
+.order-table tbody tr:nth-of-type(even) {
+  background-color: #f9fafb; /* Warna zebra */
+}
+
+.order-table tbody tr:last-of-type {
+  border-bottom: none;
+}
+
+.order-table tbody tr:hover {
+  background-color: #f0f4ff; /* Efek hover */
+}
+
+.order-table td {
+  padding: 1rem 1.5rem;
+  vertical-align: middle;
+  color: #374151;
+}
+
+/* Kolom Detail Pesanan */
+.order-details ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.order-details li {
+  margin-bottom: 0.4rem;
+}
+
+.order-details li span {
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Kolom Tindakan (Tombol) */
+.order-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.order-actions .btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  color: white;
+}
+
+.btn-accept {
+  background-color: #10b981; /* Hijau modern */
+}
+
+.btn-accept:hover {
+  background-color: #059669;
+}
+
+.btn-reject {
+  background-color: #ef4444; /* Merah modern */
+}
+
+.btn-reject:hover {
+  background-color: #dc2626;
+}
+
+/* Pesan "Tidak Ada Pesanan" */
+.no-orders-message {
+  text-align: center;
+  padding: 4rem 2rem;
+  font-size: 1.1rem;
+  color: #6b7280;
+}
+
+/* Pesan Error */
+.error-message {
+  text-align: center;
+  color: #ef4444;
+  font-weight: 500;
+  padding: 2rem;
+}
+
+/* Responsive (untuk layar kecil) */
+@media screen and (max-width: 768px) {
+  .order-table thead {
+    display: none; /* Sembunyikan header tabel */
+  }
+
+  .order-table,
+  .order-table tbody,
+  .order-table tr,
+  .order-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .order-table tr {
+    margin-bottom: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+  }
+
+  .order-table td {
+    text-align: right;
+    padding-left: 50%;
+    position: relative;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .order-table td:last-child {
+    border-bottom: none;
+  }
+
+  .order-table td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 1.5rem;
+    font-weight: bold;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  .order-actions {
+    justify-content: flex-end;
+  }
+}

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Keranjang Saya - Carita Hidroponik</title>
+    <title>Keranjang Saya | Carita Hidroponik</title>
 
     <!-- ========== STYLE ========== -->
     <link rel="stylesheet" href="css/style.css" />
@@ -103,6 +103,12 @@
     <div id="footer-include"></div>
 
     <!-- ========== SCRIPTS ========== -->
+    <!-- Load Supabase library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+    <!-- Load our custom Supabase client -->
+    <script src="js/supabase-client.js"></script>
+
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="js/app.js"></script>
     <script src="js/include.js"></script>
@@ -111,5 +117,64 @@
       defer
     ></script>
     <script src="js/script.js"></script>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const checkoutBtn = document.getElementById('checkout-btn');
+
+        checkoutBtn.addEventListener('click', async () => {
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+
+          if (!user) {
+            alert('Anda harus login untuk melakukan checkout.');
+            window.location.href = 'login page.html';
+            return;
+          }
+
+          const cartStore = Alpine.store('cart');
+          if (cartStore.items.length === 0) {
+            alert('Keranjang Anda kosong.');
+            return;
+          }
+
+          const orderDetails = cartStore.items.map((item) => ({
+            product_id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+          }));
+
+          const totalHarga = cartStore.total;
+
+          const { data, error } = await supabase
+            .from('pesanan')
+            .insert([
+              {
+                user_id: user.id,
+                detail_produk: orderDetails,
+                total_harga: totalHarga,
+                status: 'pending',
+              },
+            ])
+            .select();
+
+          if (error) {
+            console.error('Error saat membuat pesanan:', error);
+            alert(`Terjadi kesalahan: ${error.message}`);
+          } else {
+            alert('Pesanan Anda berhasil dibuat dan sedang menunggu konfirmasi!');
+
+            // Kosongkan keranjang
+            cartStore.items = [];
+            cartStore.updateTotalsAndSave(); // Ini akan mengosongkan localStorage juga
+
+            // Arahkan ke halaman "My Account" atau halaman konfirmasi
+            window.location.href = 'my account.html';
+          }
+        });
+      });
+    </script>
   </body>
 </html>
