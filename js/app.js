@@ -192,7 +192,7 @@ window.products = function () {
   return {
     searchTerm: "",
     currentPage: 1,
-    itemsPerPage: 8,
+    itemsPerPage: 10,
     selectedCategory: "all",
     sortOption: "default",
     items: allProducts,
@@ -215,44 +215,49 @@ window.products = function () {
       return "Rp " + value.toLocaleString("id-ID");
     },
 
-    filteredItems() {
-      let filtered = this.items;
+    // REFACTOR: Menggabungkan logika filter dan sort ke dalam satu computed property
+    // untuk kejelasan dan memastikan urutan operasi yang benar.
+    processedItems() {
+      // Selalu mulai dengan salinan lengkap dari semua item produk
+      let processed = [...this.items];
 
+      // 1. Filter berdasarkan kategori yang dipilih
       if (this.selectedCategory !== "all") {
-        filtered = filtered.filter(
+        processed = processed.filter(
           (item) => item.category === this.selectedCategory
         );
       }
 
+      // 2. Filter berdasarkan kata kunci pencarian
       if (this.searchTerm.trim() !== "") {
-        filtered = filtered.filter((item) =>
+        processed = processed.filter((item) =>
           item.name.toLowerCase().includes(this.searchTerm.toLowerCase())
         );
       }
 
-      return filtered;
-    },
-
-    sortedItems() {
-      let items = [...this.filteredItems()];
-
+      // 3. Lakukan pengurutan (sorting) berdasarkan opsi yang dipilih
+      // Operasi pengurutan dilakukan setelah pemfilteran agar lebih efisien
       if (this.sortOption === "price-asc") {
-        items.sort((a, b) => a.price - b.price);
+        processed.sort((a, b) => a.price - b.price);
       } else if (this.sortOption === "price-desc") {
-        items.sort((a, b) => b.price - b.price);
+        processed.sort((a, b) => b.price - a.price);
       }
 
-      return items;
+      // Kembalikan item yang sudah diproses (difilter dan diurutkan)
+      // Logika paginasi akan diterapkan pada hasil dari fungsi ini
+      return processed;
     },
 
     paginatedItems() {
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
-      return this.sortedItems().slice(start, end);
+      // Langsung slice dari data yang sudah diproses (filter + sort)
+      return this.processedItems().slice(start, end);
     },
 
     totalPages() {
-      return Math.ceil(this.sortedItems().length / this.itemsPerPage);
+      // Kalkulasi total halaman berdasarkan data yang sudah diproses
+      return Math.ceil(this.processedItems.length / this.itemsPerPage);
     },
 
     goToPage(page) {
