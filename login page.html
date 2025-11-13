@@ -61,6 +61,10 @@
               </div>
             </form>
           </div>
+          <div id="verification-message" style="text-align: center; color: var(--text-color); display: none;">
+            <h2>Pendaftaran Berhasil!</h2>
+            <p>Kami telah mengirimkan tautan verifikasi ke email Anda. Silakan periksa kotak masuk Anda untuk menyelesaikan pendaftaran.</p>
+          </div>
         </section>
         <section>
           <div class="login-form" id="register-form">
@@ -197,10 +201,12 @@
 
           if (error) {
             alert(`Error: ${error.message}`);
-          } else if (data.user) {
-            // The trigger will create the profile. We just need to redirect.
-            // Since the default role is 'customer', we can send them to the account page.
-            window.location.href = 'my account.html';
+          } else {
+            // Hide the registration form
+            registerForm.style.display = 'none';
+            // Show the verification message
+            const verificationMessage = document.getElementById('verification-message');
+            verificationMessage.style.display = 'block';
           }
         });
       });
