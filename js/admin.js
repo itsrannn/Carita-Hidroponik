@@ -33,22 +33,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         orders.forEach(order => {
             const tr = document.createElement('tr');
 
-            const customerName = order.shipping_address?.full_name || 'N/A';
-            const total = `Rp ${order.total_amount.toLocaleString('id-ID')}`;
-            const date = new Date(order.created_at).toLocaleDateString('id-ID');
+            // Create a summary of the order items from 'order_details'
+            let summary = 'Tidak ada item';
+            if (order.order_details && order.order_details.length > 0) {
+                summary = order.order_details.map(item => `${item.name} (x${item.quantity})`).join(', ');
+            }
 
             tr.innerHTML = `
-                <td>${order.order_code}</td>
-                <td>${customerName}</td>
-                <td>${total}</td>
-                <td>${order.status}</td>
-                <td>${date}</td>
+                <td>${order.order_code || order.id}</td>
+                <td>${summary}</td>
+                <td><span class="status-${order.status.toLowerCase().replace(/\s+/g, '-')}">${order.status}</span></td>
                 <td class="action-buttons">
-                    <!-- Action buttons will be added here -->
+                    <!-- Action buttons will be dynamically inserted here -->
                 </td>
             `;
 
-            // Add action buttons based on status
             const actionsCell = tr.querySelector('.action-buttons');
             addActions(actionsCell, order);
 
@@ -57,22 +56,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function addActions(cell, order) {
-        // Clear previous buttons
-        cell.innerHTML = '';
+        cell.innerHTML = ''; // Clear previous buttons
 
-        if (order.status === 'Menunggu Konfirmasi') {
-            const acceptBtn = createButton('Terima', () => updateOrderStatus(order.id, 'Diterima'));
-            const rejectBtn = createButton('Tolak', () => updateOrderStatus(order.id, 'Ditolak'));
-            cell.append(acceptBtn, rejectBtn);
-        } else if (order.status === 'Diterima') {
-            const shipBtn = createButton('Kirim', () => handleShipping(order.id));
-            cell.append(shipBtn);
-        } else if (order.status === 'Dalam Pengiriman') {
-            const deliveredBtn = createButton('Sudah Tiba', () => updateOrderStatus(order.id, 'Sudah Tiba'));
-            cell.append(deliveredBtn);
+        // Map status to potential next statuses
+        const statusTransitions = {
+            'Menunggu Konfirmasi': ['Diproses', 'Ditolak'],
+            'Diproses': ['Dalam Pengiriman'],
+            'Dalam Pengiriman': ['Selesai']
+        };
+
+        const availableActions = statusTransitions[order.status];
+
+        if (availableActions) {
+            availableActions.forEach(action => {
+                const actionBtn = createButton(action, () => updateOrderStatus(order.id, action));
+                cell.appendChild(actionBtn);
+            });
         } else {
-            // No actions for 'Ditolak' or 'Sudah Tiba'
-            cell.textContent = '-';
+            // For 'Ditolak' and 'Selesai', no more actions
+            cell.textContent = 'Selesai';
         }
     }
 
@@ -95,27 +97,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
             alert('Status pesanan berhasil diperbarui.');
             fetchOrders(); // Refresh the list
-        }
-    }
-
-    async function handleShipping(orderId) {
-        const receiptNumber = prompt('Masukkan nomor resi pengiriman:');
-        if (receiptNumber && receiptNumber.trim() !== '') {
-            const { error } = await supabase
-                .from('orders')
-                .update({
-                    status: 'Dalam Pengiriman',
-                    shipping_receipt: receiptNumber.trim()
-                })
-                .eq('id', orderId);
-
-            if (error) {
-                console.error('Error updating shipping info:', error);
-                alert('Gagal memperbarui informasi pengiriman.');
-            } else {
-                alert('Informasi pengiriman berhasil diperbarui.');
-                fetchOrders(); // Refresh the list
-            }
         }
     }
 
