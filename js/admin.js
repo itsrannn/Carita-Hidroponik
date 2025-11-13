@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (error) throw error;
 
-            if (orders.length === 0) {
+            if (!orders || orders.length === 0) {
                 loadingMessage.textContent = 'Tidak ada pesanan yang ditemukan.';
                 return;
             }
@@ -33,10 +33,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         orders.forEach(order => {
             const tr = document.createElement('tr');
 
-            // Create a summary of the order items
+            // Buat ringkasan item (gunakan order_details jika ada, fallback ke items)
             let summary = 'Tidak ada item';
-            if (order.items && order.items.length > 0) {
-                summary = order.items.map(item => `${item.name} (x${item.quantity})`).join(', ');
+            const orderItems = order.order_details || order.items;
+            if (orderItems && orderItems.length > 0) {
+                summary = orderItems.map(item => `${item.name} (x${item.quantity})`).join(', ');
             }
 
             tr.innerHTML = `

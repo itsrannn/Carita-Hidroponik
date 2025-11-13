@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS public.orders (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     user_id uuid REFERENCES auth.users(id) NOT NULL,
     order_code text UNIQUE NOT NULL,
-    items jsonb,
+    order_details jsonb, -- gunakan 'order_details' agar konsisten dengan front-end dan lebih deskriptif
     total_amount numeric NOT NULL,
     shipping_address jsonb,
     status text DEFAULT 'Menunggu Konfirmasi'::text NOT NULL,
@@ -47,9 +47,6 @@ CREATE POLICY "Allow admin full access" ON public.orders
 FOR ALL USING (is_admin()) WITH CHECK (is_admin());
 
 -- 5. Set up Supabase Realtime for the 'orders' table
--- This part is usually done in the Supabase Dashboard under Database -> Replication,
--- but this command ensures it's configured.
--- (This might require higher privileges than available in the editor)
 DO $$
 BEGIN
   IF NOT EXISTS (

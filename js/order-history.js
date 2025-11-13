@@ -50,10 +50,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 year: 'numeric'
             });
 
-            // Rincian item
+            // Rincian item — gunakan order_details jika ada, fallback ke items
             let itemsHtml = '<p>Rincian pesanan tidak tersedia.</p>';
-            if (order.items && Array.isArray(order.items) && order.items.length > 0) {
-                itemsHtml = order.items.map(item => {
+            const orderItems = order.order_details || order.items;
+            if (orderItems && Array.isArray(orderItems) && orderItems.length > 0) {
+                itemsHtml = orderItems.map(item => {
                     if (item.name && item.quantity) {
                         return `
                             <div class="item">
