@@ -558,7 +558,7 @@ body {
   /* Default: 2 kolom di tablet, 1 di mobile */
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 2rem;
-  margin: 2rem 0;
+  margin: 2rem;
 }
 
 .news-section .section-title {
