@@ -111,5 +111,45 @@
       defer
     ></script>
     <script src="js/script.js"></script>
+
+    <!-- Supabase & Checkout Logic -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/checkout.js"></script>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const checkoutButton = document.getElementById('checkout-btn');
+        if (checkoutButton) {
+          checkoutButton.addEventListener('click', async () => {
+            // Check if user is logged in first
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                alert('Anda harus login terlebih dahulu untuk melanjutkan.');
+                window.location.href = 'login page.html';
+                return;
+            }
+
+            // Check if profile is complete
+            const { complete, profile } = await isProfileComplete();
+
+            if (complete) {
+              // Disable the button to prevent multiple clicks
+              checkoutButton.disabled = true;
+              checkoutButton.innerText = 'Memproses...';
+
+              await processCheckout(profile);
+
+              // Re-enable the button in case of failure, navigation will happen on success
+              checkoutButton.disabled = false;
+              checkoutButton.innerText = 'Checkout Sekarang';
+            } else {
+              alert('Profil atau alamat pengiriman Anda belum lengkap. Silakan lengkapi data Anda terlebih dahulu.');
+              window.location.href = 'my account.html';
+            }
+          });
+        }
+      });
+    </script>
   </body>
 </html>

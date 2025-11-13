@@ -4,80 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard | Carita Hidroponik</title>
-
-    <!-- Include main stylesheet -->
     <link rel="stylesheet" href="css/style.css" />
-
     <style>
-        /* Admin Dashboard Specific Styles */
-        body {
-            background-color: #f8f9fa;
-        }
+        body { background-color: #f8f9fa; }
         .dashboard-header {
             padding: 1.5rem;
             background-color: white;
             border-bottom: 1px solid #dee2e6;
             margin-bottom: 2rem;
         }
-        .order-card {
+        .table-container {
             background-color: white;
-            border: 1px solid #dee2e6;
             border-radius: 8px;
-            margin-bottom: 1.5rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            overflow: hidden;
         }
-        .order-card-header {
-            padding: 1rem 1.5rem;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 1rem;
+            text-align: left;
             border-bottom: 1px solid #dee2e6;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
-        .order-card-header h3 {
-            margin: 0;
-            font-size: 1.1rem;
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
         }
-        .order-status {
-            font-weight: bold;
-            padding: 0.25rem 0.75rem;
-            border-radius: 50px;
-            font-size: 0.8rem;
-        }
-        .order-status.pending {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-        .order-card-body {
-            padding: 1.5rem;
-        }
-        .order-item {
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid #f1f1f1;
-            padding: 0.75rem 0;
-        }
-        .order-item:last-child {
-            border-bottom: none;
-        }
-        .order-total {
-            text-align: right;
-            font-weight: bold;
-            font-size: 1.2rem;
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 2px solid #333;
-        }
-        .no-orders, .error-message {
-            text-align: center;
-            padding: 3rem;
-            background-color: white;
-            border-radius: 8px;
+        .action-buttons button, .action-buttons input {
+            margin-right: 5px;
         }
     </style>
 </head>
-<body x-data="adminDashboard" x-init="init()">
+<body>
 
-    <!-- Header -->
     <div id="header-include"></div>
 
     <main class="main-content">
@@ -87,56 +48,27 @@
                 <p>Kelola pesanan yang masuk di sini.</p>
             </div>
 
-            <!-- Loading Spinner -->
-            <template x-if="loading">
-                <p>Memuat pesanan...</p>
-            </template>
-
-            <!-- Error Message -->
-            <template x-if="error">
-                <div class="error-message">
-                    <h2>Terjadi Kesalahan</h2>
-                    <p x-text="error"></p>
-                </div>
-            </template>
-
-            <!-- Orders List -->
-            <div x-show="!loading && !error">
-                <!-- No Orders Message -->
-                <template x-if="orders.length === 0">
-                    <div class="no-orders">
-                        <h2>Tidak Ada Order</h2>
-                        <p>Saat ini tidak ada pesanan yang masuk.</p>
-                    </div>
-                </template>
-
-                <!-- Order Cards -->
-                <template x-for="order in orders" :key="order.id">
-                    <div class="order-card">
-                        <div class="order-card-header">
-                            <div>
-                                <h3>Order ID: <span x-text="order.id"></span></h3>
-                                <small x-text="`Dipesan oleh: ${order.profiles ? order.profiles.full_name : 'N/A'}`"></small>
-                            </div>
-                            <span class="order-status" :class="order.status" x-text="order.status"></span>
-                        </div>
-                        <div class="order-card-body">
-                            <p><strong>Tanggal Pesanan:</strong> <span x-text="formatDate(order.created_at)"></span></p>
-                            <div>
-                                <div x-for="item in order.items" :key="item.id" class="order-item">
-                                    <span><span x-text="item.quantity"></span>x <span x-text="item.name"></span></span>
-                                    <span x-text="formatCurrency(item.price * item.quantity)"></span>
-                                </div>
-                            </div>
-                            <div class="order-total" x-text="`Total: ${formatCurrency(calculateOrderTotal(order.items))}`"></div>
-                        </div>
-                    </div>
-                </template>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Kode Pesanan</th>
+                            <th>Pelanggan</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Tanggal</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-table-body">
+                        <!-- Data pesanan akan dimasukkan di sini oleh JS -->
+                    </tbody>
+                </table>
             </div>
+            <p id="loading-message">Memuat pesanan...</p>
         </div>
     </main>
 
-    <!-- Footer -->
     <div id="footer-include"></div>
 
     <!-- Scripts -->
@@ -145,10 +77,9 @@
     <script src="js/include.js"></script>
     <script src="js/script.js"></script>
 
-    <!-- Supabase & Alpine -->
+    <!-- Supabase & Page Logic -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <script src="js/supabase-client.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js" defer></script>
     <script src="js/admin.js"></script>
 </body>
 </html>

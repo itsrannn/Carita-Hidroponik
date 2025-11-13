@@ -1,58 +1,124 @@
 // js/admin.js
 
-document.addEventListener('alpine:init', () => {
-    Alpine.data('adminDashboard', () => ({
-        orders: [],
-        loading: true,
-        error: null,
+document.addEventListener('DOMContentLoaded', async () => {
+    const ordersTableBody = document.getElementById('orders-table-body');
+    const loadingMessage = document.getElementById('loading-message');
 
-        init() {
-            this.fetchOrders();
-        },
+    async function fetchOrders() {
+        try {
+            // Fetch all orders. Assumes RLS is set up for admin role.
+            const { data: orders, error } = await supabase
+                .from('orders')
+                .select('*')
+                .order('created_at', { ascending: false });
 
-        async fetchOrders() {
-            this.loading = true;
-            this.error = null;
-            try {
-                // Fetch orders and the full_name from the related profile
-                const { data, error } = await supabase
-                    .from('orders')
-                    .select(`
-                        id,
-                        created_at,
-                        status,
-                        items,
-                        profiles ( full_name )
-                    `)
-                    .order('created_at', { ascending: false });
+            if (error) throw error;
 
-                if (error) throw error;
-
-                this.orders = data;
-
-            } catch (err) {
-                this.error = 'Gagal mengambil data pesanan. Pastikan Anda masuk sebagai admin dan kebijakan RLS sudah benar.';
-                console.error('Error fetching orders:', err);
-            } finally {
-                this.loading = false;
+            if (orders.length === 0) {
+                loadingMessage.textContent = 'Tidak ada pesanan yang ditemukan.';
+                return;
             }
-        },
 
-        // Helper to format currency
-        formatCurrency(amount) {
-            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(amount);
-        },
-
-        // Helper to format date
-        formatDate(dateString) {
-            const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-            return new Date(dateString).toLocaleDateString('id-ID', options);
-        },
-
-        // Calculate total for an order
-        calculateOrderTotal(items) {
-            if (!items) return 0;
-            return items.reduce((total, item) => total + (item.price * item.quantity), 0);
+            renderOrders(orders);
+            loadingMessage.style.display = 'none';
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+            loadingMessage.textContent = 'Gagal memuat pesanan.';
         }
-    }));
+    }
+
+    function renderOrders(orders) {
+        ordersTableBody.innerHTML = ''; // Clear existing rows
+
+        orders.forEach(order => {
+            const tr = document.createElement('tr');
+
+            const customerName = order.shipping_address?.full_name || 'N/A';
+            const total = `Rp ${order.total_amount.toLocaleString('id-ID')}`;
+            const date = new Date(order.created_at).toLocaleDateString('id-ID');
+
+            tr.innerHTML = `
+                <td>${order.order_code}</td>
+                <td>${customerName}</td>
+                <td>${total}</td>
+                <td>${order.status}</td>
+                <td>${date}</td>
+                <td class="action-buttons">
+                    <!-- Action buttons will be added here -->
+                </td>
+            `;
+
+            // Add action buttons based on status
+            const actionsCell = tr.querySelector('.action-buttons');
+            addActions(actionsCell, order);
+
+            ordersTableBody.appendChild(tr);
+        });
+    }
+
+    function addActions(cell, order) {
+        // Clear previous buttons
+        cell.innerHTML = '';
+
+        if (order.status === 'Menunggu Konfirmasi') {
+            const acceptBtn = createButton('Terima', () => updateOrderStatus(order.id, 'Diterima'));
+            const rejectBtn = createButton('Tolak', () => updateOrderStatus(order.id, 'Ditolak'));
+            cell.append(acceptBtn, rejectBtn);
+        } else if (order.status === 'Diterima') {
+            const shipBtn = createButton('Kirim', () => handleShipping(order.id));
+            cell.append(shipBtn);
+        } else if (order.status === 'Dalam Pengiriman') {
+            const deliveredBtn = createButton('Sudah Tiba', () => updateOrderStatus(order.id, 'Sudah Tiba'));
+            cell.append(deliveredBtn);
+        } else {
+            // No actions for 'Ditolak' or 'Sudah Tiba'
+            cell.textContent = '-';
+        }
+    }
+
+    function createButton(text, onClick) {
+        const button = document.createElement('button');
+        button.textContent = text;
+        button.onclick = onClick;
+        return button;
+    }
+
+    async function updateOrderStatus(orderId, newStatus) {
+        const { error } = await supabase
+            .from('orders')
+            .update({ status: newStatus })
+            .eq('id', orderId);
+
+        if (error) {
+            console.error('Error updating status:', error);
+            alert('Gagal memperbarui status pesanan.');
+        } else {
+            alert('Status pesanan berhasil diperbarui.');
+            fetchOrders(); // Refresh the list
+        }
+    }
+
+    async function handleShipping(orderId) {
+        const receiptNumber = prompt('Masukkan nomor resi pengiriman:');
+        if (receiptNumber && receiptNumber.trim() !== '') {
+            const { error } = await supabase
+                .from('orders')
+                .update({
+                    status: 'Dalam Pengiriman',
+                    shipping_receipt: receiptNumber.trim()
+                })
+                .eq('id', orderId);
+
+            if (error) {
+                console.error('Error updating shipping info:', error);
+                alert('Gagal memperbarui informasi pengiriman.');
+            } else {
+                alert('Informasi pengiriman berhasil diperbarui.');
+                fetchOrders(); // Refresh the list
+            }
+        }
+    }
+
+    // Initial fetch
+    fetchOrders();
 });

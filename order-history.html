@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riwayat Pesanan | Carita Hidroponik</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/my account.css"> <!-- Reusing some styles -->
+    <style>
+        .order-card {
+            background-color: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+        .order-code {
+            font-weight: 700;
+            font-size: 1.1em;
+            color: #333;
+        }
+        .order-status {
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            color: #fff;
+        }
+        .status-menunggu-konfirmasi { background-color: #f39c12; }
+        .status-diterima { background-color: #27ae60; }
+        .status-ditolak { background-color: #c0392b; }
+        .status-dalam-pengiriman { background-color: #3498db; }
+        .status-sudah-tiba { background-color: #2ecc71; }
+
+        .order-body .item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .order-body .item-info {
+            flex-grow: 1;
+        }
+        .order-body .item-name {
+            font-weight: 600;
+        }
+        .order-body .item-qty {
+            color: #777;
+        }
+    </style>
+</head>
+<body x-data @alpine:init="$store.cart.init()">
+    <div id="header-include"></div>
+
+    <main class="main-content my-account">
+        <div class="container">
+            <h1 class="page-title">Riwayat Pesanan Saya</h1>
+            <div class="account-layout">
+                <aside class="account-sidebar">
+                    <nav class="account-nav">
+                        <ul>
+                            <li><a href="my account.html"><i data-feather="user"></i> Profil Saya</a></li>
+                            <li><a href="order-history.html" class="active"><i data-feather="shopping-bag"></i> Riwayat Pesanan</a></li>
+                            <li><a href="#" id="logout-link"><i data-feather="log-out"></i> Keluar</a></li>
+                        </ul>
+                    </nav>
+                </aside>
+
+                <section class="account-main">
+                    <div id="order-list-container">
+                        <!-- Orders will be loaded here by JavaScript -->
+                        <p id="loading-message">Memuat riwayat pesanan...</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <div id="footer-include"></div>
+
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="js/app.js"></script>
+    <script src="js/include.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js" defer></script>
+    <script src="js/script.js"></script>
+
+    <!-- Supabase & Page Logic -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/order-history.js"></script>
+</body>
+</html>
