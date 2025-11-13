@@ -20,6 +20,7 @@ document.addEventListener('alpine:init', () => {
         loading: false,
 
         // --- UI State ---
+        activeView: 'profile', // 'profile' or 'history'
         editProfileMode: false,
         editAddressMode: false,
 
@@ -37,8 +38,17 @@ document.addEventListener('alpine:init', () => {
         selectedDistrict: '',
         selectedVillage: '',
 
+        // --- Order History Data ---
+        orders: [],
+
         // --- Initialization ---
         async init() {
+            // Handle URL params for active view
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('view') === 'history') {
+                this.activeView = 'history';
+            }
+
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) {
                 window.location.href = 'login page.html';
@@ -47,6 +57,7 @@ document.addEventListener('alpine:init', () => {
             this.user = session.user;
             await this.fetchProvinces(); // Fetch provinces first
             await this.getProfile(); // Then get the profile
+            await this.getOrderHistory(); // Fetch order history
 
             this.$watch('editAddressMode', (value) => {
                 if (value) {
@@ -56,6 +67,25 @@ document.addEventListener('alpine:init', () => {
                     });
                 }
             });
+        },
+
+        // --- Order History ---
+        async getOrderHistory() {
+            this.loading = true;
+            try {
+                const { data, error } = await supabase
+                    .from('orders')
+                    .select('*')
+                    .eq('user_id', this.user.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                this.orders = data;
+            } catch (error) {
+                alert('Error fetching order history: ' + error.message);
+            } finally {
+                this.loading = false;
+            }
         },
 
         // --- Map Functionality ---
