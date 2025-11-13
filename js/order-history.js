@@ -1,36 +1,40 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    // Ensure supabase is available
+    // Pastikan Supabase sudah tersedia
     if (!window.supabase) {
-        console.error('Supabase client not found. Make sure supabase-client.js is loaded correctly.');
+        console.error('Supabase client not found. Pastikan supabase-client.js dimuat dengan benar.');
         return;
     }
 
     const orderListContainer = document.getElementById('order-list-container');
     const loadingMessage = document.getElementById('loading-message');
 
+    // --- Autentikasi pengguna ---
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-        window.location.href = 'login page.html';
+        loadingMessage.innerHTML = 'Anda harus masuk untuk melihat riwayat pesanan. Mengalihkan ke halaman login...';
+        setTimeout(() => {
+            window.location.href = 'login page.html';
+        }, 3000);
         return;
     }
     const user = session.user;
 
-    // Function to map status to a CSS class
+    // --- Fungsi status order ---
     function getStatusClass(status) {
         const statusMap = {
             'Menunggu Konfirmasi': 'status-menunggu-konfirmasi',
-            'Diproses': 'status-diterima', // Assuming 'Diterima' class for 'Diproses'
+            'Diproses': 'status-diterima',
             'Ditolak': 'status-ditolak',
             'Dalam Pengiriman': 'status-dalam-pengiriman',
-            'Selesai': 'status-sudah-tiba' // Assuming 'Sudah Tiba' class for 'Selesai'
+            'Selesai': 'status-sudah-tiba'
         };
         return statusMap[status] || 'status-default';
     }
 
-
+    // --- Fungsi render order ---
     function renderOrders(orders) {
-        orderListContainer.innerHTML = ''; // Clear previous content
-        if (orders.length === 0) {
+        orderListContainer.innerHTML = ''; // Kosongkan kontainer
+        if (!orders || orders.length === 0) {
             orderListContainer.innerHTML = '<p>Anda belum memiliki riwayat pesanan.</p>';
             return;
         }
@@ -46,16 +50,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                 year: 'numeric'
             });
 
-            // Generate item list HTML
-            let itemsHtml = '<p>Rincian pesanan tidak tersedia.</p>'; // Default message
+            // Rincian item
+            let itemsHtml = '<p>Rincian pesanan tidak tersedia.</p>';
             if (order.items && Array.isArray(order.items) && order.items.length > 0) {
                 itemsHtml = order.items.map(item => {
-                    // Assuming item format is { name: 'Product Name', quantity: 2 }
-                    // If the format is different, this needs to be adjusted.
                     if (item.name && item.quantity) {
-                        return `<div class="item">${item.name} (x${item.quantity})</div>`;
+                        return `
+                            <div class="item">
+                                <div class="item-info">
+                                    <div class="item-name">${item.name}</div>
+                                    <div class="item-qty">Jumlah: ${item.quantity}</div>
+                                </div>
+                            </div>
+                        `;
                     }
-                    return ''; // Skip invalid items
+                    return '';
                 }).join('');
             }
 
@@ -79,6 +88,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // --- Ambil data orders ---
     async function fetchOrders() {
         try {
             const { data: orders, error } = await supabase
@@ -91,20 +101,24 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             loadingMessage.style.display = 'none';
             renderOrders(orders);
-
         } catch (error) {
             console.error('Error fetching orders:', error);
             loadingMessage.textContent = 'Gagal memuat riwayat pesanan.';
         }
     }
 
-    // Fetch initial orders
+    // Jalankan saat halaman dimuat
     fetchOrders();
 
-    // Subscribe to real-time changes on the orders table
+    // --- Real-time update ---
     const subscription = supabase
         .channel('public:orders')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${user.id}` }, payload => {
+        .on('postgres_changes', {
+            event: '*',
+            schema: 'public',
+            table: 'orders',
+            filter: `user_id=eq.${user.id}`
+        }, payload => {
             console.log('Perubahan terdeteksi, memuat ulang pesanan...', payload);
             fetchOrders();
         })
@@ -112,13 +126,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- Logout Functionality ---
     const logoutButton = document.getElementById('logout-button');
-    logoutButton.addEventListener('click', async () => {
-        try {
-            const { error } = await supabase.auth.signOut();
-            if (error) throw error;
-            window.location.href = 'login page.html';
-        } catch (error) {
-            alert('Error logging out: ' + error.message);
-        }
-    });
+    if (logoutButton) {
+        logoutButton.addEventListener('click', async () => {
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                window.location.href = 'login page.html';
+            } catch (error) {
+                alert('Error logging out: ' + error.message);
+            }
+        });
+    }
 });
