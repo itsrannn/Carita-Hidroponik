@@ -168,13 +168,25 @@ document.addEventListener('alpine:init', () => {
                 if (error) throw error;
                 if (data) {
                     this.profile = { ...this.profile, ...data };
-                    // With provinces pre-loaded, we can now safely find the matching province
                     if (this.profile.province && this.provinces.length > 0) {
                         const province = this.provinces.find(p => p.name === this.profile.province);
                         if (province) {
                             this.selectedProvince = province.id;
                             await this.fetchRegencies();
-                            // Continue for regency, district, and village
+                            const regency = this.regencies.find(r => r.name === this.profile.regency);
+                            if (regency) {
+                                this.selectedRegency = regency.id;
+                                await this.fetchDistricts();
+                                const district = this.districts.find(d => d.name === this.profile.district);
+                                if (district) {
+                                    this.selectedDistrict = district.id;
+                                    await this.fetchVillages();
+                                    const village = this.villages.find(v => v.name === this.profile.village);
+                                    if (village) {
+                                        this.selectedVillage = village.id;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
