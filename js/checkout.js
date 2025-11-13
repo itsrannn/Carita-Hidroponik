@@ -93,7 +93,7 @@ async function processCheckout(profile) {
   const { error } = await supabase.from('orders').insert({
     user_id: user.id,
     order_code: orderCode,
-    order_details: orderDetails,
+    items: orderDetails, // Corrected column name to 'items'
     shipping_address: shippingAddress,
     total_amount: cartTotal,
     status: 'Menunggu Konfirmasi'

@@ -55,6 +55,21 @@
         .order-body .item-qty {
             color: #777;
         }
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        #logout-button {
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--primary-color);
+            color: white;
+        }
     </style>
 </head>
 <body x-data @alpine:init="$store.cart.init()">
@@ -62,19 +77,12 @@
 
     <main class="main-content my-account">
         <div class="container">
-            <h1 class="page-title">Riwayat Pesanan Saya</h1>
+            <div class="page-header">
+                <h1 class="page-title">Riwayat Pesanan Saya</h1>
+                <button id="logout-button" class="button-primary">Keluar</button>
+            </div>
             <div class="account-layout">
-                <aside class="account-sidebar">
-                    <nav class="account-nav">
-                        <ul>
-                            <li><a href="my account.html"><i data-feather="user"></i> Profil Saya</a></li>
-                            <li><a href="order-history.html" class="active"><i data-feather="shopping-bag"></i> Riwayat Pesanan</a></li>
-                            <li><a href="#" id="logout-link"><i data-feather="log-out"></i> Keluar</a></li>
-                        </ul>
-                    </nav>
-                </aside>
-
-                <section class="account-main">
+                <section class="account-main" style="width: 100%;">
                     <div id="order-list-container">
                         <!-- Orders will be loaded here by JavaScript -->
                         <p id="loading-message">Memuat riwayat pesanan...</p>
