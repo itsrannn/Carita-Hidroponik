@@ -1,3 +1,15 @@
+// ================== CART BADGE REFRESH ON BFCACHE ==================
+// Menangani kasus di mana pengguna kembali ke halaman menggunakan back button (bfcache)
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) {
+    // Jika halaman dimuat dari cache, paksa inisialisasi ulang cart store
+    // untuk memastikan badge kuantitas di header selalu up-to-date.
+    if (window.Alpine && Alpine.store('cart')) {
+      Alpine.store('cart').init();
+    }
+  }
+});
+
 // ==================== Data Produk Global ====================
 // **PERUBAHAN:** Data produk dipindah ke sini (menjadi global)
 // agar bisa dibaca oleh script di 'product detail.html'

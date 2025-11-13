@@ -9,6 +9,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       // Jalankan feather icons di dalam header
       if (typeof feather !== "undefined") feather.replace();
 
+      // Re-inisialisasi AlpineJS untuk mengenali komponen di header
+      if (typeof Alpine !== "undefined") Alpine.initTree(headerContainer);
+
     } catch (err) {
       console.error("Gagal memuat header:", err);
     }
