@@ -74,6 +74,18 @@ document.addEventListener("DOMContentLoaded", () => {
   if (typeof feather !== "undefined") feather.replace();
 });
 
+// ================== CART BADGE REFRESH ON BFCACHE ==================
+window.addEventListener('pageshow', (event) => {
+  // Check if the page was loaded from the back-forward cache
+  if (event.persisted) {
+    // If so, re-initialize the cart from localStorage to ensure the badge is up-to-date
+    // This requires Alpine.js and the cart store to be available
+    if (window.Alpine && Alpine.store('cart')) {
+      Alpine.store('cart').init();
+    }
+  }
+});
+
 // ==================== Alpine Store: Products Component ====================
 document.addEventListener("alpine:init", () => {
   Alpine.store("productsComponent", {

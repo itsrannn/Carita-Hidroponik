@@ -166,24 +166,36 @@ document.addEventListener('alpine:init', () => {
                     .single();
 
                 if (error) throw error;
+
                 if (data) {
                     this.profile = { ...this.profile, ...data };
+
+                    // Ensure fetches are sequential to prevent race conditions
                     if (this.profile.province && this.provinces.length > 0) {
                         const province = this.provinces.find(p => p.name === this.profile.province);
                         if (province) {
                             this.selectedProvince = province.id;
-                            await this.fetchRegencies();
-                            const regency = this.regencies.find(r => r.name === this.profile.regency);
-                            if (regency) {
-                                this.selectedRegency = regency.id;
-                                await this.fetchDistricts();
-                                const district = this.districts.find(d => d.name === this.profile.district);
-                                if (district) {
-                                    this.selectedDistrict = district.id;
-                                    await this.fetchVillages();
-                                    const village = this.villages.find(v => v.name === this.profile.village);
-                                    if (village) {
-                                        this.selectedVillage = village.id;
+                            await this.fetchRegencies(); // Wait for regencies to load
+
+                            if (this.profile.regency && this.regencies.length > 0) {
+                                const regency = this.regencies.find(r => r.name === this.profile.regency);
+                                if (regency) {
+                                    this.selectedRegency = regency.id;
+                                    await this.fetchDistricts(); // Wait for districts to load
+
+                                    if (this.profile.district && this.districts.length > 0) {
+                                        const district = this.districts.find(d => d.name === this.profile.district);
+                                        if (district) {
+                                            this.selectedDistrict = district.id;
+                                            await this.fetchVillages(); // Wait for villages to load
+
+                                            if (this.profile.village && this.villages.length > 0) {
+                                                const village = this.villages.find(v => v.name === this.profile.village);
+                                                if (village) {
+                                                    this.selectedVillage = village.id;
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -191,7 +203,8 @@ document.addEventListener('alpine:init', () => {
                     }
                 }
             } catch (error) {
-                alert('Error loading profile: ' + error.message);
+                console.error('Error loading profile:', error);
+                alert('Gagal memuat profil: ' + error.message);
             } finally {
                 this.loading = false;
             }
