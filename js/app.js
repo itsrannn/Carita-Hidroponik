@@ -225,6 +225,16 @@ function renderNewsCards(newsData) {
   container.innerHTML = ""; // bersihkan kontainer dulu
 
   newsData.forEach((news) => {
+    // Create a temporary div to parse the HTML summary and get the plain text
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = news.summary;
+    const summaryText = tempDiv.textContent || tempDiv.innerText || "";
+
+    // Truncate the text
+    const truncatedSummary = summaryText.length > 50
+      ? summaryText.substring(0, 50) + "..."
+      : summaryText;
+
     const card = document.createElement("a");
     card.href = `news detail.html?id=${news.id}`;
     card.classList.add("news-card");
@@ -233,7 +243,7 @@ function renderNewsCards(newsData) {
       <div class="news-card-content">
         <div class="news-card-category">${news.category}</div>
         <h3 class="news-card-title">${news.title}</h3>
-        <p class="news-card-summary">${news.summary}</p>
+        <p class="news-card-summary">${truncatedSummary}</p>
         <div class="news-card-date">${news.date}</div>
       </div>
     `;
