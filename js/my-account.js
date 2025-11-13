@@ -7,19 +7,25 @@ document.addEventListener('alpine:init', () => {
         user: null,
         profile: {
             full_name: '',
-            phone_number: '', // Add phone_number to the profile object
+            phone_number: '',
             address: '',
             postal_code: '',
             province: '',
             regency: '',
             district: '',
-            village: ''
+            village: '',
+            latitude: null,
+            longitude: null,
         },
         loading: false,
 
         // --- UI State ---
         editProfileMode: false,
         editAddressMode: false,
+
+        // --- Map State ---
+        map: null,
+        marker: null,
 
         // --- Regional Data ---
         provinces: [],
@@ -41,6 +47,53 @@ document.addEventListener('alpine:init', () => {
             this.user = session.user;
             await this.fetchProvinces(); // Fetch provinces first
             await this.getProfile(); // Then get the profile
+
+            this.$watch('editAddressMode', (value) => {
+                if (value) {
+                    // Use nextTick to ensure the map container is visible
+                    this.$nextTick(() => {
+                        this.initMap();
+                    });
+                }
+            });
+        },
+
+        // --- Map Functionality ---
+        initMap() {
+            // Default coordinates (e.g., center of Indonesia)
+            const defaultLat = -2.5489;
+            const defaultLng = 118.0149;
+
+            const lat = this.profile.latitude || defaultLat;
+            const lng = this.profile.longitude || defaultLng;
+
+            // Check if map is already initialized
+            if (this.map) {
+                this.map.remove();
+            }
+
+            this.map = L.map('map').setView([lat, lng], 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(this.map);
+
+            this.marker = L.marker([lat, lng], {
+                draggable: true
+            }).addTo(this.map);
+
+            this.marker.on('dragend', (event) => {
+                const position = this.marker.getLatLng();
+                this.profile.latitude = position.lat;
+                this.profile.longitude = position.lng;
+            });
+
+            this.map.on('click', (event) => {
+                const position = event.latlng;
+                this.marker.setLatLng(position);
+                this.profile.latitude = position.lat;
+                this.profile.longitude = position.lng;
+            });
         },
 
         // --- Regional Data Fetching ---
@@ -108,7 +161,7 @@ document.addEventListener('alpine:init', () => {
             try {
                 const { data, error } = await supabase
                     .from('profiles')
-                    .select(`full_name, phone_number, address, postal_code, province, regency, district, village`)
+                    .select(`full_name, phone_number, address, postal_code, province, regency, district, village, latitude, longitude`)
                     .eq('id', this.user.id)
                     .single();
 
@@ -173,6 +226,8 @@ document.addEventListener('alpine:init', () => {
                     regency: regencyName,
                     district: districtName,
                     village: villageName,
+                    latitude: this.profile.latitude,
+                    longitude: this.profile.longitude,
                     updated_at: new Date()
                 }).eq('id', this.user.id).select().single();
 
