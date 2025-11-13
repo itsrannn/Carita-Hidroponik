@@ -17,13 +17,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function fetchOrders() {
         try {
-            // Fetch all orders and join with profiles to get user's full name
+            // Ambil semua pesanan + data profil pelanggan (nama & kontak)
             const { data: orders, error } = await supabase
                 .from('orders')
                 .select(`
                     *,
                     profiles (
-                        full_name
+                        full_name,
+                        phone_number
                     )
                 `)
                 .order('created_at', { ascending: false });
@@ -47,7 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch (error) {
             console.error('Error fetching orders:', error);
             loadingMessage.textContent = 'Gagal memuat pesanan.';
-             showAdminMessage(
+            showAdminMessage(
                 'Gagal Memuat Pesanan',
                 `Terjadi kesalahan saat mengambil data pesanan: <strong>${error.message}</strong><br>` +
                 'Pastikan Anda telah masuk (login) dan memiliki koneksi internet yang stabil. Jika masalah berlanjut, periksa kebijakan RLS Anda.'
@@ -56,28 +57,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function renderOrders(orders) {
-        ordersTableBody.innerHTML = ''; // Clear existing rows
+        ordersTableBody.innerHTML = ''; // Hapus isi tabel sebelumnya
 
         orders.forEach(order => {
             const tr = document.createElement('tr');
 
+            // Ringkasan item
             let summary = 'Tidak ada item';
             const orderItems = order.order_details || order.items;
             if (orderItems && orderItems.length > 0) {
                 summary = orderItems.map(item => `${item.name} (x${item.quantity})`).join(', ');
             }
 
-            // Handle case where profile might be null
-            const customerName = order.profiles && order.profiles.full_name ? order.profiles.full_name : 'Pelanggan tidak ditemukan';
+            // Informasi pelanggan & kontak
+            const profile = order.profiles;
+            const customerInfo = profile
+                ? `${profile.full_name || 'Nama tidak ada'}<br><small>${profile.phone_number || 'No HP tidak ada'}</small>`
+                : 'Pelanggan tidak ditemukan';
 
+            // Template baris tabel
             tr.innerHTML = `
                 <td>${order.order_code || order.id}</td>
-                <td>${customerName}</td>
+                <td>${customerInfo}</td>
                 <td>${summary}</td>
                 <td><span class="status-${order.status.toLowerCase().replace(/\s+/g, '-')}">${order.status}</span></td>
-                <td class="action-buttons">
-                    <!-- Action buttons will be dynamically inserted here -->
-                </td>
+                <td class="action-buttons"></td>
             `;
 
             const actionsCell = tr.querySelector('.action-buttons');
@@ -88,7 +92,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function addActions(cell, order) {
-        cell.innerHTML = ''; // Clear previous buttons
+        cell.innerHTML = ''; // Bersihkan tombol sebelumnya
 
         const statusTransitions = {
             'Menunggu Konfirmasi': ['Diproses', 'Ditolak'],
@@ -126,9 +130,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             alert('Gagal memperbarui status pesanan.');
         } else {
             alert('Status pesanan berhasil diperbarui.');
-            fetchOrders(); // Refresh the list
+            fetchOrders(); // Refresh data
         }
     }
 
+    // Muat data awal
     fetchOrders();
 });
