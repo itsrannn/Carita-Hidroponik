@@ -8,6 +8,7 @@
 
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/my account.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
 </head>
@@ -115,6 +116,12 @@
                   <label for="postalCode">Kode Pos</label>
                   <input type="text" id="postalCode" x-model="profile.postal_code" :disabled="!editAddressMode" />
                 </div>
+                <div class="form-group">
+                  <label>Tandai Lokasi Anda di Peta</label>
+                  <div id="map" style="height: 300px; width: 100%;"></div>
+                  <input type="hidden" id="latitude" x-model="profile.latitude" />
+                  <input type="hidden" id="longitude" x-model="profile.longitude" />
+                </div>
                 <div class="form-actions" x-show="editAddressMode">
                   <button type="submit" class="btn btn-primary" :disabled="loading">
                     <span x-show="!loading">Simpan Alamat</span>
@@ -145,6 +152,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js" defer></script>
   <script src="js/script.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </body>
 
 </html>

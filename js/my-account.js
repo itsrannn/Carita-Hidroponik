@@ -87,6 +87,8 @@ document.addEventListener('alpine:init', () => {
                     regency: this.profile.regency,
                     district: this.profile.district,
                     village: this.profile.village,
+                    latitude: this.profile.latitude,
+                    longitude: this.profile.longitude,
                     updated_at: new Date()
                 }).eq('id', this.user.id).select().single();
 
