@@ -58,11 +58,21 @@ RETURNS boolean AS $$
   );
 $$ LANGUAGE sql SECURITY DEFINER;
 
-CREATE POLICY "Allow admin full access"
+-- Hapus kebijakan "FOR ALL" yang lama dan ambigu
+DROP POLICY IF EXISTS "Allow admin full access" ON public.orders;
+
+-- Kebijakan baru yang lebih eksplisit untuk admin
+CREATE POLICY "Allow admin to view all orders"
 ON public.orders
-FOR ALL
-USING (is_admin())
-WITH CHECK (is_admin());
+FOR SELECT USING (is_admin());
+
+CREATE POLICY "Allow admin to update orders"
+ON public.orders
+FOR UPDATE USING (is_admin()) WITH CHECK (is_admin());
+
+CREATE POLICY "Allow admin to delete orders"
+ON public.orders
+FOR DELETE USING (is_admin());
 
 -- 5. Supabase Realtime setup
 DO $$
