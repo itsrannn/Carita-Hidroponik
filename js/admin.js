@@ -76,6 +76,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ? `${profile.full_name || 'Nama tidak ada'} <br><small>(${profile.phone_number || 'No HP tidak ada'})</small>`
                 : 'Pelanggan tidak ditemukan';
 
+            // Format Alamat
+            let addressInfo = 'Alamat tidak tersedia';
+            if (order.shipping_address) {
+                const addr = order.shipping_address;
+                addressInfo = `
+                    ${addr.full_address || ''}<br>
+                    <small>
+                        ${addr.village || ''}, ${addr.district || ''}<br>
+                        ${addr.regency || ''}, ${addr.province || ''}
+                    </small>
+                `;
+            }
+
             // Format tanggal
             const orderDate = new Date(order.created_at).toLocaleDateString('id-ID', {
                 day: '2-digit', month: 'long', year: 'numeric'
@@ -90,6 +103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="card-body">
                     <p><strong>Tanggal:</strong> ${orderDate}</p>
                     <p><strong>Pelanggan:</strong> ${customerInfo}</p>
+                    <p><strong>Alamat Kirim:</strong><br>${addressInfo}</p>
                     <p><strong>Item:</strong></p>
                     <ul>${itemsList}</ul>
                 </div>
