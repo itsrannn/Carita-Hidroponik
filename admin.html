@@ -57,10 +57,39 @@
             gap: 0.5rem;
             align-items: center;
         }
-        .action-buttons select, .action-buttons input {
-            padding: 0.5rem;
-            border-radius: 6px;
-            border: 1px solid #ccc;
+        /* Modern Admin Buttons */
+        .btn-admin {
+            border: none;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-admin-approve {
+            background-color: var(--accent);
+            color: white;
+        }
+        .btn-admin-approve:hover {
+            background-color: var(--green);
+            transform: translateY(-2px);
+        }
+        .btn-admin-reject {
+            background-color: #fce8e6;
+            color: #c5221f;
+        }
+        .btn-admin-reject:hover {
+            background-color: #f7d5d2;
+            transform: translateY(-2px);
+        }
+        /* Modern Status Badge */
+        .status-badge {
+            font-weight: 600;
+            padding: 0.3rem 0.8rem;
+            border-radius: 50px;
+            font-size: 0.85em;
+            color: #fff;
+            text-transform: capitalize;
         }
     </style>
 </head>

@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ? `${profile.full_name || 'Nama tidak ada'} <br><small>(${profile.phone_number || 'No HP tidak ada'})</small>`
                 : 'Pelanggan tidak ditemukan';
 
-            // Address
+            // Address (versi modern)
             let addressInfo = 'Alamat tidak tersedia';
             if (order.shipping_address) {
                 const addr = order.shipping_address;
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="admin-order-card">
                     <div class="order-header">
                         <h3>Pesanan #${order.order_code || order.id}</h3>
-                        <span class="status status-${order.status.toLowerCase().replace(/\s+/g, '-')}">
+                        <span class="status-badge status-${order.status.toLowerCase().replace(/\s+/g, '-')}">
                             ${order.status}
                         </span>
                     </div>
@@ -154,7 +154,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (availableActions) {
             availableActions.forEach(action => {
-                const actionBtn = createButton(action, () => updateOrderStatus(order, action));
+                const buttonClass = action === 'Ditolak'
+                    ? 'btn-admin-reject'
+                    : 'btn-admin-approve';
+
+                const actionBtn = createButton(
+                    action,
+                    () => updateOrderStatus(order, action),
+                    buttonClass
+                );
+
                 cell.appendChild(actionBtn);
             });
         } else {
@@ -162,15 +171,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    function createButton(text, onClick) {
+    function createButton(text, onClick, a_class) {
         const button = document.createElement('button');
         button.textContent = text;
         button.onclick = onClick;
+        button.className = `btn-admin ${a_class}`;
         return button;
     }
 
     async function updateOrderStatus(order, newStatus) {
-        // Perbaikan utama: gunakan .select() agar cek RLS & data kembali
         const { data, error } = await supabase
             .from('orders')
             .update({ status: newStatus })
@@ -184,23 +193,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (!data || data.length === 0) {
-            console.error('Update failed silently. Likely RLS issue.');
-            alert('Pembaruan gagal: Anda mungkin tidak punya izin untuk mengubah pesanan ini.');
+            console.error('Update failed silently. Likely RLS policy violation.');
+            alert('Pembaruan Gagal: Anda mungkin tidak memiliki izin untuk mengubah pesanan ini.');
             return;
         }
 
         alert('Status pesanan berhasil diperbarui.');
 
-        // Update UI lokal
         order.status = newStatus;
 
         const card = document.getElementById(`order-${order.id}`);
         if (!card) return;
 
-        const statusEl = card.querySelector('.status');
+        const statusEl = card.querySelector('.status-badge');
         if (statusEl) {
             statusEl.textContent = newStatus;
-            statusEl.className = `status status-${newStatus.toLowerCase().replace(/\s+/g, '-')}`;
+            statusEl.className = `status-badge status-${newStatus.toLowerCase().replace(/\s+/g, '-')}`;
         }
 
         const actionsContainer = card.querySelector('.action-buttons');
