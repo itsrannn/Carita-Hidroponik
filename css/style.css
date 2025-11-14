@@ -1266,11 +1266,11 @@ body {
     text-transform: capitalize;
     color: white;
 }
-/* Modern Status Colors */
+/* Status Colors (Final Merge) */
 .status-menunggu-konfirmasi { background-color: #f59e0b; } /* Amber */
 .status-diproses { background-color: #3b82f6; } /* Blue */
 .status-dalam-pengiriman { background-color: #8b5cf6; } /* Violet */
-.status-selesai { background-color: var(--accent); } /* Green */
+.status-selesai { background-color: var(--accent); } /* Accent (Green theme) */
 .status-ditolak { background-color: #ef4444; } /* Red */
 .status-default { background-color: #6b7280; } /* Gray */
 
