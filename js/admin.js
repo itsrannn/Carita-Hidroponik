@@ -66,7 +66,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             let itemsList = '<li>Tidak ada item</li>';
             const orderItems = order.order_details || order.items;
             if (orderItems && orderItems.length > 0) {
-                itemsList = orderItems.map(item => `<li>${item.name} (x${item.quantity})</li>`).join('');
+                itemsList = orderItems.map(item =>
+                    `<li>${item.name} (x${item.quantity})</li>`
+                ).join('');
             }
 
             // Customer
@@ -97,13 +99,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 year: 'numeric'
             });
 
-            // UI Markup
             card.innerHTML = `
                 <div class="admin-order-card">
                     <div class="order-header">
                         <h3>Pesanan #${order.order_code || order.id}</h3>
-                        <span class="status status-${order.status.toLowerCase().replace(/\s+/g, '-')}"
-                        >${order.status}</span>
+                        <span class="status status-${order.status.toLowerCase().replace(/\s+/g, '-')}">
+                            ${order.status}
+                        </span>
                     </div>
 
                     <div class="order-body">
@@ -132,7 +134,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
 
-            // Status Buttons
             const actionsContainer = card.querySelector('.action-buttons');
             addActions(actionsContainer, order);
 
@@ -169,20 +170,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function updateOrderStatus(order, newStatus) {
-        const { error } = await supabase
+        // Perbaikan utama: gunakan .select() agar cek RLS & data kembali
+        const { data, error } = await supabase
             .from('orders')
             .update({ status: newStatus })
-            .eq('id', order.id);
+            .eq('id', order.id)
+            .select();
 
         if (error) {
             console.error('Error updating status:', error);
-            alert('Gagal memperbarui status.');
+            alert(`Gagal memperbarui status pesanan: ${error.message}`);
+            return;
+        }
+
+        if (!data || data.length === 0) {
+            console.error('Update failed silently. Likely RLS issue.');
+            alert('Pembaruan gagal: Anda mungkin tidak punya izin untuk mengubah pesanan ini.');
             return;
         }
 
         alert('Status pesanan berhasil diperbarui.');
 
-        // --- Local UI Update ---
+        // Update UI lokal
         order.status = newStatus;
 
         const card = document.getElementById(`order-${order.id}`);
