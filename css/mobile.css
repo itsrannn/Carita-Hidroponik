@@ -110,4 +110,48 @@
     font-size: 0.9rem;
     max-width: 80%;
   }
+
+  /* My Account & Order History */
+  .my-account .page-title,
+  .order-history .page-title {
+    margin-left: 1rem;
+    margin-right: 1rem;
+  }
+
+  .account-layout {
+    flex-direction: column;
+  }
+
+  /* Product Detail */
+  .product-detail-head {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .product-detail-img {
+    max-width: 80%;
+    margin: 0 auto 1.5rem;
+  }
+
+  .product-detail-info .badge-category {
+    margin: 0 auto;
+  }
+
+  .related-products .products-grid {
+    grid-template-columns: 1fr; /* Reset grid columns */
+    display: flex; /* Gunakan flexbox */
+    overflow-x: auto; /* Aktifkan horizontal scroll */
+    padding-bottom: 1.5rem; /* Beri ruang untuk scrollbar */
+    gap: 1rem;
+  }
+
+  .related-products .product-card {
+    width: 160px; /* Samakan dengan ukuran di index.html */
+    flex-shrink: 0; /* Mencegah card menyusut */
+  }
+
+  /* Sembunyikan scrollbar agar lebih rapi */
+  .related-products .products-grid::-webkit-scrollbar {
+    display: none;
+  }
 }
