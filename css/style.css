@@ -584,8 +584,6 @@ body {
   transition: transform 0.3s, box-shadow 0.3s;
   text-decoration: none;
   color: #111;
-  /* PERUBAHAN 1: Mengurangi min-height untuk kartu yang lebih ringkas */
-  min-height: 440px;
 }
 
 .news-card:hover {
@@ -629,7 +627,6 @@ body {
   display: -webkit-box;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-height: 2.2rem;
 }
 
 .news-card-content p {
