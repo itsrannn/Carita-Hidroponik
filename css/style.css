@@ -1271,7 +1271,7 @@ body {
 .status-diproses { background-color: #3498db; }
 .status-dalam-pengiriman { background-color: #8e44ad; }
 .status-selesai { background-color: var(--accent); }
-.status-dibatalkan { background-color: #e74c3c; }
+.status-ditolak { background-color: #e74c3c; }
 
 
 .order-body {
