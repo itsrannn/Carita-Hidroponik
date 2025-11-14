@@ -61,7 +61,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         orders.forEach(order => {
             const card = document.createElement('div');
-            card.className = 'order-card';
+            card.className = 'admin-order-card'; // Match the inner div for consistency
+            card.id = `order-${order.id}`; // Add unique ID
 
             // Ringkasan item
             let itemsList = '<li>Tidak ada item</li>';
@@ -76,6 +77,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ? `${profile.full_name || 'Nama tidak ada'} <br><small>(${profile.phone_number || 'No HP tidak ada'})</small>`
                 : 'Pelanggan tidak ditemukan';
 
+            // Format Alamat
+            let addressInfo = 'Alamat tidak tersedia';
+            if (order.shipping_address) {
+                const addr = order.shipping_address;
+                // Build the address string piece by piece to avoid "undefined" text
+                const addressParts = [
+                    addr.address, // Street, building, house number
+                    addr.village,
+                    addr.district,
+                    addr.regency,
+                    addr.province,
+                    addr.postal_code
+                ];
+                addressInfo = addressParts.filter(part => part).join(', '); // Filter out null/empty parts and join
+            }
+
             // Format tanggal
             const orderDate = new Date(order.created_at).toLocaleDateString('id-ID', {
                 day: '2-digit', month: 'long', year: 'numeric'
@@ -83,17 +100,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             // Template kartu
             card.innerHTML = `
-                <div class="card-header">
-                    <h3>Pesanan #${order.order_code || order.id}</h3>
-                    <span class="status status-${order.status.toLowerCase().replace(/\s+/g, '-')}">${order.status}</span>
+                <div class="admin-order-card">
+                    <div class="order-header">
+                        <h3>Pesanan #${order.order_code || order.id}</h3>
+                        <span class="status status-${order.status.toLowerCase().replace(/\s+/g, '-')}">${order.status}</span>
+                    </div>
+                    <div class="order-body">
+                        <div class="info-group">
+                            <label>Tanggal</label>
+                            <p>${orderDate}</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Pelanggan</label>
+                            <p>${customerInfo}</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Alamat Kirim</label>
+                            <p>${addressInfo}</p>
+                        </div>
+                        <div class="info-group">
+                            <label>Item</label>
+                            <ul>${itemsList}</ul>
+                        </div>
+                    </div>
+                    <div class="order-footer action-buttons"></div>
                 </div>
-                <div class="card-body">
-                    <p><strong>Tanggal:</strong> ${orderDate}</p>
-                    <p><strong>Pelanggan:</strong> ${customerInfo}</p>
-                    <p><strong>Item:</strong></p>
-                    <ul>${itemsList}</ul>
-                </div>
-                <div class="card-footer action-buttons"></div>
             `;
 
             const actionsContainer = card.querySelector('.action-buttons');
@@ -116,7 +147,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (availableActions) {
             availableActions.forEach(action => {
-                const actionBtn = createButton(action, () => updateOrderStatus(order.id, action));
+                const actionBtn = createButton(action, () => updateOrderStatus(order, action));
                 cell.appendChild(actionBtn);
             });
         } else {
@@ -131,18 +162,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         return button;
     }
 
-    async function updateOrderStatus(orderId, newStatus) {
-        const { error } = await supabase
+    async function updateOrderStatus(order, newStatus) {
+        // Add .select() to the query to get the updated data back
+        const { data, error } = await supabase
             .from('orders')
             .update({ status: newStatus })
-            .eq('id', orderId);
+            .eq('id', order.id)
+            .select();
 
         if (error) {
             console.error('Error updating status:', error);
-            alert('Gagal memperbarui status pesanan.');
-        } else {
-            alert('Status pesanan berhasil diperbarui.');
-            fetchOrders(); // Refresh data
+            alert(`Gagal memperbarui status pesanan: ${error.message}`);
+            return;
+        }
+
+        // If data is null or empty, the update failed silently (likely due to RLS)
+        if (!data || data.length === 0) {
+            console.error('Update failed silently. Likely RLS policy violation.');
+            alert('Pembaruan Gagal: Anda mungkin tidak memiliki izin untuk mengubah pesanan ini. Pastikan Anda adalah admin.');
+            return;
+        }
+
+        // --- If successful, THEN update the UI locally ---
+        alert('Status pesanan berhasil diperbarui.');
+
+        order.status = newStatus;
+        const card = document.getElementById(`order-${order.id}`);
+        if (!card) return;
+
+        const statusEl = card.querySelector('.status');
+        if (statusEl) {
+            statusEl.textContent = newStatus;
+            statusEl.className = `status status-${newStatus.toLowerCase().replace(/\s+/g, '-')}`;
+        }
+
+        const actionsContainer = card.querySelector('.action-buttons');
+        if (actionsContainer) {
+            addActions(actionsContainer, order);
         }
     }
 
