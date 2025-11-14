@@ -23,10 +23,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     function getStatusClass(status) {
         const statusMap = {
             'Menunggu Konfirmasi': 'status-menunggu-konfirmasi',
-            'Diproses': 'status-diterima',
+            'Diproses': 'status-diproses',
             'Ditolak': 'status-ditolak',
             'Dalam Pengiriman': 'status-dalam-pengiriman',
-            'Selesai': 'status-sudah-tiba'
+            'Selesai': 'status-selesai'
         };
         return statusMap[status] || 'status-default';
     }
