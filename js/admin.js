@@ -76,6 +76,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ? `${profile.full_name || 'Nama tidak ada'} <br><small>(${profile.phone_number || 'No HP tidak ada'})</small>`
                 : 'Pelanggan tidak ditemukan';
 
+            // Format Alamat
+            let addressInfo = 'Alamat tidak tersedia';
+            if (order.shipping_address) {
+                const addr = order.shipping_address;
+                // Build the address string piece by piece to avoid "undefined" text
+                const addressParts = [
+                    addr.address, // Street, building, house number
+                    addr.village,
+                    addr.district,
+                    addr.regency,
+                    addr.province,
+                    addr.postal_code
+                ];
+                addressInfo = addressParts.filter(part => part).join(', '); // Filter out null/empty parts and join
+            }
+
             // Format tanggal
             const orderDate = new Date(order.created_at).toLocaleDateString('id-ID', {
                 day: '2-digit', month: 'long', year: 'numeric'
@@ -90,6 +106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div class="card-body">
                     <p><strong>Tanggal:</strong> ${orderDate}</p>
                     <p><strong>Pelanggan:</strong> ${customerInfo}</p>
+                    <p><strong>Alamat Kirim:</strong> ${addressInfo}</p>
                     <p><strong>Item:</strong></p>
                     <ul>${itemsList}</ul>
                 </div>

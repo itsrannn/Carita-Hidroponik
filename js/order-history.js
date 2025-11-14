@@ -23,10 +23,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     function getStatusClass(status) {
         const statusMap = {
             'Menunggu Konfirmasi': 'status-menunggu-konfirmasi',
-            'Diproses': 'status-diterima',
+            'Diproses': 'status-diproses',
             'Ditolak': 'status-ditolak',
             'Dalam Pengiriman': 'status-dalam-pengiriman',
-            'Selesai': 'status-sudah-tiba'
+            'Selesai': 'status-selesai'
         };
         return statusMap[status] || 'status-default';
     }
@@ -69,13 +69,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }).join('');
             }
 
+            const statusText = order.status || 'Belum Diperbarui';
+            const statusClass = getStatusClass(order.status);
+
             orderCard.innerHTML = `
                 <div class="order-header">
                     <div>
                         <div class="order-code">ID Pesanan: ${order.order_code || order.id}</div>
                         <div class="order-date">${orderDate}</div>
                     </div>
-                    <div class="order-status ${getStatusClass(order.status)}">${order.status}</div>
+                    <div class="order-status ${statusClass}">${statusText}</div>
                 </div>
                 <div class="order-body">
                     <strong>Ringkasan Pesanan:</strong>
