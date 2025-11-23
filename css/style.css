@@ -1181,7 +1181,7 @@ body {
 
 /* --- Form Styling --- */
 .form-group {
-  margin-bottom: 1.25rem;
+  margin-bottom: 0rem;
 }
 
 .form-group:last-child {
