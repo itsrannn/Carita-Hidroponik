@@ -215,9 +215,16 @@
                       </article>
                     </a>
                   </template>
+
+                  <!-- Pesan jika tidak ada produk -->
+                  <template x-if="processedItems().length === 0">
+                    <div class="no-products-message" style="text-align: center; padding: 2rem; width: 100%;">
+                      <p>Produk tidak ditemukan. Coba kata kunci atau kategori lain.</p>
+                    </div>
+                  </template>
                 </section>
 
-                <nav class="pagination">
+                <nav class="pagination" x-show="processedItems().length > 0">
                   <a
                     href="#"
                     @click.prevent="goToPage(currentPage - 1)"
