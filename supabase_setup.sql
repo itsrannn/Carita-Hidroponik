@@ -36,11 +36,13 @@ CREATE TABLE IF NOT EXISTS public.orders (
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 
 -- 3. Kebijakan RLS untuk pengguna biasa
+DROP POLICY IF EXISTS "Allow users to view their own orders" ON public.orders;
 CREATE POLICY "Allow users to view their own orders"
 ON public.orders
 FOR SELECT
 USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Allow users to create their own orders" ON public.orders;
 CREATE POLICY "Allow users to create their own orders"
 ON public.orders
 FOR INSERT
@@ -62,14 +64,17 @@ $$ LANGUAGE sql SECURITY DEFINER;
 DROP POLICY IF EXISTS "Allow admin full access" ON public.orders;
 
 -- Kebijakan baru yang lebih eksplisit untuk admin
+DROP POLICY IF EXISTS "Allow admin to view all orders" ON public.orders;
 CREATE POLICY "Allow admin to view all orders"
 ON public.orders
 FOR SELECT USING (is_admin());
 
+DROP POLICY IF EXISTS "Allow admin to update orders" ON public.orders;
 CREATE POLICY "Allow admin to update orders"
 ON public.orders
 FOR UPDATE USING (is_admin()) WITH CHECK (is_admin());
 
+DROP POLICY IF EXISTS "Allow admin to delete orders" ON public.orders;
 CREATE POLICY "Allow admin to delete orders"
 ON public.orders
 FOR DELETE USING (is_admin());
@@ -112,12 +117,14 @@ ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 
 -- 3. Kebijakan RLS untuk Produk
 -- a. Izinkan semua pengguna (termasuk anonim) untuk melihat produk
+DROP POLICY IF EXISTS "Allow public read access to products" ON public.products;
 CREATE POLICY "Allow public read access to products"
 ON public.products
 FOR SELECT
 USING (true);
 
 -- b. Izinkan admin untuk melakukan semua operasi (SELECT, INSERT, UPDATE, DELETE)
+DROP POLICY IF EXISTS "Allow admin full access to products" ON public.products;
 CREATE POLICY "Allow admin full access to products"
 ON public.products
 FOR ALL
