@@ -94,3 +94,37 @@
   margin-bottom: 1rem;
   color: var(--muted);
 }
+
+/* ================== SWIPER SLIDER Kustom ================== */
+.related-product-slider {
+  padding: 0 40px; /* Ruang untuk panah navigasi */
+}
+
+.related-product-slider .swiper-slide {
+  height: auto; /* Agar tinggi slide menyesuaikan konten */
+  display: flex;
+}
+
+.related-product-slider .product-card {
+  width: 100%; /* Pastikan kartu mengisi slide */
+}
+
+.related-product-slider .swiper-button-prev,
+.related-product-slider .swiper-button-next {
+  color: var(--green);
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  box-shadow: 0 2px 8px var(--shadow);
+  transition: background-color 0.2s;
+}
+.related-product-slider .swiper-button-prev:hover,
+.related-product-slider .swiper-button-next:hover {
+  background-color: #ffffff;
+}
+.related-product-slider .swiper-button-prev::after,
+.related-product-slider .swiper-button-next::after {
+  font-size: 1.5rem; /* Ukuran ikon panah */
+  font-weight: 700;
+}
