@@ -179,67 +179,72 @@
                 </label>
               </div>
             </section>
-            <section id="productsGrid" class="products-grid">
-              <template x-for="item in paginatedItems()" :key="item.id">
-                <a
-                  :href="'product detail.html?id=' + item.id"
-                  class="product-link"
-                >
-                  <article class="product-card">
-                    <figure class="product-media">
-                      <img
-                        :src="item.img ? item.img : 'img/general/default.jpg'"
-                        :alt="item.name"
-                      />
-                    </figure>
-                    <div class="product-body">
-                      <h3 class="product-title" x-text="item.name"></h3>
-                      <div class="product-meta">
-                        <div
-                          class="price"
-                          x-text="formatRupiah(item.price)"
-                        ></div>
-                        <button
-                          class="btn-sm add-cart"
-                          @click.prevent.stop="$store.cart.add(item)"
-                        >
-                          <i data-feather="shopping-bag"></i>
-                          Add
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                </a>
-              </template>
-            </section>
+            <!-- Loading Message -->
+            <p x-show="isLoading" class="loading-text" style="text-align: center; padding: 2rem;">Memuat produk...</p>
 
-            <nav class="pagination">
-              <a
-                href="#"
-                @click.prevent="goToPage(currentPage - 1)"
-                x-show="currentPage > 1"
-                aria-label="Previous Page"
-                >&laquo;</a
-              >
+            <div x-show="!isLoading" x-transition>
+                <section id="productsGrid" class="products-grid">
+                  <template x-for="item in paginatedItems()" :key="item.id">
+                    <a
+                      :href="'product detail.html?id=' + item.id"
+                      class="product-link"
+                    >
+                      <article class="product-card">
+                        <figure class="product-media">
+                          <img
+                            :src="item.img ? item.img : 'img/general/default.jpg'"
+                            :alt="item.name"
+                          />
+                        </figure>
+                        <div class="product-body">
+                          <h3 class="product-title" x-text="item.name"></h3>
+                          <div class="product-meta">
+                            <div
+                              class="price"
+                              x-text="formatRupiah(item.price)"
+                            ></div>
+                            <button
+                              class="btn-sm add-cart"
+                              @click.prevent.stop="$store.cart.add(item)"
+                            >
+                              <i data-feather="shopping-bag"></i>
+                              Add
+                            </button>
+                          </div>
+                        </div>
+                      </article>
+                    </a>
+                  </template>
+                </section>
 
-              <template x-for="page in totalPages()" :key="page">
-                <a
-                  href="#"
-                  @click.prevent="goToPage(page)"
-                  :class="{ 'active': page === currentPage }"
-                  x-text="page"
-                  :aria-current="page === currentPage ? 'page' : false"
-                ></a>
-              </template>
+                <nav class="pagination">
+                  <a
+                    href="#"
+                    @click.prevent="goToPage(currentPage - 1)"
+                    x-show="currentPage > 1"
+                    aria-label="Previous Page"
+                    >&laquo;</a
+                  >
 
-              <a
-                href="#"
-                @click.prevent="goToPage(currentPage + 1)"
-                x-show="currentPage < totalPages()"
-                aria-label="Next Page"
-                >&raquo;</a
-              >
-            </nav>
+                  <template x-for="page in totalPages()" :key="page">
+                    <a
+                      href="#"
+                      @click.prevent="goToPage(page)"
+                      :class="{ 'active': page === currentPage }"
+                      x-text="page"
+                      :aria-current="page === currentPage ? 'page' : false"
+                    ></a>
+                  </template>
+
+                  <a
+                    href="#"
+                    @click.prevent="goToPage(currentPage + 1)"
+                    x-show="currentPage < totalPages()"
+                    aria-label="Next Page"
+                    >&raquo;</a
+                  >
+                </nav>
+            </div>
           </main>
         </div>
       </div>
