@@ -111,25 +111,36 @@
 
 .related-product-slider .swiper-button-prev,
 .related-product-slider .swiper-button-next {
-  color: var(--dark-green);
-  background-color: rgba(255, 255, 255, 0.7);
-  border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-  transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+  /* Positioning and size */
   top: 45%;
+  width: 44px;
+  height: 44px;
+
+  /* Icon styling */
+  color: #333; /* Dark gray for the icon, visible on light background */
+
+  /* Background and shape */
+  background-color: transparent; /* No background by default */
+  border-radius: 50%;
+
+  /* Effects */
+  transition: background-color 0.2s ease, color 0.2s ease;
+
+  /* Resetting any previous styles */
+  box-shadow: none;
 }
+
 .related-product-slider .swiper-button-prev:hover,
 .related-product-slider .swiper-button-next:hover {
-  background-color: white;
-  color: var(--green);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  background-color: rgba(255, 255, 255, 0.9); /* White, slightly transparent background on hover */
+  color: var(--green); /* Change icon color on hover */
+  box-shadow: 0 1px 5px rgba(0,0,0,0.1); /* Add a very subtle shadow on hover */
 }
+
 .related-product-slider .swiper-button-prev::after,
 .related-product-slider .swiper-button-next::after {
-  font-size: 1rem;
-  font-weight: 800;
+  font-size: 1.1rem; /* Adjust icon size */
+  font-weight: 700;
 }
 .related-product-slider .swiper-button-prev {
   left: 5px;
