@@ -13,8 +13,13 @@
             background-color: white;
             border-bottom: 1px solid #dee2e6;
             margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .form-card, .product-list-card {
+        .dashboard-header-text h1 { margin: 0; }
+        .dashboard-header-text p { margin: 0; margin-top: 0.25rem; color: #6c757d; }
+        .product-list-card {
             background-color: #fff;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.06);
@@ -22,189 +27,187 @@
             padding: 2rem;
             margin-bottom: 2rem;
         }
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 1.5rem;
-        }
-        @media (min-width: 768px) {
-            .form-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .grid-col-span-2 {
-                grid-column: span 2;
-            }
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-        }
-        .form-group label {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #333;
-        }
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            padding: 0.75rem;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(50, 130, 184, 0.2);
-        }
-        .form-group textarea {
-            min-height: 120px;
-            resize: vertical;
-        }
-        .btn-submit {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            justify-self: start;
-        }
-        .btn-submit:hover {
-            background-color: var(--dark-primary);
-        }
+        .product-table-wrapper { overflow-x: auto; }
+        .product-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; }
+        .product-table thead th { padding: 1rem; background-color: #f8f9fa; font-weight: 600; color: #495057; border-bottom: 2px solid #dee2e6; }
+        .product-table tbody tr { border-bottom: 1px solid #dee2e6; }
+        .product-table tbody tr:last-child { border-bottom: none; }
+        .product-table tbody td { padding: 1rem; vertical-align: middle; color: #212529; }
+        .product-table .product-image { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
+        .product-table .product-name { font-weight: 600; }
+        .product-table .action-buttons { display: flex; gap: 0.5rem; }
+        .btn-edit, .btn-delete { border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background-color 0.2s, color 0.2s; font-size: 0.9rem; }
+        .btn-edit { background-color: #e7f3ff; color: #0d6efd; }
+        .btn-edit:hover { background-color: #d0e7ff; }
+        .btn-delete { background-color: #fce8e6; color: #c5221f; }
+        .btn-delete:hover { background-color: #f7d5d2; }
+        .btn-add { background-color: var(--primary); color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
+        .btn-add:hover { background-color: var(--dark-primary); }
 
-        /* Product List */
-        .product-list-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.5rem;
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
         }
-        .product-card {
-            border: 1px solid #eee;
+        .modal-content {
+            background-color: white;
             border-radius: 12px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            transition: box-shadow 0.2s;
-        }
-        .product-card:hover {
-            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-        }
-        .product-card img {
-            width: 100%;
-            height: 200px;
-            object-fit: cover;
-        }
-        .product-card-content {
-            padding: 1rem;
-            flex-grow: 1;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
             display: flex;
             flex-direction: column;
         }
-        .product-card-content h3 {
-            margin: 0 0 0.5rem 0;
-            font-size: 1.1rem;
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .product-card-content p {
-            margin: 0 0 1rem 0;
-            color: #555;
-            font-weight: 600;
-        }
-        .product-card-actions {
-            margin-top: auto;
-        }
-        .btn-delete {
-            background-color: #fce8e6;
-            color: #c5221f;
-            border: none;
-            padding: 0.6rem 1rem;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            transition: background-color 0.2s;
-        }
-        .btn-delete:hover {
-            background-color: #f7d5d2;
+        .modal-header h2 { margin: 0; }
+        .modal-body { padding: 1.5rem; overflow-y: auto; }
+        .modal-footer { padding: 1.5rem; border-top: 1px solid #dee2e6; display: flex; justify-content: flex-end; gap: 1rem; }
+        .btn-close, .btn-cancel { border: 1px solid #ccc; background-color: #fff; color: #333; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-submit { background-color: var(--primary); color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .form-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        @media (min-width: 768px) { .form-grid { grid-template-columns: repeat(2, 1fr); } .grid-col-span-2 { grid-column: span 2; } }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-weight: 600; margin-bottom: 0.5rem; color: #333; }
+        .form-group input, .form-group select, .form-group textarea { padding: 0.75rem; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
+        .form-group textarea { min-height: 120px; resize: vertical; }
+
+        @media (max-width: 768px) {
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            .product-table thead {
+                display: none;
+            }
+            .product-table, .product-table tbody, .product-table tr, .product-table td {
+                display: block;
+                width: 100%;
+            }
+            .product-table tr {
+                margin-bottom: 1rem;
+                border: 1px solid #dee2e6;
+                border-radius: 8px;
+                padding: 0.5rem;
+            }
+            .product-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.75rem;
+                border: none;
+                border-bottom: 1px solid #e9ecef;
+            }
+            .product-table td:last-child {
+                border-bottom: none;
+            }
+            .product-table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                margin-right: 1rem;
+                color: #495057;
+            }
         }
     </style>
 </head>
-<body>
+<body x-data="productAdmin()">
 
     <div id="header-include"></div>
 
     <main class="main-content">
         <div class="container">
             <div class="dashboard-header">
-                <h1 class="page-title">Manajemen Produk</h1>
-                <p>Tambah atau hapus produk yang ditampilkan di toko.</p>
-                <div style="margin-top: 1rem;">
-                    <a href="admin.html" class="btn">&larr; Kembali ke Manajemen Pesanan</a>
+                <div class="dashboard-header-text">
+                    <h1 class="page-title">Manajemen Produk</h1>
+                    <p>Tambah, edit, atau hapus produk yang ditampilkan di toko.</p>
                 </div>
+                 <button @click="openAddModal()" class="btn-add">+ Tambah Produk Baru</button>
             </div>
 
-            <!-- Add Product Form -->
-            <div class="form-card">
-                <h2>Tambah Produk Baru</h2>
-                <form id="add-product-form" class="form-grid">
-                    <div class="form-group">
-                        <label for="product-name">Nama Produk</label>
-                        <input type="text" id="product-name" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="product-category">Kategori</label>
-                        <select id="product-category" required>
-                            <option value="benih">Benih</option>
-                            <option value="nutrisi">Nutrisi</option>
-                            <option value="media">Media Tanam</option>
-                            <option value="peralatan">Peralatan</option>
-                            <option value="promo">Promo</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="product-price">Harga (Rp)</label>
-                        <input type="number" id="product-price" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="product-image">Gambar Produk</label>
-                        <input type="file" id="product-image" accept="image/*" required>
-                    </div>
-                    <div class="form-group grid-col-span-2">
-                        <label for="product-char">Karakteristik</label>
-                        <textarea id="product-char" placeholder="Contoh: 1 pack berisi ±12 biji, Super Pedas, Panen ±90 hari"></textarea>
-                    </div>
-                    <div class="form-group grid-col-span-2">
-                        <label for="product-description">Deskripsi Lengkap</label>
-                        <textarea id="product-description" required></textarea>
-                    </div>
-                    <div class="form-group grid-col-span-2">
-                        <button type="submit" class="btn-submit">Tambah Produk</button>
-                    </div>
-                </form>
-                 <div id="admin-message-container" class="message-container" style="display: none; margin-top: 1rem;"></div>
-            </div>
-
-            <!-- Product List -->
             <div class="product-list-card">
                 <h2>Daftar Produk</h2>
-                <div id="product-list-grid" class="product-list-grid">
-                    <!-- Products will be loaded here by JS -->
+                <div class="product-table-wrapper">
+                    <table class="product-table">
+                        <thead>
+                            <tr><th>Gambar</th><th>Produk</th><th>Kategori</th><th>Harga</th><th>Aksi</th></tr>
+                        </thead>
+                        <tbody id="product-list-body"></tbody>
+                    </table>
                 </div>
                 <p id="loading-message">Memuat produk...</p>
+                <div id="admin-message-container" class="message-container" style="display: none; margin-top: 1rem;"></div>
             </div>
-
         </div>
     </main>
 
+    <!-- Product Form Modal -->
+    <div x-show="isModalOpen" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="modal-overlay" @click.self="closeModal()" style="display: none;">
+        <div class="modal-content" @click.stop>
+            <div class="modal-header">
+                <h2 x-text="modalMode === 'add' ? 'Tambah Produk Baru' : 'Edit Produk'"></h2>
+                <button @click="closeModal()" class="btn-close">&times;</button>
+            </div>
+            <form id="add-product-form">
+                <div class="modal-body">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="product-name">Nama Produk</label>
+                            <input type="text" id="product-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-category">Kategori</label>
+                            <select id="product-category" required>
+                                <option value="benih">Benih</option>
+                                <option value="nutrisi">Nutrisi</option>
+                                <option value="media">Media Tanam</option>
+                                <option value="peralatan">Peralatan</option>
+                                <option value="promo">Promo</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-price">Harga (Rp)</label>
+                            <input type="number" id="product-price" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="product-image">Gambar Produk</label>
+                            <input type="file" id="product-image" accept="image/*">
+                        </div>
+                        <div class="form-group grid-col-span-2">
+                            <label for="product-char">Karakteristik</label>
+                            <textarea id="product-char" placeholder="Contoh: 1 pack berisi ±12 biji, Super Pedas, Panen ±90 hari"></textarea>
+                        </div>
+                        <div class="form-group grid-col-span-2">
+                            <label for="product-description">Deskripsi Lengkap</label>
+                            <textarea id="product-description" required></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" @click="closeModal()" class="btn-cancel">Batal</button>
+                    <button type="submit" class="btn-submit" x-text="modalMode === 'add' ? 'Tambah Produk' : 'Simpan Perubahan'"></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
     <div id="footer-include"></div>
 
-    <!-- Scripts -->
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
