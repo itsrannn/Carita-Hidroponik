@@ -78,7 +78,7 @@
 
           <div class="slider-dots"></div>
         </div>
-        <div class="layout container" x-data="products()" x-init="init()">
+        <div class="layout container" x-data="products" x-init="init()">
           <aside class="sidebar" id="categorySidebar">
             <div class="sidebar-header">
               <h4>Kategori Produk</h4>
@@ -272,14 +272,15 @@
 
     <script src="https://unpkg.com/feather-icons"></script>
 
+    <!-- Urutan Pemuatan Skrip yang Benar -->
+    <!-- 1. Klien Supabase (untuk koneksi DB) -->
+    <script src="js/supabase-client.js"></script>
+    <!-- 2. Alpine.js (harus ada sebelum app.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js" defer></script>
+    <!-- 3. Skrip Aplikasi Utama (tergantung Supabase & Alpine) -->
     <script src="js/app.js"></script>
+    <!-- 4. Skrip lain-lain -->
     <script src="js/include.js"></script>
-
-    <script
-      src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js"
-      defer
-    ></script>
-
     <script src="js/script.js"></script>
 
     <script>

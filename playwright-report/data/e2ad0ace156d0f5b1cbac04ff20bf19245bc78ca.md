@@ -1,0 +1,142 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - link "Carita Hidroponik" [ref=e6] [cursor=pointer]:
+        - /url: index.html
+        - img "Carita Hidroponik" [ref=e7]
+      - generic [ref=e8]:
+        - button "Account" [ref=e10] [cursor=pointer]:
+          - img [ref=e11]
+        - button "Cart" [ref=e14] [cursor=pointer]:
+          - img [ref=e15]
+  - generic [ref=e20]:
+    - generic [ref=e21]:
+      - generic [ref=e22]:
+        - img "Promo Diskon 12.12" [ref=e23]
+        - generic [ref=e24]:
+          - heading "DISKON 30% UNTUK SEMUA BENIH!" [level=1] [ref=e25]
+          - paragraph [ref=e26]: Rayakan panen akhir tahun dengan benih unggul terbaik.
+          - link "Lihat Benih" [ref=e27] [cursor=pointer]:
+            - /url: "#Product"
+      - button "Previous Slide" [ref=e28] [cursor=pointer]:
+        - img [ref=e29]
+      - button "Next Slide" [ref=e31] [cursor=pointer]:
+        - img [ref=e32]
+    - generic [ref=e34]:
+      - complementary [ref=e35]:
+        - generic [ref=e36]:
+          - heading "Kategori Produk" [level=4] [ref=e37]
+          - button "−" [expanded] [ref=e38] [cursor=pointer]
+        - navigation [ref=e39]:
+          - list [ref=e40]:
+            - listitem [ref=e41]:
+              - link "Semua Produk" [ref=e42] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e43]:
+              - link "Benih" [ref=e44] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e45]:
+              - link "Nutrisi & Pupuk" [ref=e46] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e47]:
+              - link "Media Tanam" [ref=e48] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e49]:
+              - link "Peralatan" [ref=e50] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e51]:
+              - link "Promo & Bundling" [ref=e52] [cursor=pointer]:
+                - /url: "#"
+        - paragraph [ref=e54]:
+          - text: Butuh bantuan?
+          - link "Hubungi kami" [ref=e55] [cursor=pointer]:
+            - /url: contact.html
+      - main [ref=e56]:
+        - generic [ref=e57]:
+          - searchbox [ref=e58]
+          - img [ref=e60] [cursor=pointer]
+        - generic [ref=e63]:
+          - generic [ref=e64]:
+            - heading "Produk Unggulan" [level=1] [ref=e65]
+            - paragraph [ref=e66]: Pilihan terbaik untuk kebun hidroponik dan hobi berkebun.
+          - generic [ref=e68]:
+            - generic [ref=e69]: Sort by
+            - combobox "Sort by" [ref=e70] [cursor=pointer]:
+              - option "Default" [selected]
+              - option "Price ↑"
+              - option "Price ↓"
+  - generic [ref=e71]:
+    - heading "🌱 Status Berita & Tutorial Terbaru" [level=2] [ref=e72]
+    - generic [ref=e73]:
+      - link "5 Langkah Mudah Menanam Cabai Carolina Hidroponik untuk Pemula Tutorial 5 Langkah Mudah Menanam Cabai Carolina Hidroponik untuk Pemula Cabai Carolina Reaper dikenal sebagai cabai terpe... 10 Nov 2025" [ref=e74] [cursor=pointer]:
+        - /url: news detail.html?id=1
+        - img "5 Langkah Mudah Menanam Cabai Carolina Hidroponik untuk Pemula" [ref=e75]
+        - generic [ref=e76]:
+          - generic [ref=e77]: Tutorial
+          - heading "5 Langkah Mudah Menanam Cabai Carolina Hidroponik untuk Pemula" [level=3] [ref=e78]
+          - paragraph [ref=e79]: Cabai Carolina Reaper dikenal sebagai cabai terpe...
+          - generic [ref=e80]: 10 Nov 2025
+      - 'link "Nutrisi AB Mix: Rahasia Pertumbuhan Cepat Tanaman Hidroponik Berita Nutrisi AB Mix: Rahasia Pertumbuhan Cepat Tanaman Hidroponik Nutrisi AB Mix adalah kunci utama pertumbuhan tan... 9 Nov 2025" [ref=e81] [cursor=pointer]':
+        - /url: news detail.html?id=2
+        - 'img "Nutrisi AB Mix: Rahasia Pertumbuhan Cepat Tanaman Hidroponik" [ref=e82]'
+        - generic [ref=e83]:
+          - generic [ref=e84]: Berita
+          - 'heading "Nutrisi AB Mix: Rahasia Pertumbuhan Cepat Tanaman Hidroponik" [level=3] [ref=e85]'
+          - paragraph [ref=e86]: Nutrisi AB Mix adalah kunci utama pertumbuhan tan...
+          - generic [ref=e87]: 9 Nov 2025
+      - link "Cara Menyilangkan Cabai Super Pedas untuk Hasil Unik dan Lebih Tahan Hama Tips & Pengetahuan Cara Menyilangkan Cabai Super Pedas untuk Hasil Unik dan Lebih Tahan Hama Persilangan cabai (hybridisasi) adalah teknik men... 8 Nov 2025" [ref=e88] [cursor=pointer]:
+        - /url: news detail.html?id=3
+        - img "Cara Menyilangkan Cabai Super Pedas untuk Hasil Unik dan Lebih Tahan Hama" [ref=e89]
+        - generic [ref=e90]:
+          - generic [ref=e91]: Tips & Pengetahuan
+          - heading "Cara Menyilangkan Cabai Super Pedas untuk Hasil Unik dan Lebih Tahan Hama" [level=3] [ref=e92]
+          - paragraph [ref=e93]: Persilangan cabai (hybridisasi) adalah teknik men...
+          - generic [ref=e94]: 8 Nov 2025
+  - generic [ref=e95]:
+    - heading "Tentang Carita Hidroponik" [level=2] [ref=e96]
+    - paragraph [ref=e97]: Carita Hidroponik menyediakan benih, nutrisi, dan perlengkapan hidroponik berkualitas untuk pemula dan profesional.
+  - contentinfo [ref=e99]:
+    - generic [ref=e100]:
+      - generic [ref=e101]:
+        - img "Carita Hidroponik" [ref=e102]
+        - paragraph [ref=e103]: Carita Hidroponik adalah penyedia benih, nutrisi, dan perlengkapan hidroponik terpercaya. Kami mendukung para petani dan penghobi untuk hasil panen terbaik.
+      - generic [ref=e104]:
+        - heading "Menu" [level=4] [ref=e105]
+        - list [ref=e106]:
+          - listitem [ref=e107]:
+            - link "Home" [ref=e108] [cursor=pointer]:
+              - /url: index.html
+          - listitem [ref=e109]:
+            - link "Produk" [ref=e110] [cursor=pointer]:
+              - /url: index.html
+          - listitem [ref=e111]:
+            - link "Akun Saya" [ref=e112] [cursor=pointer]:
+              - /url: my account.html
+          - listitem [ref=e113]:
+            - link "About Us" [ref=e114] [cursor=pointer]:
+              - /url: contact.html
+      - generic [ref=e115]:
+        - heading "Kontak Kami" [level=4] [ref=e116]
+        - paragraph [ref=e117]:
+          - text: "Email:"
+          - link "info@caritahidroponik.com" [ref=e118] [cursor=pointer]:
+            - /url: mailto:info@caritahidroponik.com
+        - paragraph [ref=e119]:
+          - text: "WhatsApp:"
+          - link "+62 821-3969-8804" [ref=e120] [cursor=pointer]:
+            - /url: https://wa.me/628213969880
+        - generic [ref=e121]:
+          - link [ref=e122] [cursor=pointer]:
+            - /url: "#"
+            - img [ref=e123]
+          - link [ref=e126] [cursor=pointer]:
+            - /url: "#"
+            - img [ref=e127]
+          - link [ref=e129] [cursor=pointer]:
+            - /url: "#"
+            - img [ref=e130]
+    - paragraph [ref=e134]: © 2025 Carita Hidroponik — All Rights Reserved.
+```

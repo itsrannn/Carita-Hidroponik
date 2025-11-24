@@ -1,7 +1,22 @@
-// ==================== Data Produk Global (DEPRECATED) ====================
-// Data produk sekarang diambil dari database Supabase.
-// Array 'allProducts' ini tidak lagi digunakan.
-// const allProducts = [ ... ];
+// ==================== Data Produk Global ====================
+// **PERUBAHAN:** Data produk sekarang diambil dari Supabase
+async function fetchProducts() {
+  try {
+    const { data, error } = await window.supabase
+      .from("products")
+      .select("*")
+      .order("id", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching products:", error);
+      return [];
+    }
+    return data;
+  } catch (err) {
+    console.error("Unexpected error fetching products:", err);
+    return [];
+  }
+}
 
 // ==================== Data Berita Global ====================
 const allNews = 
@@ -135,109 +150,101 @@ document.addEventListener("DOMContentLoaded", () => {
   if (typeof feather !== "undefined") feather.replace();
 });
 
-// ==================== Alpine.js Product Data ====================
-// Variabel global untuk kompatibilitas halaman detail produk
-let allProducts = [];
+// ==================== Alpine.js Setup ====================
+document.addEventListener("alpine:init", () => {
+  // --- Alpine Store: Cart ---
+  Alpine.store("cart", {
+    items: [],
+    total: 0,
+    quantity: 0,
+    init() {
+      this.items = JSON.parse(localStorage.getItem("cartItems")) || [];
+      this.updateTotalsAndSave();
+    },
+    add(newItem) {
+      const existing = this.items.find((item) => item.id === newItem.id);
+      if (existing) {
+        existing.quantity++;
+      } else {
+        this.items.push({ ...newItem, quantity: 1 });
+      }
+      this.updateTotalsAndSave();
+    },
+    remove(id, force = false) {
+      const item = this.items.find((i) => i.id === id);
+      if (!item) return;
+      if (force || item.quantity === 1) {
+        this.items = this.items.filter((i) => i.id !== id);
+      } else {
+        item.quantity--;
+      }
+      this.updateTotalsAndSave();
+    },
+    updateTotalsAndSave() {
+      this.quantity = this.items.reduce((sum, i) => sum + i.quantity, 0);
+      this.total = this.items.reduce(
+        (sum, i) => sum + i.price * i.quantity,
+        0
+      );
+      localStorage.setItem("cartItems", JSON.stringify(this.items));
+    },
+  });
 
-window.products = function () {
-  return {
+  // --- Alpine Component: Products ---
+  Alpine.data("products", () => ({
     searchTerm: "",
     currentPage: 1,
     itemsPerPage: 8,
     selectedCategory: "all",
     sortOption: "default",
     items: [],
-    isLoading: true, // Tambahkan state loading
-
-    // --- PERUBAHAN: Fungsi init mengambil data dari Supabase ---
+    isLoading: true,
     async init() {
-      // Pastikan supabase client sudah siap
-      if (!window.supabase) {
-        console.error("Supabase client not initialized.");
-        this.isLoading = false;
-        return;
-      }
-
-      const { data, error } = await window.supabase
-        .from('products')
-        .select('*')
-        .order('name', { ascending: true });
-
+      this.isLoading = true;
+      this.items = await fetchProducts();
       this.isLoading = false;
+      this.$nextTick(() => feather.replace());
 
-      if (error) {
-        console.error('Error fetching products:', error);
-        return;
-      }
-
-      // Mapping untuk kompatibilitas dengan template (img & desc)
-      const mappedData = data.map(p => ({ ...p, img: p.image_url, desc: p.description }));
-
-      this.items = mappedData;
-      allProducts = mappedData; // Isi variabel global
-
-      // Watchers untuk filter
-      const updateAndRefreshIcons = () => {
+      const updateAndRefresh = () => {
         this.currentPage = 1;
         this.$nextTick(() => feather.replace());
       };
 
-      this.$watch("selectedCategory", updateAndRefreshIcons);
-      this.$watch("searchTerm", updateAndRefreshIcons);
-      this.$watch("sortOption", updateAndRefreshIcons);
+      this.$watch("selectedCategory", updateAndRefresh);
+      this.$watch("searchTerm", updateAndRefresh);
+      this.$watch("sortOption", updateAndRefresh);
     },
-    // --- AKHIR PERUBAHAN ---
-
     formatRupiah(value) {
       if (!value) return "Rp 0";
       return "Rp " + value.toLocaleString("id-ID");
     },
-
-    // REFACTOR: Menggabungkan logika filter dan sort ke dalam satu computed property
-    // untuk kejelasan dan memastikan urutan operasi yang benar.
     processedItems() {
-      // Selalu mulai dengan salinan lengkap dari semua item produk
       let processed = [...this.items];
-
-      // 1. Filter berdasarkan kategori yang dipilih
       if (this.selectedCategory !== "all") {
         processed = processed.filter(
           (item) => item.category === this.selectedCategory
         );
       }
-
-      // 2. Filter berdasarkan kata kunci pencarian
       if (this.searchTerm.trim() !== "") {
         processed = processed.filter((item) =>
           item.name.toLowerCase().includes(this.searchTerm.toLowerCase())
         );
       }
-
-      // 3. Lakukan pengurutan (sorting) berdasarkan opsi yang dipilih
-      // Operasi pengurutan dilakukan setelah pemfilteran agar lebih efisien
       if (this.sortOption === "price-asc") {
         processed.sort((a, b) => a.price - b.price);
       } else if (this.sortOption === "price-desc") {
         processed.sort((a, b) => b.price - a.price);
       }
-
-      // Kembalikan item yang sudah diproses (difilter dan diurutkan)
-      // Logika paginasi akan diterapkan pada hasil dari fungsi ini
       return processed;
     },
-
     paginatedItems() {
       const start = (this.currentPage - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
-      // Langsung slice dari data yang sudah diproses (filter + sort)
       return this.processedItems().slice(start, end);
     },
-
     totalPages() {
-      // Kalkulasi total halaman berdasarkan data yang sudah diproses
       return Math.ceil(this.processedItems().length / this.itemsPerPage);
     },
-
     goToPage(page) {
       if (page >= 1 && page <= this.totalPages()) {
         this.currentPage = page;
@@ -245,74 +252,10 @@ window.products = function () {
         this.$nextTick(() => feather.replace());
       }
     },
-  };
-};
+  }));
 
-// ==================== Alpine Store: Cart ====================
-document.addEventListener("alpine:init", () => {
-  Alpine.store("cart", {
-    items: [],
-    total: 0,
-    quantity: 0,
-
-    init() {
-      // Load from localStorage and then calculate totals
-      this.items = JSON.parse(localStorage.getItem('cartItems')) || [];
-      this.updateTotalsAndSave();
-    },
-
-    add(newItem) {
-      const existing = this.items.find((item) => item.id === newItem.id);
-
-      if (existing) {
-        existing.quantity++;
-      } else {
-        // Add new item with quantity 1
-        this.items.push({ ...newItem, quantity: 1 });
-      }
-      this.updateTotalsAndSave();
-    },
-
-    remove(id, force = false) {
-      const item = this.items.find((i) => i.id === id);
-      if (!item) return;
-
-      // If force is true (from trash button) or quantity is 1, remove the item
-      if (force || item.quantity === 1) {
-        this.items = this.items.filter((i) => i.id !== id);
-      } else {
-        // Otherwise, just decrement the quantity
-        item.quantity--;
-      }
-      this.updateTotalsAndSave();
-    },
-
-    updateTotalsAndSave() {
-      // Calculate total quantity and price
-      this.quantity = this.items.reduce((sum, i) => sum + i.quantity, 0);
-      this.total = this.items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
-
-      // Save to localStorage
-      localStorage.setItem('cartItems', JSON.stringify(this.items));
-    },
-  });
-
-  // ==================== Search Box ====================
-  // (Kode ini dibiarkan apa adanya, meski watcher di init() juga menangani search)
-  document.addEventListener("DOMContentLoaded", () => {
-    const searchBox = document.querySelector("#search-box-home");
-    if (searchBox) {
-      searchBox.addEventListener("input", (e) => {
-        const productsComponent = Alpine.store("productsComponent");
-        if (productsComponent) {
-          productsComponent.searchTerm = e.target.value;
-          productsComponent.currentPage = 1;
-        }
-      });
-    }
-  });
-
-  // ==================== Hero Slider Logic ====================
+  // --- Hero Slider Initialization ---
+  // Ditjalankan di sini agar DOM dijamin sudah siap
   initHeroSlider();
 });
 
