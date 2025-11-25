@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Carita Hidroponik</title>
+    <link rel="icon" href="img/Logo.jpg" type="image/jpg" />
 
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/mobile.css" media="(max-width: 768px)" />
@@ -81,7 +82,66 @@
 
           <div class="slider-dots"></div>
         </div>
-        <div class="layout container" x-data="products()" x-init="init()">
+        <script>
+          function products() {
+            return {
+              searchTerm: "",
+              currentPage: 1,
+              itemsPerPage: 8,
+              selectedCategory: "all",
+              sortOption: "default",
+              init() {
+                this.$watch("currentPage", () => {
+                  this.$nextTick(() => feather.replace());
+                });
+              },
+              formatRupiah(value) {
+                if (!value) return "Rp 0";
+                return "Rp " + value.toLocaleString("id-ID");
+              },
+              get items() {
+                return Alpine.store("products").all;
+              },
+              get isLoading() {
+                return Alpine.store("products").isLoading;
+              },
+              processedItems() {
+                let processed = [...this.items];
+                if (this.selectedCategory !== "all") {
+                  processed = processed.filter(
+                    (item) => item.category === this.selectedCategory
+                  );
+                }
+                if (this.searchTerm.trim() !== "") {
+                  processed = processed.filter((item) =>
+                    item.name.toLowerCase().includes(this.searchTerm.toLowerCase())
+                  );
+                }
+                if (this.sortOption === "price-asc") {
+                  processed.sort((a, b) => a.price - b.price);
+                } else if (this.sortOption === "price-desc") {
+                  processed.sort((a, b) => b.price - a.price);
+                }
+                return processed;
+              },
+              paginatedItems() {
+                const start = (this.currentPage - 1) * this.itemsPerPage;
+                const end = start + this.itemsPerPage;
+                return this.processedItems().slice(start, end);
+              },
+              totalPages() {
+                return Math.ceil(this.processedItems().length / this.itemsPerPage);
+              },
+              goToPage(page) {
+                if (page >= 1 && page <= this.totalPages()) {
+                  this.currentPage = page;
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }
+              },
+            }
+          }
+        </script>
+        <div class="layout container" x-data="products()">
           <aside class="sidebar" id="categorySidebar">
             <div class="sidebar-header">
               <h4>Kategori Produk</h4>
@@ -195,7 +255,7 @@
                       <article class="product-card">
                         <figure class="product-media">
                           <img
-                            :src="item.img ? item.img : 'img/general/default.jpg'"
+                            :src="item.img ? item.img : 'img/coming soon.jpg'"
                             :alt="item.name"
                           />
                         </figure>
@@ -282,65 +342,5 @@
     <script src="js/main.js" defer></script>
     <script src="js/include.js" defer></script>
     <script src="js/script.js" defer></script>
-
-    <script>
-      function products() {
-        return {
-          searchTerm: "",
-          currentPage: 1,
-          itemsPerPage: 8,
-          selectedCategory: "all",
-          sortOption: "default",
-          init() {
-            this.$watch("currentPage", () => {
-              this.$nextTick(() => feather.replace());
-            });
-          },
-          formatRupiah(value) {
-            if (!value) return "Rp 0";
-            return "Rp " + value.toLocaleString("id-ID");
-          },
-          get items() {
-            return Alpine.store("products").all;
-          },
-          get isLoading() {
-            return Alpine.store("products").isLoading;
-          },
-          processedItems() {
-            let processed = [...this.items];
-            if (this.selectedCategory !== "all") {
-              processed = processed.filter(
-                (item) => item.category === this.selectedCategory
-              );
-            }
-            if (this.searchTerm.trim() !== "") {
-              processed = processed.filter((item) =>
-                item.name.toLowerCase().includes(this.searchTerm.toLowerCase())
-              );
-            }
-            if (this.sortOption === "price-asc") {
-              processed.sort((a, b) => a.price - b.price);
-            } else if (this.sortOption === "price-desc") {
-              processed.sort((a, b) => b.price - a.price);
-            }
-            return processed;
-          },
-          paginatedItems() {
-            const start = (this.currentPage - 1) * this.itemsPerPage;
-            const end = start + this.itemsPerPage;
-            return this.processedItems().slice(start, end);
-          },
-          totalPages() {
-            return Math.ceil(this.processedItems().length / this.itemsPerPage);
-          },
-          goToPage(page) {
-            if (page >= 1 && page <= this.totalPages()) {
-              this.currentPage = page;
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }
-          },
-        }
-      }
-    </script>
   </body>
 </html>

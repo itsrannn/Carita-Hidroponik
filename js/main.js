@@ -72,4 +72,8 @@ document.addEventListener("alpine:init", () => {
         return this.items.reduce((total, item) => total + item.quantity, 0);
     }
   });
+
+  // --- Reusable Components ---
+  // The products component is now defined inline in index.html
+  // to prevent race condition errors.
 });
