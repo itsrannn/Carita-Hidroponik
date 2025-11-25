@@ -172,4 +172,5 @@ document.addEventListener('alpine:init', () => {
             return "Rp " + (Number(value) || 0).toLocaleString("id-ID");
         }
     }));
+
 });

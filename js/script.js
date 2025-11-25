@@ -89,9 +89,14 @@ if (sortSelect) {
   });
 }
 
-// ================== FEATHER ICONS REFRESH ==================
+// ================== FEATHER ICONS REFRESH & ALPINE START ==================
 document.addEventListener("DOMContentLoaded", () => {
   if (typeof feather !== "undefined") feather.replace();
+
+  // Start Alpine now that all components and stores are registered
+  if (window.Alpine) {
+    window.Alpine.start();
+  }
 });
 
 // ================== CART BADGE REFRESH ON BFCACHE ==================

@@ -174,10 +174,17 @@
     </div>
 
     <div id="footer-include"></div>
+
     <script src="https://unpkg.com/feather-icons"></script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js" defer></script>
+    <!-- 1. Library Supabase & Alpine (harus dimuat sebelum skrip lain) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js?nounit=true"></script>
+
+    <!-- 2. Skrip Aplikasi (defer untuk menunggu DOM siap) -->
     <script src="js/supabase-client.js" defer></script>
-    <script src="js/admin-products.js" defer></script>
+    <!-- 4. Skrip Halaman (tergantung Alpine & Supabase) -->
+    <script src="js/admin-products.js" type="module"></script>
+    <!-- 5. Skrip lain-lain -->
     <script src="js/include.js" defer></script>
 </body>
 </html>
