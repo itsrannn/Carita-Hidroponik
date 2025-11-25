@@ -53,7 +53,7 @@
         <section class="product-detail-head">
           <div class="product-detail-img">
             <img
-              :src="product.img ? product.img : 'img/general/default.jpg'"
+              :src="product.image_url ? product.image_url : 'img/general/default.jpg'"
               :alt="product.name"
             />
           </div>
@@ -74,7 +74,7 @@
         <!-- SECTION DESKRIPSI -->
         <section class="product-detail-description">
           <h2>Deskripsi Produk</h2>
-          <p x-text="product.desc"></p>
+          <p x-text="product.description"></p>
         </section>
 
         <!-- SECTION PRODUK TERKAIT -->
@@ -89,7 +89,7 @@
                     <article class="product-card">
                       <figure class="product-media">
                         <img
-                          :src="item.img ? item.img : 'img/general/default.jpg'"
+                          :src="item.image_url ? item.image_url : 'img/general/default.jpg'"
                           :alt="item.name"
                         />
                       </figure>
@@ -190,6 +190,7 @@
                 768: { slidesPerView: 5, spaceBetween: 20 },
               },
             });
+            this.$nextTick(() => feather.replace());
           },
         }
       }
