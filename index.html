@@ -209,7 +209,6 @@
                       </figure>
                       <div class="product-body">
                         <h3 class="product-title" x-text="item.name"></h3>
-                        <p class="product-description" x-text="item.description"></p>
                         <div class="product-meta">
                           <div class="price" x-text="formatRupiah(item.price)"></div>
                           <button class="btn-sm add-cart" @click.prevent.stop="$store.cart.add(item.id)">
