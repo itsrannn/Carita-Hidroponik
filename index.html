@@ -76,6 +76,14 @@
               sortOption: "default",
 
               init() {
+                // Initial load
+                this.$watch('isLoading', (loading) => {
+                  if (!loading) {
+                    this.$nextTick(() => feather.replace());
+                  }
+                });
+
+                // Pagination
                 this.$watch("currentPage", () => {
                   this.$nextTick(() => feather.replace());
                 });
@@ -197,10 +205,11 @@
                   <a :href="'product detail.html?id=' + item.id" class="product-link">
                     <article class="product-card">
                       <figure class="product-media">
-                        <img :src="item.img ? item.img : 'img/coming soon.jpg'" :alt="item.name" />
+                        <img :src="item.image_url ? item.image_url : 'img/coming soon.jpg'" :alt="item.name" />
                       </figure>
                       <div class="product-body">
                         <h3 class="product-title" x-text="item.name"></h3>
+                        <p class="product-description" x-text="item.description"></p>
                         <div class="product-meta">
                           <div class="price" x-text="formatRupiah(item.price)"></div>
                           <button class="btn-sm add-cart" @click.prevent.stop="$store.cart.add(item.id)">

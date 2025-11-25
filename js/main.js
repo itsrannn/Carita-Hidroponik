@@ -1,3 +1,33 @@
+// --- Mock News Data ---
+// In a real application, this would likely be fetched from a CMS or database.
+window.mockNewsData = [
+  {
+    id: 1,
+    title: "5 Tips Jitu Memulai Hidroponik di Rumah",
+    summary: "Hidroponik tidak sesulit yang dibayangkan. Dengan panduan ini, Anda bisa memulai kebun hidroponik mini di balkon atau halaman rumah Anda.",
+    imageUrl: "img/News 1.jpg",
+    link: "news detail.html?id=1",
+    date: "2024-07-28",
+  },
+  {
+    id: 2,
+    title: "Mengenal Nutrisi A-B Mix: Kunci Sukses Tanaman Hidroponik",
+    summary: "Apa itu nutrisi A-B Mix dan mengapa sangat penting? Pelajari cara meracik dan menggunakannya untuk hasil panen yang maksimal.",
+    imageUrl: "img/News 2.jpg",
+    link: "news detail.html?id=2",
+    date: "2024-07-25",
+  },
+  {
+    id: 3,
+    title: "Perbandingan Media Tanam: Rockwool, Cocopeat, atau Hidroton?",
+    summary: "Setiap media tanam memiliki kelebihan dan kekurangan. Kami bantu Anda memilih yang terbaik sesuai dengan jenis tanaman dan sistem Anda.",
+    imageUrl: "img/News 3.jpg",
+    link: "news detail.html?id=3",
+    date: "2024-07-22",
+  },
+];
+
+
 document.addEventListener("alpine:init", () => {
   // --- Centralized Stores ---
   Alpine.store("products", {
