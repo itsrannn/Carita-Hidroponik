@@ -106,7 +106,31 @@
 }
 
 .related-product-slider .product-card {
-  width: 100%; /* Pastikan kartu mengisi slide */
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Memastikan kartu mengisi tinggi slide */
+}
+
+.related-product-slider .product-body {
+  flex-grow: 1; /* Mendorong konten ke bawah */
+  display: flex;
+  flex-direction: column;
+}
+
+.related-product-slider .product-title {
+  flex-grow: 1; /* Memastikan judul mengisi ruang yang tersedia */
+}
+
+.related-product-slider .product-media {
+  aspect-ratio: 1 / 1; /* Membuat gambar menjadi persegi */
+  flex-shrink: 0;
+}
+
+.related-product-slider .product-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Memastikan gambar menutupi area tanpa distorsi */
 }
 
 .related-product-slider .swiper-button-prev,
