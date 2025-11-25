@@ -24,7 +24,7 @@ document.addEventListener("alpine:init", () => {
   });
 
   Alpine.store("cart", {
-    items: [], // e.g., [{ id: 1, quantity: 1 }]
+    items: [], 
     init() {
       this.items = JSON.parse(localStorage.getItem("cartItems")) || [];
     },
@@ -39,7 +39,7 @@ document.addEventListener("alpine:init", () => {
     },
     remove(productId, force = false) {
       const itemIndex = this.items.findIndex(item => String(item.id) === String(productId));
-       if (itemIndex > -1) {
+      if (itemIndex > -1) {
         if (force || this.items[itemIndex].quantity === 1) {
           this.items.splice(itemIndex, 1);
         } else {
@@ -49,8 +49,8 @@ document.addEventListener("alpine:init", () => {
       this.save();
     },
     clear() {
-        this.items = [];
-        this.save();
+      this.items = [];
+      this.save();
     },
     save() {
       localStorage.setItem("cartItems", JSON.stringify(this.items));
@@ -69,11 +69,10 @@ document.addEventListener("alpine:init", () => {
       return this.details.reduce((total, item) => total + item.subtotal, 0);
     },
     get quantity() {
-        return this.items.reduce((total, item) => total + item.quantity, 0);
+      return this.items.reduce((total, item) => total + item.quantity, 0);
     }
   });
 
-  // --- Reusable Components ---
-  // The products component is now defined inline in index.html
-  // to prevent race condition errors.
+  // --- No products component here ---
+  // Products component sudah didefinisikan inline di index.html
 });
