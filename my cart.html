@@ -16,7 +16,10 @@
     />
   </head>
 
-  <body x-data @alpine:init="$store.cart.init()">
+  <body x-data @alpine:init="
+    $store.products.init();
+    $store.cart.init();
+  ">
     <!-- ========== HEADER INCLUDE ========== -->
     <div id="header-include"></div>
 
@@ -25,7 +28,7 @@
       <section class="cart-section">
         <div class="container">
           <h2 class="section-title">Keranjang Belanja</h2>
-          <div class="cart-layout">
+          <div class="cart-layout" x-data>
             <!-- CART ITEMS -->
             <div class="cart-items-container">
               <div class="cart-header">
@@ -34,12 +37,12 @@
                 <div class="header-total">Total</div>
               </div>
 
-              <div id="cart-items-list" x-data="{ cart: $store.cart }">
-                <template x-if="cart.items.length === 0">
+              <div id="cart-items-list">
+                <template x-if="$store.cart.items.length === 0">
                   <p class="cart-empty-message">Keranjang belanja Anda kosong.</p>
                 </template>
 
-                <template x-for="item in cart.items" :key="item.id">
+                <template x-for="item in $store.cart.details" :key="item.id">
                   <div class="cart-item">
                     <div class="cart-item-product">
                       <img :src="item.img" :alt="item.name" class="cart-item-image" />
@@ -49,12 +52,12 @@
                       </div>
                     </div>
                     <div class="cart-item-quantity">
-                      <button class="quantity-btn" @click="cart.remove(item.id)" aria-label="Kurangi">-</button>
+                      <button class="quantity-btn" @click="$store.cart.remove(item.id)" aria-label="Kurangi">-</button>
                       <span class="quantity-value" x-text="item.quantity"></span>
-                      <button class="quantity-btn" @click="cart.add(item)" aria-label="Tambah">+</button>
+                      <button class="quantity-btn" @click="$store.cart.add(item.id)" aria-label="Tambah">+</button>
                     </div>
-                    <div class="cart-item-total" x-text="`Rp ${(item.quantity * item.price).toLocaleString('id-ID')}`"></div>
-                    <button class="cart-item-remove" @click="cart.remove(item.id, true)" aria-label="Hapus item">
+                    <div class="cart-item-total" x-text="`Rp ${item.subtotal.toLocaleString('id-ID')}`"></div>
+                    <button class="cart-item-remove" @click="$store.cart.remove(item.id, true)" aria-label="Hapus item">
                       <i data-feather="trash-2"></i>
                     </button>
                   </div>
@@ -67,7 +70,7 @@
             </div>
 
             <!-- SUMMARY -->
-            <div class="cart-summary" x-data="{ cart: $store.cart }">
+            <div class="cart-summary">
               <h3>Ringkasan Belanja</h3>
 
               <div class="coupon-form">
@@ -77,7 +80,7 @@
 
               <div class="summary-item">
                 <span>Subtotal</span>
-                <span id="summary-subtotal" x-text="`Rp ${cart.total.toLocaleString('id-ID')}`">Rp 0</span>
+                <span id="summary-subtotal" x-text="`Rp ${$store.cart.total.toLocaleString('id-ID')}`"></span>
               </div>
               <div class="summary-item">
                 <span>Ongkos Kirim</span>
@@ -86,10 +89,10 @@
 
               <div class="summary-total">
                 <span>Total</span>
-                <span id="summary-total" x-text="`Rp ${cart.total.toLocaleString('id-ID')}`">Rp 0</span>
+                <span id="summary-total" x-text="`Rp ${$store.cart.total.toLocaleString('id-ID')}`"></span>
               </div>
 
-              <button id="checkout-btn" class="btn btn-primary btn-block" :disabled="cart.items.length === 0">
+              <button id="checkout-btn" class="btn btn-primary btn-block" :disabled="$store.cart.items.length === 0">
                 Checkout Sekarang
               </button>
             </div>
@@ -105,52 +108,12 @@
 
     <!-- ========== SCRIPTS ========== -->
     <script src="https://unpkg.com/feather-icons"></script>
-    <script src="js/app.js"></script>
-    <script src="js/include.js"></script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js"
-      defer
-    ></script>
-    <script src="js/script.js"></script>
-
-    <!-- Supabase & Checkout Logic -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js?nounit=true" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-    <script src="js/supabase-client.js"></script>
-    <script src="js/checkout.js"></script>
-
-    <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        const checkoutButton = document.getElementById('checkout-btn');
-        if (checkoutButton) {
-          checkoutButton.addEventListener('click', async () => {
-            // Check if user is logged in first
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-                alert('Anda harus login terlebih dahulu untuk melanjutkan.');
-                window.location.href = 'login page.html';
-                return;
-            }
-
-            // Check if profile is complete
-            const { complete, profile } = await isProfileComplete();
-
-            if (complete) {
-              // Disable the button to prevent multiple clicks
-              checkoutButton.disabled = true;
-              checkoutButton.innerText = 'Memproses...';
-
-              await processCheckout(profile);
-
-              // Re-enable the button in case of failure, navigation will happen on success
-              checkoutButton.disabled = false;
-              checkoutButton.innerText = 'Checkout Sekarang';
-            } else {
-              alert('Profil atau alamat pengiriman Anda belum lengkap. Silakan lengkapi data Anda terlebih dahulu.');
-              window.location.href = 'my account.html';
-            }
-          });
-        }
-      });
-    </script>
+    <script src="js/supabase-client.js" defer></script>
+    <script src="js/main.js" defer></script>
+    <script src="js/include.js" defer></script>
+    <script src="js/script.js" defer></script>
+    <script src="js/checkout.js" defer></script>
   </body>
 </html>

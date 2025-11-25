@@ -14,7 +14,10 @@
     />
   </head>
 
-  <body x-data @alpine:init="$store.cart.init()">
+  <body x-data @alpine:init="
+    $store.products.init();
+    $store.cart.init();
+  ">
     <div id="header-include"></div>
 
     <section id="Home" class="hero-section">
@@ -78,7 +81,7 @@
 
           <div class="slider-dots"></div>
         </div>
-        <div class="layout container" x-data="products" x-init="init()">
+        <div class="layout container" x-data="products()" x-init="init()">
           <aside class="sidebar" id="categorySidebar">
             <div class="sidebar-header">
               <h4>Kategori Produk</h4>
@@ -180,9 +183,9 @@
               </div>
             </section>
             <!-- Loading Message -->
-            <p x-show="isLoading" class="loading-text" style="text-align: center; padding: 2rem;">Memuat produk...</p>
+            <p x-show="$store.products.isLoading" class="loading-text" style="text-align: center; padding: 2rem;">Memuat produk...</p>
 
-            <div x-show="!isLoading" x-transition>
+            <div x-show="!$store.products.isLoading" x-transition>
                 <section id="productsGrid" class="products-grid">
                   <template x-for="item in paginatedItems()" :key="item.id">
                     <a
@@ -205,7 +208,7 @@
                             ></div>
                             <button
                               class="btn-sm add-cart"
-                              @click.prevent.stop="$store.cart.add(item)"
+                              @click.prevent.stop="$store.cart.add(item.id)"
                             >
                               <i data-feather="shopping-bag"></i>
                               Add
@@ -273,19 +276,71 @@
     <script src="https://unpkg.com/feather-icons"></script>
 
     <!-- Urutan Pemuatan Skrip yang Benar -->
-    <!-- 1. Library Supabase & Alpine (harus dimuat sebelum skrip lain) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js?nounit=true"></script>
-
-    <!-- 2. Skrip Aplikasi (defer untuk menunggu DOM siap) -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js?nounit=true" defer></script>
     <script src="js/supabase-client.js" defer></script>
-    <script src="js/app.js" type="module"></script>
-    <!-- 5. Skrip lain-lain -->
+    <script src="js/main.js" defer></script>
     <script src="js/include.js" defer></script>
     <script src="js/script.js" defer></script>
 
     <script>
-      document.addEventListener("DOMContentLoaded", () => feather.replace());
+      function products() {
+        return {
+          searchTerm: "",
+          currentPage: 1,
+          itemsPerPage: 8,
+          selectedCategory: "all",
+          sortOption: "default",
+          init() {
+            this.$watch("currentPage", () => {
+              this.$nextTick(() => feather.replace());
+            });
+          },
+          formatRupiah(value) {
+            if (!value) return "Rp 0";
+            return "Rp " + value.toLocaleString("id-ID");
+          },
+          get items() {
+            return Alpine.store("products").all;
+          },
+          get isLoading() {
+            return Alpine.store("products").isLoading;
+          },
+          processedItems() {
+            let processed = [...this.items];
+            if (this.selectedCategory !== "all") {
+              processed = processed.filter(
+                (item) => item.category === this.selectedCategory
+              );
+            }
+            if (this.searchTerm.trim() !== "") {
+              processed = processed.filter((item) =>
+                item.name.toLowerCase().includes(this.searchTerm.toLowerCase())
+              );
+            }
+            if (this.sortOption === "price-asc") {
+              processed.sort((a, b) => a.price - b.price);
+            } else if (this.sortOption === "price-desc") {
+              processed.sort((a, b) => b.price - a.price);
+            }
+            return processed;
+          },
+          paginatedItems() {
+            const start = (this.currentPage - 1) * this.itemsPerPage;
+            const end = start + this.itemsPerPage;
+            return this.processedItems().slice(start, end);
+          },
+          totalPages() {
+            return Math.ceil(this.processedItems().length / this.itemsPerPage);
+          },
+          goToPage(page) {
+            if (page >= 1 && page <= this.totalPages()) {
+              this.currentPage = page;
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }
+          },
+        }
+      }
     </script>
   </body>
 </html>
