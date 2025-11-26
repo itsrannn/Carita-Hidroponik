@@ -97,7 +97,8 @@
 
 /* ================== SWIPER SLIDER Kustom ================== */
 .related-product-slider {
-  padding: 0 40px; /* Ruang untuk panah navigasi */
+  padding: 0 10px 40px 10px; /* Ruang untuk panah navigasi dan pagination */
+  margin: 0 -10px;
 }
 
 .related-product-slider .swiper-slide {
@@ -110,6 +111,12 @@
   display: flex;
   flex-direction: column;
   height: 100%; /* Memastikan kartu mengisi tinggi slide */
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* Transisi untuk hover */
+}
+
+.related-product-slider .product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px var(--shadow);
 }
 
 .related-product-slider .product-body {
@@ -136,39 +143,55 @@
 .related-product-slider .swiper-button-prev,
 .related-product-slider .swiper-button-next {
   /* Positioning and size */
-  top: 45%;
+  top: 50%;
+  transform: translateY(-50%); /* Center vertically */
   width: 44px;
   height: 44px;
 
   /* Icon styling */
-  color: #333; /* Dark gray for the icon, visible on light background */
+  color: var(--dark);
 
   /* Background and shape */
-  background-color: transparent; /* No background by default */
+  background-color: rgba(255, 255, 255, 0.8);
   border-radius: 50%;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 
   /* Effects */
-  transition: background-color 0.2s ease, color 0.2s ease;
-
-  /* Resetting any previous styles */
-  box-shadow: none;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
 }
 
 .related-product-slider .swiper-button-prev:hover,
 .related-product-slider .swiper-button-next:hover {
-  background-color: rgba(255, 255, 255, 0.9); /* White, slightly transparent background on hover */
-  color: var(--green); /* Change icon color on hover */
-  box-shadow: 0 1px 5px rgba(0,0,0,0.1); /* Add a very subtle shadow on hover */
+  background-color: white;
+  color: var(--green);
+  transform: translateY(-50%) scale(1.1);
 }
 
 .related-product-slider .swiper-button-prev::after,
 .related-product-slider .swiper-button-next::after {
-  font-size: 1.1rem; /* Adjust icon size */
-  font-weight: 700;
+  font-size: 1.2rem;
+  font-weight: 800;
 }
+
 .related-product-slider .swiper-button-prev {
-  left: 5px;
+  left: -10px;
 }
 .related-product-slider .swiper-button-next {
-  right: 5px;
+  right: -10px;
+}
+
+/* Pagination */
+.related-product-slider .swiper-pagination {
+  bottom: 0px;
+}
+.related-product-slider .swiper-pagination-bullet {
+  background-color: var(--muted);
+  width: 8px;
+  height: 8px;
+  transition: background-color 0.3s ease, width 0.3s ease;
+}
+.related-product-slider .swiper-pagination-bullet-active {
+  background-color: var(--green);
+  width: 24px;
+  border-radius: 4px;
 }

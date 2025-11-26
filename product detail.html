@@ -116,6 +116,7 @@
             </div>
             <div class="swiper-button-prev"></div>
             <div class="swiper-button-next"></div>
+            <div class="swiper-pagination"></div>
           </div>
 
           <p x-show="relatedProducts.length === 0" class="muted" style="text-align: center;">
@@ -179,11 +180,15 @@
           initSwiper() {
             if (this.relatedProducts.length === 0) return;
             new Swiper(".related-product-slider", {
-              loop: false,
+              loop: true,
               spaceBetween: 15,
               navigation: {
                 nextEl: ".swiper-button-next",
                 prevEl: ".swiper-button-prev",
+              },
+              pagination: {
+                el: ".swiper-pagination",
+                clickable: true,
               },
               breakpoints: {
                 320: { slidesPerView: 2, spaceBetween: 10 },
