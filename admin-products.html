@@ -140,7 +140,7 @@
                     <h1 class="page-title">Manajemen Konten</h1>
                     <p>Kelola produk dan berita yang ditampilkan di situs Anda.</p>
                 </div>
-                <button @click="openAddModal()" class="btn-add">
+                <button type="button" @click="openAddModal()" class="btn-add">
                     <span x-show="activeTab === 'products'">+ Tambah Produk</span>
                     <span x-show="activeTab === 'news'">+ Tambah Berita</span>
                 </button>
@@ -148,8 +148,8 @@
 
             <div class="content-card">
                 <div class="tabs">
-                    <button @click="activeTab = 'products'" :class="{ 'active': activeTab === 'products' }" class="tab-button">Manajemen Produk</button>
-                    <button @click="activeTab = 'news'" :class="{ 'active': activeTab === 'news' }" class="tab-button">Manajemen Berita</button>
+                    <button type="button" @click="activeTab = 'products'" :class="{ 'active': activeTab === 'products' }" class="tab-button">Manajemen Produk</button>
+                    <button type="button" @click="activeTab = 'news'" :class="{ 'active': activeTab === 'news' }" class="tab-button">Manajemen Berita</button>
                 </div>
 
                 <!-- Products Tab -->
@@ -174,8 +174,8 @@
                                         <td data-label="Harga" x-text="formatRupiah(product.price)"></td>
                                         <td data-label="Aksi">
                                             <div class="action-buttons">
-                                                <button class="btn-edit" @click="openEditModal(product)">Edit</button>
-                                                <button class="btn-delete" @click="deleteItem(product.id, product.image_url)">Hapus</button>
+                                                <button type="button" class="btn-edit" @click="openEditModal(product)">Edit</button>
+                                                <button type="button" class="btn-delete" @click="deleteItem(product.id, product.image_url)">Hapus</button>
                                             </div>
                                         </td>
                                     </tr>
@@ -206,8 +206,8 @@
                                         <td data-label="Kutipan" x-text="item.excerpt"></td>
                                         <td data-label="Aksi">
                                             <div class="action-buttons">
-                                                <button class="btn-edit" @click="openEditModal(item)">Edit</button>
-                                                <button class="btn-delete" @click="deleteItem(item.id, item.image_url)">Hapus</button>
+                                                <button type="button" class="btn-edit" @click="openEditModal(item)">Edit</button>
+                                                <button type="button" class="btn-delete" @click="deleteItem(item.id, item.image_url)">Hapus</button>
                                             </div>
                                         </td>
                                     </tr>
@@ -225,7 +225,7 @@
         <div class="modal-content" @click.stop>
             <div class="modal-header">
                 <h2 x-text="getModalTitle()"></h2>
-                <button @click="closeModal()" class="btn-close">&times;</button>
+                <button type="button" @click="closeModal()" class="btn-close">&times;</button>
             </div>
             <form @submit.prevent="submitForm()">
                 <div class="modal-body">
