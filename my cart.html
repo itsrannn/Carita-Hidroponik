@@ -42,7 +42,7 @@
                   <p class="cart-empty-message">Keranjang belanja Anda kosong.</p>
                 </template>
 
-                <template x-for="item in $store.cart.details" :key="item.id">
+                <template x-for="item in $store.cart.details" :key="item.id" x-init="$nextTick(() => feather.replace())">
                   <div class="cart-item">
                     <div class="cart-item-product">
                       <img :src="item.img" :alt="item.name" class="cart-item-image" />
@@ -92,7 +92,12 @@
                 <span id="summary-total" x-text="`Rp ${$store.cart.total.toLocaleString('id-ID')}`"></span>
               </div>
 
-              <button id="checkout-btn" class="btn btn-primary btn-block" :disabled="$store.cart.items.length === 0">
+              <button
+                id="checkout-btn"
+                class="btn btn-primary btn-block"
+                :disabled="$store.cart.items.length === 0"
+                @click="window.location.href='my account.html'"
+              >
                 Checkout Sekarang
               </button>
             </div>

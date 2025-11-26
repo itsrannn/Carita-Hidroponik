@@ -21,6 +21,25 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       // Jalankan feather icons di dalam header
       if (typeof feather !== "undefined") feather.replace();
+
+      // --- LOGIKA DROPDOWN PROFIL ---
+      // Ditempatkan di sini untuk memastikan elemen ada setelah fetch
+      const dropdownToggle = document.getElementById("user-dropdown-toggle");
+      const dropdownContent = document.getElementById("user-dropdown-content");
+
+      if (dropdownToggle && dropdownContent) {
+        dropdownToggle.addEventListener("click", (event) => {
+          event.stopPropagation();
+          dropdownContent.classList.toggle("active");
+        });
+
+        // Menutup dropdown jika klik di luar
+        document.addEventListener("click", (event) => {
+          if (!dropdownContent.contains(event.target) && !dropdownToggle.contains(event.target)) {
+            dropdownContent.classList.remove("active");
+          }
+        });
+      }
     } catch (err) {
       console.error("Gagal memuat header:", err);
     }

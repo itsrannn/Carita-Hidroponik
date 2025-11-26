@@ -29,8 +29,8 @@
     background-color: #f1f1f1;
   }
 
-  /* Tampilkan dropdown saat x-show bernilai true */
-  .user-dropdown .dropdown-content[x-show] {
+  /* Tampilkan dropdown saat memiliki kelas .active */
+  .user-dropdown .dropdown-content.active {
     display: block;
   }
 </style>
@@ -44,11 +44,11 @@
     </div>
     <div class="top-actions">
       <!-- Dropdown Pengguna -->
-      <div class="user-dropdown" x-data="{ open: false }" @click.away="open = false">
-        <button @click="open = !open" class="icon-btn" aria-label="Account">
+      <div class="user-dropdown" id="user-dropdown-container">
+        <button id="user-dropdown-toggle" class="icon-btn" aria-label="Account">
           <i data-feather="user"></i>
         </button>
-        <div x-show="open" class="dropdown-content">
+        <div id="user-dropdown-content" class="dropdown-content">
           <a href="my account.html">Profil Saya</a>
           <a href="order-history.html">Riwayat Pesanan</a>
           <!-- Link Logout bisa ditambahkan di sini jika diperlukan -->
@@ -56,10 +56,10 @@
       </div>
 
       <!-- Tombol Keranjang -->
-      <button id="cart-toggle" class="icon-btn" aria-label="Cart" x-data @click="window.location.href='my cart.html'">
+      <a href="my cart.html" class="icon-btn" aria-label="Cart">
         <i data-feather="shopping-cart"></i>
-        <span id="cart-count" class="badge" x-show="$store.cart.quantity > 0" x-text="$store.cart.quantity">0</span>
-      </button>
+        <span id="cart-count" class="badge" x-show="$store.cart.quantity > 0" x-text="$store.cart.quantity"></span>
+      </a>
     </div>
   </div>
 </header>

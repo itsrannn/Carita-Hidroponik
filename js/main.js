@@ -86,14 +86,22 @@ document.addEventListener("alpine:init", () => {
       localStorage.setItem("cartItems", JSON.stringify(this.items));
     },
     get details() {
-      return this.items.map(item => {
-        const product = Alpine.store("products").getProductById(item.id);
-        return {
-          ...product,
-          quantity: item.quantity,
-          subtotal: (product ? product.price : 0) * item.quantity,
-        };
-      });
+      return this.items
+        .map(item => {
+          const product = Alpine.store("products").getProductById(item.id);
+          // Jika produk tidak ditemukan (misalnya, telah dihapus), jangan sertakan.
+          if (!product) {
+            return null;
+          }
+          return {
+            ...product,
+            quantity: item.quantity,
+            // Ganti nama 'image_url' menjadi 'img' agar cocok dengan template HTML yang ada
+            img: product.image_url,
+            subtotal: product.price * item.quantity,
+          };
+        })
+        .filter(Boolean); // Hapus item null dari array
     },
     get total() {
       return this.details.reduce((total, item) => total + item.subtotal, 0);
