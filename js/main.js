@@ -114,3 +114,34 @@ document.addEventListener("alpine:init", () => {
   // --- No products component here ---
   // Products component sudah didefinisikan inline di index.html
 });
+
+/**
+ * Displays a notification on the screen.
+ * @param {string} message The message to display.
+ * @param {boolean} isError If true, the notification will have an error style.
+ */
+window.showNotification = (message, isError = false) => {
+  const notificationElement = document.getElementById('notification');
+  if (!notificationElement) {
+    console.warn('Notification element not found. Please add `<div id="notification"></div>` to your HTML.');
+    // Fallback to alert if the element doesn't exist
+    alert(message);
+    return;
+  }
+
+  notificationElement.textContent = message;
+
+  // Basic styling for error messages
+  if (isError) {
+    notificationElement.style.backgroundColor = '#ef4444'; // Red color for errors
+  } else {
+    notificationElement.style.backgroundColor = 'var(--accent)'; // Default green color
+  }
+
+  notificationElement.classList.add('show');
+
+  // Hide the notification after 3 seconds
+  setTimeout(() => {
+    notificationElement.classList.remove('show');
+  }, 3000);
+};
