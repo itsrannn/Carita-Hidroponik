@@ -3,6 +3,23 @@
 // It assumes 'supabase' is a global variable.
 
 /**
+ * Shows or hides the 'Profile Incomplete' modal.
+ * @param {boolean} show True to show, false to hide.
+ */
+window.toggleProfileModal = (show) => {
+  const modal = document.getElementById('profile-incomplete-modal');
+  if (modal) {
+    if (show) {
+      modal.style.display = 'flex';
+      setTimeout(() => modal.classList.add('show'), 10); // Delay for transition
+    } else {
+      modal.classList.remove('show');
+      setTimeout(() => (modal.style.display = 'none'), 300); // Wait for transition to end
+    }
+  }
+};
+
+/**
  * Generates a unique order code.
  * Example: CH-20231115-A1B2
  * @returns {string} The unique order code.
@@ -23,7 +40,7 @@ function generateOrderCode() {
 async function isProfileComplete() {
   const { data: { session }, error: sessionError } = await supabase.auth.getSession();
   if (sessionError || !session) {
-    console.error('Error getting session:', sessionError);
+    // If not logged in, we treat the profile as incomplete.
     return { complete: false, reason: 'Not logged in', profile: null };
   }
 
@@ -35,15 +52,24 @@ async function isProfileComplete() {
     .single();
 
   if (error) {
-    console.error('Error fetching profile:', error);
+    // This can happen if the profile hasn't been created yet.
+    console.warn('Could not fetch profile:', error.message);
     return { complete: false, reason: 'Profile does not exist', profile: null };
   }
 
-  const requiredFields = ['full_name', 'phone_number', 'address', 'postal_code', 'province', 'regency', 'district', 'village'];
-  for (const field of requiredFields) {
+  // Check all required text fields.
+  const requiredTextFields = ['full_name', 'phone_number', 'address', 'postal_code', 'province', 'regency', 'district', 'village'];
+  for (const field of requiredTextFields) {
     if (!data[field] || String(data[field]).trim() === '') {
-      return { complete: false, reason: `Missing field: ${field}`, profile: null };
+      console.log(`Profile incomplete. Missing field: ${field}`);
+      return { complete: false, reason: `Missing field: ${field}`, profile: data };
     }
+  }
+
+  // Specifically check for valid coordinates.
+  if (data.latitude == null || data.longitude == null || (data.latitude === 0 && data.longitude === 0)) {
+    console.log('Profile incomplete. Missing map coordinates.');
+    return { complete: false, reason: 'Missing map coordinates', profile: data };
   }
 
   return { complete: true, reason: 'Profile is complete', profile: data };
@@ -54,13 +80,16 @@ async function isProfileComplete() {
  * @param {object} profile The user's complete profile data.
  */
 async function processCheckout(profile) {
-  const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
-  const cartTotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const cartStore = Alpine.store('cart');
 
-  if (cartItems.length === 0) {
-    alert('Keranjang belanja Anda kosong.');
+  if (!cartStore || cartStore.items.length === 0) {
+    window.showNotification('Keranjang belanja Anda kosong.', true);
     return;
   }
+
+  // Use the reactive cart data from the Alpine store
+  const cartDetails = cartStore.details;
+  const cartTotal = cartStore.total;
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
@@ -70,11 +99,13 @@ async function processCheckout(profile) {
   }
 
   const orderCode = generateOrderCode();
-  const orderDetails = cartItems.map(item => ({
-    id: item.id,
+  // Map the details from the cart store to the format needed for the database
+  const orderDetails = cartDetails.map(item => ({
+    product_id: item.id, // Use product_id for clarity
     name: item.name,
     quantity: item.quantity,
-    price: item.price
+    price: item.price,
+    subtotal: item.subtotal
   }));
 
   const shippingAddress = {
@@ -101,18 +132,70 @@ async function processCheckout(profile) {
 
   if (error) {
     console.error('Error creating order:', error);
-    alert(`Terjadi kesalahan saat membuat pesanan: ${error.message}`);
+    window.showNotification(`Terjadi kesalahan saat membuat pesanan: ${error.message}`, true);
     return;
   }
 
   // Clear the cart from localStorage and Alpine store
   localStorage.removeItem('cartItems');
-  const cartStore = Alpine.store('cart');
-  if (cartStore) {
-    cartStore.items = [];
-    cartStore.updateTotalsAndSave();
+  // Use the globally accessible Alpine object
+  if (window.Alpine && Alpine.store('cart')) {
+      Alpine.store('cart').clear(); // Use the clear method
   }
 
-  alert(`Pesanan Anda dengan kode ${orderCode} berhasil dibuat!`);
-  window.location.href = 'order-history.html'; // Redirect to the new order history page
+
+  window.showNotification(`Pesanan Anda dengan kode ${orderCode} berhasil dibuat!`);
+
+  // Redirect after a short delay to allow the user to see the notification
+  setTimeout(() => {
+    window.location.href = 'order-history.html';
+  }, 1500);
 }
+
+
+// --- Main Checkout Logic ---
+document.addEventListener('DOMContentLoaded', () => {
+  const checkoutBtn = document.getElementById('checkout-btn');
+  const closeModalBtn = document.getElementById('close-modal-btn');
+  const modalOverlay = document.getElementById('profile-incomplete-modal');
+
+  if (checkoutBtn) {
+    checkoutBtn.addEventListener('click', async () => {
+      // 1. Check if user is logged in
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        window.showNotification('Anda harus login untuk checkout.', true);
+        // Redirect to login page after a delay
+        setTimeout(() => {
+          window.location.href = 'login page.html';
+        }, 1500);
+        return;
+      }
+
+      // 2. Check if profile is complete
+      const { complete, profile } = await isProfileComplete();
+      if (!complete) {
+        // Show the modal if the profile is incomplete
+        window.toggleProfileModal(true);
+      } else {
+        // Proceed to checkout if the profile is complete
+        await processCheckout(profile);
+      }
+    });
+  }
+
+  // Logic to close the modal
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', () => {
+      window.toggleProfileModal(false);
+    });
+  }
+  if (modalOverlay) {
+    // Also close if the user clicks on the overlay background
+    modalOverlay.addEventListener('click', (event) => {
+      if (event.target === modalOverlay) {
+        window.toggleProfileModal(false);
+      }
+    });
+  }
+});
