@@ -19,6 +19,18 @@
         }
         .dashboard-header-text h1 { margin: 0; }
         .dashboard-header-text p { margin: 0; margin-top: 0.25rem; color: #6c757d; }
+
+        .back-link {
+            display: block;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
         .content-card {
             background-color: #fff;
             border-radius: 12px;
@@ -48,8 +60,6 @@
         .tabs { display: flex; border-bottom: 1px solid #dee2e6; margin-bottom: 2rem; }
         .tab-button { padding: 1rem 1.5rem; cursor: pointer; border: none; background: none; font-size: 1rem; font-weight: 600; color: #6c757d; border-bottom: 3px solid transparent; transition: color 0.2s, border-color 0.2s; }
         .tab-button.active { color: var(--primary); border-bottom-color: var(--primary); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
 
         /* Table Header */
         .table-header {
@@ -115,7 +125,7 @@
         }
     </style>
 </head>
-<body x-data="adminPage" x-init="init()" @keyup.escape="closeModal()">
+<body x-data="contentManager" x-init="init()" @keyup.escape="closeModal()">
 
     <div id="header-include"></div>
 
@@ -123,6 +133,7 @@
         <div class="container">
             <div class="dashboard-header">
                 <div class="dashboard-header-text">
+                    <a href="admin.html" class="back-link">&larr; Kembali ke Dashboard</a>
                     <h1 class="page-title">Manajemen Konten</h1>
                     <p>Kelola produk dan berita yang ditampilkan di situs Anda.</p>
                 </div>
@@ -139,7 +150,7 @@
                 </div>
 
                 <!-- Products Tab -->
-                <div x-show="activeTab === 'products'" class="tab-content active">
+                <div x-show="activeTab === 'products'" class="tab-content">
                     <div class="table-header">
                         <h2>Daftar Produk</h2>
                         <input type="text" x-model="searchQuery.products" placeholder="Cari produk..." class="search-input">
@@ -207,7 +218,7 @@
     </main>
 
     <!-- Generic Form Modal -->
-    <div x-show="isModalOpen" x-transition class="modal-overlay" @click.self="closeModal()" style="display: none;">
+    <div x-show="isModalOpen" x-transition class="modal-overlay" @click.self="closeModal()">
         <div class="modal-content" @click.stop>
             <div class="modal-header">
                 <h2 x-text="getModalTitle()"></h2>

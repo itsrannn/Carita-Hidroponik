@@ -1,0 +1,227 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - link "Carita Hidroponik" [ref=e6] [cursor=pointer]:
+        - /url: index.html
+        - img "Carita Hidroponik" [ref=e7]
+      - generic [ref=e8]:
+        - button "Account" [ref=e10] [cursor=pointer]:
+          - img [ref=e11]
+        - link "Cart" [ref=e14] [cursor=pointer]:
+          - /url: my cart.html
+          - img [ref=e15]
+  - generic [ref=e20]:
+    - generic [ref=e21]:
+      - generic [ref=e22]:
+        - img "Starter Kit untuk Pemula" [ref=e23]
+        - generic [ref=e24]:
+          - heading "MULAI HIDROPONIK DENGAN MUDAH" [level=1] [ref=e25]
+          - paragraph [ref=e26]: Paket lengkap untuk pemula, termasuk panduan praktis dan instalasi mini.
+          - link "Dapatkan Kit" [ref=e27] [cursor=pointer]:
+            - /url: "#Product"
+      - button "Previous Slide" [ref=e28] [cursor=pointer]:
+        - img [ref=e29]
+      - button "Next Slide" [ref=e31] [cursor=pointer]:
+        - img [ref=e32]
+      - generic [ref=e34]:
+        - button "Go to slide 1" [ref=e35] [cursor=pointer]
+        - button "Go to slide 2" [ref=e36] [cursor=pointer]
+        - button "Go to slide 3" [ref=e37] [cursor=pointer]
+    - generic [ref=e38]:
+      - complementary [ref=e39]:
+        - generic [ref=e40]:
+          - heading "Kategori Produk" [level=4] [ref=e41]
+          - button "−" [expanded] [ref=e42] [cursor=pointer]
+        - navigation [ref=e43]:
+          - list [ref=e44]:
+            - listitem [ref=e45]:
+              - link "Semua Produk" [ref=e46] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e47]:
+              - link "Benih" [ref=e48] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e49]:
+              - link "Nutrisi & Pupuk" [ref=e50] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e51]:
+              - link "Media Tanam" [ref=e52] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e53]:
+              - link "Peralatan" [ref=e54] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e55]:
+              - link "Promo & Bundling" [ref=e56] [cursor=pointer]:
+                - /url: "#"
+        - paragraph [ref=e58]:
+          - text: Butuh bantuan?
+          - link "Hubungi kami" [ref=e59] [cursor=pointer]:
+            - /url: contact.html
+      - main [ref=e60]:
+        - generic [ref=e61]:
+          - searchbox [ref=e62]
+          - img [ref=e64] [cursor=pointer]
+        - generic [ref=e67]:
+          - generic [ref=e68]:
+            - heading "Produk Unggulan" [level=1] [ref=e69]
+            - paragraph [ref=e70]: Pilihan terbaik untuk kebun hidroponik dan hobi berkebun.
+          - generic [ref=e72]:
+            - generic [ref=e73]: Sort by
+            - combobox "Sort by" [ref=e74] [cursor=pointer]:
+              - option "Default" [selected]
+              - option "Price ↑"
+              - option "Price ↓"
+        - generic [ref=e75]:
+          - generic [ref=e76]:
+            - link [ref=e77] [cursor=pointer]:
+              - /url: product detail.html?id=1
+              - article [ref=e78]:
+                - figure [ref=e79]:
+                  - img "Benih Cabai Carolina" [ref=e80]
+                - generic [ref=e81]:
+                  - heading "Benih Cabai Carolina" [level=3] [ref=e82]
+                  - generic [ref=e83]:
+                    - generic [ref=e84]: Rp 12.000
+                    - button "Add" [ref=e85]:
+                      - img [ref=e86]
+                      - text: Add
+            - link [ref=e89] [cursor=pointer]:
+              - /url: product detail.html?id=2
+              - article [ref=e90]:
+                - figure [ref=e91]:
+                  - img "Benih Cabai Fatalii" [ref=e92]
+                - generic [ref=e93]:
+                  - heading "Benih Cabai Fatalii" [level=3] [ref=e94]
+                  - generic [ref=e95]:
+                    - generic [ref=e96]: Rp 12.000
+                    - button "Add" [ref=e97]:
+                      - img [ref=e98]
+                      - text: Add
+            - link [ref=e101] [cursor=pointer]:
+              - /url: product detail.html?id=3
+              - article [ref=e102]:
+                - figure [ref=e103]:
+                  - img "Benih Cabai Ghost Pepper" [ref=e104]
+                - generic [ref=e105]:
+                  - heading "Benih Cabai Ghost Pepper" [level=3] [ref=e106]
+                  - generic [ref=e107]:
+                    - generic [ref=e108]: Rp 15.000
+                    - button "Add" [ref=e109]:
+                      - img [ref=e110]
+                      - text: Add
+            - link [ref=e113] [cursor=pointer]:
+              - /url: product detail.html?id=4
+              - article [ref=e114]:
+                - figure [ref=e115]:
+                  - img "Benih Cabai Habanero" [ref=e116]
+                - generic [ref=e117]:
+                  - heading "Benih Cabai Habanero" [level=3] [ref=e118]
+                  - generic [ref=e119]:
+                    - generic [ref=e120]: Rp 10.000
+                    - button "Add" [ref=e121]:
+                      - img [ref=e122]
+                      - text: Add
+            - link [ref=e125] [cursor=pointer]:
+              - /url: product detail.html?id=5
+              - article [ref=e126]:
+                - figure [ref=e127]:
+                  - img "Benih Cabai Jalapeno" [ref=e128]
+                - generic [ref=e129]:
+                  - heading "Benih Cabai Jalapeno" [level=3] [ref=e130]
+                  - generic [ref=e131]:
+                    - generic [ref=e132]: Rp 20.000
+                    - button "Add" [ref=e133]:
+                      - img [ref=e134]
+                      - text: Add
+            - link [ref=e137] [cursor=pointer]:
+              - /url: product detail.html?id=6
+              - article [ref=e138]:
+                - figure [ref=e139]:
+                  - img "Benih Cabai Naga Viper" [ref=e140]
+                - generic [ref=e141]:
+                  - heading "Benih Cabai Naga Viper" [level=3] [ref=e142]
+                  - generic [ref=e143]:
+                    - generic [ref=e144]: Rp 28.000
+                    - button "Add" [ref=e145]:
+                      - img [ref=e146]
+                      - text: Add
+            - link [ref=e149] [cursor=pointer]:
+              - /url: product detail.html?id=7
+              - article [ref=e150]:
+                - figure [ref=e151]:
+                  - img "Benih Cabai Orange Drop" [ref=e152]
+                - generic [ref=e153]:
+                  - heading "Benih Cabai Orange Drop" [level=3] [ref=e154]
+                  - generic [ref=e155]:
+                    - generic [ref=e156]: Rp 17.000
+                    - button "Add" [ref=e157]:
+                      - img [ref=e158]
+                      - text: Add
+            - link [ref=e161] [cursor=pointer]:
+              - /url: product detail.html?id=8
+              - article [ref=e162]:
+                - figure [ref=e163]:
+                  - img "Benih Cabai Scotch Bonnet" [ref=e164]
+                - generic [ref=e165]:
+                  - heading "Benih Cabai Scotch Bonnet" [level=3] [ref=e166]
+                  - generic [ref=e167]:
+                    - generic [ref=e168]: Rp 25.000
+                    - button "Add" [ref=e169]:
+                      - img [ref=e170]
+                      - text: Add
+          - navigation [ref=e173]:
+            - link "1" [ref=e174] [cursor=pointer]:
+              - /url: "#"
+            - link "2" [ref=e175] [cursor=pointer]:
+              - /url: "#"
+            - link "Next Page" [ref=e176] [cursor=pointer]:
+              - /url: "#"
+              - text: »
+  - heading "🌱 Status Berita & Tutorial Terbaru" [level=2] [ref=e178]
+  - generic [ref=e179]:
+    - heading "Tentang Carita Hidroponik" [level=2] [ref=e180]
+    - paragraph [ref=e181]: Carita Hidroponik menyediakan benih, nutrisi, dan perlengkapan hidroponik berkualitas untuk pemula dan profesional.
+  - contentinfo [ref=e183]:
+    - generic [ref=e184]:
+      - generic [ref=e185]:
+        - img "Carita Hidroponik" [ref=e186]
+        - paragraph [ref=e187]: Carita Hidroponik adalah penyedia benih, nutrisi, dan perlengkapan hidroponik terpercaya. Kami mendukung para petani dan penghobi untuk hasil panen terbaik.
+      - generic [ref=e188]:
+        - heading "Menu" [level=4] [ref=e189]
+        - list [ref=e190]:
+          - listitem [ref=e191]:
+            - link "Home" [ref=e192] [cursor=pointer]:
+              - /url: index.html
+          - listitem [ref=e193]:
+            - link "Produk" [ref=e194] [cursor=pointer]:
+              - /url: index.html
+          - listitem [ref=e195]:
+            - link "Akun Saya" [ref=e196] [cursor=pointer]:
+              - /url: my account.html
+          - listitem [ref=e197]:
+            - link "About Us" [ref=e198] [cursor=pointer]:
+              - /url: contact.html
+      - generic [ref=e199]:
+        - heading "Kontak Kami" [level=4] [ref=e200]
+        - paragraph [ref=e201]:
+          - text: "Email:"
+          - link "info@caritahidroponik.com" [ref=e202] [cursor=pointer]:
+            - /url: mailto:info@caritahidroponik.com
+        - paragraph [ref=e203]:
+          - text: "WhatsApp:"
+          - link "+62 821-3969-8804" [ref=e204] [cursor=pointer]:
+            - /url: https://wa.me/628213969880
+        - generic [ref=e205]:
+          - link [ref=e206] [cursor=pointer]:
+            - /url: "#"
+            - img [ref=e207]
+          - link [ref=e210] [cursor=pointer]:
+            - /url: "#"
+            - img [ref=e211]
+          - link [ref=e213] [cursor=pointer]:
+            - /url: "#"
+            - img [ref=e214]
+    - paragraph [ref=e218]: © 2025 Carita Hidroponik — All Rights Reserved.
+```

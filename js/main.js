@@ -59,9 +59,7 @@ document.addEventListener("alpine:init", () => {
       return this.items
         .map(item => {
           const product = Alpine.store("products").getProductById(item.id);
-          if (!product) {
-            return null;
-          }
+          if (!product) return null;
           return {
             ...product,
             quantity: item.quantity,
@@ -79,33 +77,33 @@ document.addEventListener("alpine:init", () => {
     }
   });
 
-  // --- Page-Specific Components ---
-  Alpine.data('adminPage', () => ({
-    activeTab: 'products', // 'products' or 'news'
+  // --- Page Component (FINAL FIXED VERSION) ---
+  Alpine.data('contentManager', () => ({
+    activeTab: 'products',
     products: [],
     news: [],
     isLoading: { products: true, news: true },
     isModalOpen: false,
-    modalMode: 'add', // 'add' or 'edit'
+    modalMode: 'add',
     currentItem: {},
     searchQuery: { products: '', news: '' },
 
     get filteredProducts() {
-        if (!this.searchQuery.products) return this.products;
-        const query = this.searchQuery.products.toLowerCase();
-        return this.products.filter(p =>
-            p.name.toLowerCase().includes(query) ||
-            p.category.toLowerCase().includes(query)
-        );
+      if (!this.searchQuery.products) return this.products;
+      const q = this.searchQuery.products.toLowerCase();
+      return this.products.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q)
+      );
     },
 
     get filteredNews() {
-        if (!this.searchQuery.news) return this.news;
-        const query = this.searchQuery.news.toLowerCase();
-        return this.news.filter(n =>
-            n.title.toLowerCase().includes(query) ||
-            n.excerpt.toLowerCase().includes(query)
-        );
+      if (!this.searchQuery.news) return this.news;
+      const q = this.searchQuery.news.toLowerCase();
+      return this.news.filter(n =>
+        n.title.toLowerCase().includes(q) ||
+        n.excerpt.toLowerCase().includes(q)
+      );
     },
 
     async init() {
@@ -116,7 +114,10 @@ document.addEventListener("alpine:init", () => {
     async fetchProducts() {
       this.isLoading.products = true;
       try {
-        const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .order('created_at', { ascending: false });
         if (error) throw error;
         this.products = data;
       } catch (error) {
@@ -130,7 +131,10 @@ document.addEventListener("alpine:init", () => {
     async fetchNews() {
       this.isLoading.news = true;
       try {
-        const { data, error } = await supabase.from('news').select('*').order('created_at', { ascending: false });
+        const { data, error } = await supabase
+          .from('news')
+          .select('*')
+          .order('created_at', { ascending: false });
         if (error) throw error;
         this.news = data;
       } catch (error) {
@@ -143,18 +147,21 @@ document.addEventListener("alpine:init", () => {
 
     getModalTitle() {
       const type = this.activeTab === 'products' ? 'Produk' : 'Berita';
-      return this.modalMode === 'add' ? `Tambah ${type} Baru` : `Edit ${type}`;
+      return this.modalMode === 'add'
+        ? `Tambah ${type} Baru`
+        : `Edit ${type}`;
     },
 
     getSubmitButtonText() {
-        return this.modalMode === 'add' ? 'Tambah' : 'Simpan Perubahan';
+      return this.modalMode === 'add' ? 'Tambah' : 'Simpan Perubahan';
     },
 
     openAddModal() {
       this.modalMode = 'add';
-      this.currentItem = this.activeTab === 'products' ?
-        { name: '', category: 'benih', price: 0, characteristics: '', description: '', image_url: '' } :
-        { title: '', excerpt: '', image_url: '' };
+      this.currentItem =
+        this.activeTab === 'products'
+          ? { name: '', category: 'benih', price: 0, characteristics: '', description: '', image_url: '' }
+          : { title: '', excerpt: '', image_url: '' };
       this.isModalOpen = true;
     },
 
@@ -170,110 +177,105 @@ document.addEventListener("alpine:init", () => {
     },
 
     async submitForm() {
-        const tableName = this.activeTab;
-        const isAddMode = this.modalMode === 'add';
-        let itemData = { ...this.currentItem };
+      const tableName = this.activeTab;
+      const isAdd = this.modalMode === 'add';
+      let itemData = { ...this.currentItem };
 
-        try {
-            // 1. Handle image upload if a new file is selected
-            const imageInput = document.getElementById(tableName === 'products' ? 'product-image-input' : 'news-image-input');
-            const file = imageInput.files[0];
+      try {
+        // --- Handle image upload ---
+        const inputId = tableName === 'products' ? 'product-image-input' : 'news-image-input';
+        const imageInput = document.getElementById(inputId);
+        const file = imageInput.files[0];
 
-            if (file) {
-                const fileName = `${tableName}/${Date.now()}_${file.name}`;
-                const { data: uploadData, error: uploadError } = await supabase.storage
-                    .from('product-images')
-                    .upload(fileName, file);
+        if (file) {
+          const uploadedName = `${tableName}/${Date.now()}_${file.name}`;
 
-                if (uploadError) throw uploadError;
+          const { error: uploadErr } = await supabase.storage
+            .from('product-images')
+            .upload(uploadedName, file);
+          if (uploadErr) throw uploadErr;
 
-                const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(fileName);
-                itemData.image_url = urlData.publicUrl;
+          const { data: urlData } =
+            supabase.storage.from('product-images').getPublicUrl(uploadedName);
 
-                // If editing, delete the old image
-                if (!isAddMode && this.currentItem.image_url) {
-                    const oldImageName = this.currentItem.image_url.split('/').pop();
-                    if(oldImageName) {
-                       await supabase.storage.from('product-images').remove([`${tableName}/${oldImageName}`]);
-                    }
-                }
+          itemData.image_url = urlData.publicUrl;
+
+          // Delete old image when editing
+          if (!isAdd && this.currentItem.image_url) {
+            const oldName = this.currentItem.image_url.split('/').pop();
+            if (oldName) {
+              await supabase.storage.from('product-images').remove([`${tableName}/${oldName}`]);
             }
-
-            // 2. Prepare data for Supabase (remove id for insert)
-            let queryData = { ...itemData };
-            if (isAddMode) {
-                delete queryData.id;
-            } else {
-                delete queryData.created_at; // Avoid updating this field
-            }
-
-            // 3. Upsert data to the table
-            let result;
-            if (isAddMode) {
-                result = await supabase.from(tableName).insert(queryData).select();
-            } else {
-                result = await supabase.from(tableName).update(queryData).eq('id', itemData.id).select();
-            }
-
-            const { data, error } = result;
-
-            if (error) throw error;
-
-            // 4. Update local state
-            if (isAddMode) {
-                this[tableName].unshift(data[0]);
-            } else {
-                const index = this[tableName].findIndex(i => i.id === data[0].id);
-                if (index > -1) this[tableName][index] = data[0];
-            }
-
-            window.showNotification(`${tableName === 'products' ? 'Produk' : 'Berita'} berhasil disimpan!`);
-            this.closeModal();
-        } catch (error) {
-            console.error('Error submitting form:', error);
-            window.showNotification('Terjadi kesalahan. Coba lagi.', true);
+          }
         }
+
+        // --- Prepare query ---
+        let finalData = { ...itemData };
+        if (isAdd) delete finalData.id;
+        else delete finalData.created_at;
+
+        let result = isAdd
+          ? await supabase.from(tableName).insert(finalData).select()
+          : await supabase.from(tableName).update(finalData).eq('id', itemData.id).select();
+
+        const { data, error } = result;
+        if (error) throw error;
+
+        // Update UI
+        if (isAdd) {
+          this[tableName].unshift(data[0]);
+        } else {
+          const idx = this[tableName].findIndex(i => i.id === data[0].id);
+          if (idx > -1) this[tableName][idx] = data[0];
+        }
+
+        window.showNotification(`${tableName === 'products' ? 'Produk' : 'Berita'} berhasil disimpan!`);
+        this.closeModal();
+      } catch (error) {
+        console.error('Error submitting form:', error);
+        window.showNotification('Terjadi kesalahan. Coba lagi.', true);
+      }
     },
 
     async deleteItem(id, imageUrl) {
-        if (!confirm('Anda yakin ingin menghapus item ini? Tindakan ini tidak dapat dibatalkan.')) return;
+      if (!confirm('Anda yakin ingin menghapus item ini?')) return;
 
-        const tableName = this.activeTab;
+      const tableName = this.activeTab;
+      try {
+        const { error: dbErr } = await supabase.from(tableName).delete().eq('id', id);
+        if (dbErr) throw dbErr;
 
-        try {
-            // 1. Delete from table
-            const { error: dbError } = await supabase.from(tableName).delete().eq('id', id);
-            if (dbError) throw dbError;
-
-            // 2. Delete image from storage
-            if (imageUrl) {
-                const imageName = imageUrl.split('/').pop();
-                if (imageName) {
-                    await supabase.storage.from('product-images').remove([`${tableName}/${imageName}`]);
-                }
-            }
-
-            // 3. Update local state
-            this[tableName] = this[tableName].filter(item => item.id !== id);
-            window.showNotification('Item berhasil dihapus.');
-
-        } catch (error) {
-            console.error('Error deleting item:', error);
-            window.showNotification('Gagal menghapus item.', true);
+        if (imageUrl) {
+          const fileName = imageUrl.split('/').pop();
+          if (fileName) {
+            await supabase.storage.from('product-images').remove([`${tableName}/${fileName}`]);
+          }
         }
+
+        this[tableName] = this[tableName].filter(item => item.id !== id);
+        window.showNotification('Item berhasil dihapus.');
+      } catch (error) {
+        console.error('Error deleting item:', error);
+        window.showNotification('Gagal menghapus item.', true);
+      }
     },
 
     formatRupiah(number) {
-        if (isNaN(number)) return "Rp 0";
-        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+      if (isNaN(number)) return "Rp 0";
+      return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        minimumFractionDigits: 0
+      }).format(number);
     }
   }));
 });
 
+// Global notification
 window.showNotification = (message, isError = false) => {
   const notificationElement = document.getElementById('notification');
   if (!notificationElement) {
-    console.warn('Notification element not found. Please add `<div id="notification"></div>` to your HTML.');
+    console.warn('Notification element not found.');
     alert(message);
     return;
   }

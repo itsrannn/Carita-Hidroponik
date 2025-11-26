@@ -31,3 +31,17 @@ INSERT INTO public.products (name, category, price, "characteristics", descripti
 ('Spons Hidroponik', 'media', 3000, 'Media Semai <br> - Hidroponik <br> - Menyerap Air <br> - 1 Papan', 'Spons khusus untuk penyemaian benih pada sistem hidroponik. Memiliki daya serap air tinggi namun tetap menjaga aerasi akar agar tidak tergenang. Cocok digunakan untuk semai sayuran daun seperti selada, bayam, dan kangkung. Dapat dipotong sesuai ukuran netpot atau tray semai.', 'img/general/Spons Hidroponik.png'),
 ('Gunting Tanaman', 'peralatan', 38000, 'Stainless Steel <br> - Tajam & Presisi <br> - Ergonomis <br> - Anti Karat', 'Gunting pangkas berkualitas tinggi berbahan stainless steel yang tahan lama dan tajam. Dirancang dengan gagang ergonomis agar nyaman di tangan, cocok untuk memangkas ranting kecil, daun, atau bunga. Ideal digunakan untuk tanaman hias maupun kebun sayur.', 'img/general/Gunting Tanaman.png'),
 ('Set Komplit Berkebun', 'promo', 75000, 'Peralatan Lengkap <br> - Termasuk Sekop, Sarung Tangan, dan Gunting <br> - Material Kuat <br> - Cocok untuk Pemula', 'Set komplit berkebun berisi perlengkapan dasar seperti sekop mini, sarung tangan, gunting tanaman, dan garpu tanah. Terbuat dari bahan berkualitas tinggi dan desain ergonomis untuk kenyamanan berkebun. Ideal bagi pemula yang ingin memulai berkebun di rumah atau kebun kecil.', 'img/general/Set Komplit.png');
+
+-- =====================================================================================
+-- SKRIP SEED UNTUK TABEL 'news'
+-- =====================================================================================
+-- Skrip ini mengisi tabel 'news' dengan data berita awal.
+
+-- Kosongkan data yang ada untuk mencegah duplikasi
+TRUNCATE TABLE public.news RESTART IDENTITY;
+
+-- Masukkan data berita baru
+INSERT INTO public.news (title, excerpt, image_url) VALUES
+('5 Tips Jitu Memulai Hidroponik di Rumah', 'Hidroponik tidak sesulit yang dibayangkan. Dengan panduan ini, Anda bisa memulai kebun hidroponik mini di balkon atau halaman rumah Anda.', 'img/Pemula.png'),
+('Mengenal Nutrisi A-B Mix: Kunci Sukses Tanaman Hidroponik', 'Apa itu nutrisi A-B Mix dan mengapa sangat penting? Pelajari cara meracik dan menggunakannya untuk hasil panen yang maksimal.', 'img/Nutrisi AB.png'),
+('Perbandingan Media Tanam: Rockwool, Cocopeat, atau Hidroton?', 'Setiap media tanam memiliki kelebihan dan kekurangan. Kami bantu Anda memilih yang terbaik sesuai dengan jenis tanaman dan sistem Anda.', 'img/Cabai Silang.png');
