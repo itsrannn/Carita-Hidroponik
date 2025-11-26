@@ -1,33 +1,3 @@
-// --- Mock News Data ---
-// In a real application, this would likely be fetched from a CMS or database.
-window.mockNewsData = [
-  {
-    id: 1,
-    title: "5 Tips Jitu Memulai Hidroponik di Rumah",
-    summary: "Hidroponik tidak sesulit yang dibayangkan. Dengan panduan ini, Anda bisa memulai kebun hidroponik mini di balkon atau halaman rumah Anda.",
-    imageUrl: "img/Pemula.png",
-    link: "news detail.html?id=1",
-    date: "2024-07-28",
-  },
-  {
-    id: 2,
-    title: "Mengenal Nutrisi A-B Mix: Kunci Sukses Tanaman Hidroponik",
-    summary: "Apa itu nutrisi A-B Mix dan mengapa sangat penting? Pelajari cara meracik dan menggunakannya untuk hasil panen yang maksimal.",
-    imageUrl: "img/Nutrisi AB.png",
-    link: "news detail.html?id=2",
-    date: "2024-07-25",
-  },
-  {
-    id: 3,
-    title: "Perbandingan Media Tanam: Rockwool, Cocopeat, atau Hidroton?",
-    summary: "Setiap media tanam memiliki kelebihan dan kekurangan. Kami bantu Anda memilih yang terbaik sesuai dengan jenis tanaman dan sistem Anda.",
-    imageUrl: "img/Cabai Silang.png",
-    link: "news detail.html?id=3",
-    date: "2024-07-22",
-  },
-];
-
-
 document.addEventListener("alpine:init", () => {
   // --- Centralized Stores ---
   Alpine.store("products", {
@@ -54,7 +24,7 @@ document.addEventListener("alpine:init", () => {
   });
 
   Alpine.store("cart", {
-    items: [], 
+    items: [],
     init() {
       this.items = JSON.parse(localStorage.getItem("cartItems")) || [];
     },
@@ -89,19 +59,17 @@ document.addEventListener("alpine:init", () => {
       return this.items
         .map(item => {
           const product = Alpine.store("products").getProductById(item.id);
-          // Jika produk tidak ditemukan (misalnya, telah dihapus), jangan sertakan.
           if (!product) {
             return null;
           }
           return {
             ...product,
             quantity: item.quantity,
-            // Ganti nama 'image_url' menjadi 'img' agar cocok dengan template HTML yang ada
             img: product.image_url,
             subtotal: product.price * item.quantity,
           };
         })
-        .filter(Boolean); // Hapus item null dari array
+        .filter(Boolean);
     },
     get total() {
       return this.details.reduce((total, item) => total + item.subtotal, 0);
@@ -111,36 +79,207 @@ document.addEventListener("alpine:init", () => {
     }
   });
 
-  // --- No products component here ---
-  // Products component sudah didefinisikan inline di index.html
+  // --- Page-Specific Components ---
+  Alpine.data('adminPage', () => ({
+    activeTab: 'products', // 'products' or 'news'
+    products: [],
+    news: [],
+    isLoading: { products: true, news: true },
+    isModalOpen: false,
+    modalMode: 'add', // 'add' or 'edit'
+    currentItem: {},
+    searchQuery: { products: '', news: '' },
+
+    get filteredProducts() {
+        if (!this.searchQuery.products) return this.products;
+        const query = this.searchQuery.products.toLowerCase();
+        return this.products.filter(p =>
+            p.name.toLowerCase().includes(query) ||
+            p.category.toLowerCase().includes(query)
+        );
+    },
+
+    get filteredNews() {
+        if (!this.searchQuery.news) return this.news;
+        const query = this.searchQuery.news.toLowerCase();
+        return this.news.filter(n =>
+            n.title.toLowerCase().includes(query) ||
+            n.excerpt.toLowerCase().includes(query)
+        );
+    },
+
+    async init() {
+      this.fetchProducts();
+      this.fetchNews();
+    },
+
+    async fetchProducts() {
+      this.isLoading.products = true;
+      try {
+        const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        this.products = data;
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        window.showNotification('Gagal memuat produk.', true);
+      } finally {
+        this.isLoading.products = false;
+      }
+    },
+
+    async fetchNews() {
+      this.isLoading.news = true;
+      try {
+        const { data, error } = await supabase.from('news').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        this.news = data;
+      } catch (error) {
+        console.error('Error fetching news:', error);
+        window.showNotification('Gagal memuat berita.', true);
+      } finally {
+        this.isLoading.news = false;
+      }
+    },
+
+    getModalTitle() {
+      const type = this.activeTab === 'products' ? 'Produk' : 'Berita';
+      return this.modalMode === 'add' ? `Tambah ${type} Baru` : `Edit ${type}`;
+    },
+
+    getSubmitButtonText() {
+        return this.modalMode === 'add' ? 'Tambah' : 'Simpan Perubahan';
+    },
+
+    openAddModal() {
+      this.modalMode = 'add';
+      this.currentItem = this.activeTab === 'products' ?
+        { name: '', category: 'benih', price: 0, characteristics: '', description: '', image_url: '' } :
+        { title: '', excerpt: '', image_url: '' };
+      this.isModalOpen = true;
+    },
+
+    openEditModal(item) {
+      this.modalMode = 'edit';
+      this.currentItem = JSON.parse(JSON.stringify(item));
+      this.isModalOpen = true;
+    },
+
+    closeModal() {
+      this.isModalOpen = false;
+      this.currentItem = {};
+    },
+
+    async submitForm() {
+        const tableName = this.activeTab;
+        const isAddMode = this.modalMode === 'add';
+        let itemData = { ...this.currentItem };
+
+        try {
+            // 1. Handle image upload if a new file is selected
+            const imageInput = document.getElementById(tableName === 'products' ? 'product-image-input' : 'news-image-input');
+            const file = imageInput.files[0];
+
+            if (file) {
+                const fileName = `${tableName}/${Date.now()}_${file.name}`;
+                const { data: uploadData, error: uploadError } = await supabase.storage
+                    .from('product-images')
+                    .upload(fileName, file);
+
+                if (uploadError) throw uploadError;
+
+                const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(fileName);
+                itemData.image_url = urlData.publicUrl;
+
+                // If editing, delete the old image
+                if (!isAddMode && this.currentItem.image_url) {
+                    const oldImageName = this.currentItem.image_url.split('/').pop();
+                    if(oldImageName) {
+                       await supabase.storage.from('product-images').remove([`${tableName}/${oldImageName}`]);
+                    }
+                }
+            }
+
+            // 2. Prepare data for Supabase (remove id for insert)
+            let queryData = { ...itemData };
+            if (isAddMode) {
+                delete queryData.id;
+            } else {
+                delete queryData.created_at; // Avoid updating this field
+            }
+
+            // 3. Upsert data to the table
+            let result;
+            if (isAddMode) {
+                result = await supabase.from(tableName).insert(queryData).select();
+            } else {
+                result = await supabase.from(tableName).update(queryData).eq('id', itemData.id).select();
+            }
+
+            const { data, error } = result;
+
+            if (error) throw error;
+
+            // 4. Update local state
+            if (isAddMode) {
+                this[tableName].unshift(data[0]);
+            } else {
+                const index = this[tableName].findIndex(i => i.id === data[0].id);
+                if (index > -1) this[tableName][index] = data[0];
+            }
+
+            window.showNotification(`${tableName === 'products' ? 'Produk' : 'Berita'} berhasil disimpan!`);
+            this.closeModal();
+        } catch (error) {
+            console.error('Error submitting form:', error);
+            window.showNotification('Terjadi kesalahan. Coba lagi.', true);
+        }
+    },
+
+    async deleteItem(id, imageUrl) {
+        if (!confirm('Anda yakin ingin menghapus item ini? Tindakan ini tidak dapat dibatalkan.')) return;
+
+        const tableName = this.activeTab;
+
+        try {
+            // 1. Delete from table
+            const { error: dbError } = await supabase.from(tableName).delete().eq('id', id);
+            if (dbError) throw dbError;
+
+            // 2. Delete image from storage
+            if (imageUrl) {
+                const imageName = imageUrl.split('/').pop();
+                if (imageName) {
+                    await supabase.storage.from('product-images').remove([`${tableName}/${imageName}`]);
+                }
+            }
+
+            // 3. Update local state
+            this[tableName] = this[tableName].filter(item => item.id !== id);
+            window.showNotification('Item berhasil dihapus.');
+
+        } catch (error) {
+            console.error('Error deleting item:', error);
+            window.showNotification('Gagal menghapus item.', true);
+        }
+    },
+
+    formatRupiah(number) {
+        if (isNaN(number)) return "Rp 0";
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(number);
+    }
+  }));
 });
 
-/**
- * Displays a notification on the screen.
- * @param {string} message The message to display.
- * @param {boolean} isError If true, the notification will have an error style.
- */
 window.showNotification = (message, isError = false) => {
   const notificationElement = document.getElementById('notification');
   if (!notificationElement) {
     console.warn('Notification element not found. Please add `<div id="notification"></div>` to your HTML.');
-    // Fallback to alert if the element doesn't exist
     alert(message);
     return;
   }
-
   notificationElement.textContent = message;
-
-  // Basic styling for error messages
-  if (isError) {
-    notificationElement.style.backgroundColor = '#ef4444'; // Red color for errors
-  } else {
-    notificationElement.style.backgroundColor = 'var(--accent)'; // Default green color
-  }
-
+  notificationElement.style.backgroundColor = isError ? '#ef4444' : 'var(--accent)';
   notificationElement.classList.add('show');
-
-  // Hide the notification after 3 seconds
   setTimeout(() => {
     notificationElement.classList.remove('show');
   }, 3000);

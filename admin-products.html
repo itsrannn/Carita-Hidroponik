@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manajemen Produk | Carita Hidroponik</title>
+    <title>Manajemen Konten | Carita Hidroponik</title>
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/mobile.css" media="(max-width: 768px)" />
     <style>
@@ -19,7 +19,7 @@
         }
         .dashboard-header-text h1 { margin: 0; }
         .dashboard-header-text p { margin: 0; margin-top: 0.25rem; color: #6c757d; }
-        .product-list-card {
+        .content-card {
             background-color: #fff;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.06);
@@ -27,15 +27,15 @@
             padding: 2rem;
             margin-bottom: 2rem;
         }
-        .product-table-wrapper { overflow-x: auto; }
-        .product-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; }
-        .product-table thead th { padding: 1rem; background-color: #f8f9fa; font-weight: 600; color: #495057; border-bottom: 2px solid #dee2e6; }
-        .product-table tbody tr { border-bottom: 1px solid #dee2e6; }
-        .product-table tbody tr:last-child { border-bottom: none; }
-        .product-table tbody td { padding: 1rem; vertical-align: middle; color: #212529; }
-        .product-table .product-image { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
-        .product-table .product-name { font-weight: 600; }
-        .product-table .action-buttons { display: flex; gap: 0.5rem; }
+        .data-table-wrapper { overflow-x: auto; }
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; }
+        .data-table thead th { padding: 1rem; background-color: #f8f9fa; font-weight: 600; color: #495057; border-bottom: 2px solid #dee2e6; }
+        .data-table tbody tr { border-bottom: 1px solid #dee2e6; }
+        .data-table tbody tr:last-child { border-bottom: none; }
+        .data-table tbody td { padding: 1rem; vertical-align: middle; color: #212529; }
+        .data-table .item-image { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
+        .data-table .item-name { font-weight: 600; }
+        .data-table .action-buttons { display: flex; gap: 0.5rem; }
         .btn-edit, .btn-delete { border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background-color 0.2s, color 0.2s; font-size: 0.9rem; }
         .btn-edit { background-color: #e7f3ff; color: #0d6efd; }
         .btn-edit:hover { background-color: #d0e7ff; }
@@ -43,6 +43,30 @@
         .btn-delete:hover { background-color: #f7d5d2; }
         .btn-add { background-color: var(--primary); color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
         .btn-add:hover { background-color: var(--dark-primary); }
+
+        /* Tabs */
+        .tabs { display: flex; border-bottom: 1px solid #dee2e6; margin-bottom: 2rem; }
+        .tab-button { padding: 1rem 1.5rem; cursor: pointer; border: none; background: none; font-size: 1rem; font-weight: 600; color: #6c757d; border-bottom: 3px solid transparent; transition: color 0.2s, border-color 0.2s; }
+        .tab-button.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Table Header */
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .table-header h2 { margin: 0; }
+        .search-input {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            font-size: 0.95rem;
+            width: 100%;
+            max-width: 300px;
+        }
 
         /* Modal Styles */
         .modal-overlay {
@@ -67,13 +91,7 @@
             display: flex;
             flex-direction: column;
         }
-        .modal-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid #dee2e6;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .modal-header { padding: 1.5rem; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; }
         .modal-header h2 { margin: 0; }
         .modal-body { padding: 1.5rem; overflow-y: auto; }
         .modal-footer { padding: 1.5rem; border-top: 1px solid #dee2e6; display: flex; justify-content: flex-end; gap: 1rem; }
@@ -88,16 +106,16 @@
 
         @media (max-width: 768px) {
             .dashboard-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
-            .product-table thead { display: none; }
-            .product-table, .product-table tbody, .product-table tr, .product-table td { display: block; width: 100%; }
-            .product-table tr { margin-bottom: 1rem; border: 1px solid #dee2e6; border-radius: 8px; padding: 0.5rem; }
-            .product-table td { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border: none; border-bottom: 1px solid #e9ecef; }
-            .product-table td:last-child { border-bottom: none; }
-            .product-table td::before { content: attr(data-label); font-weight: 600; margin-right: 1rem; color: #495057; }
+            .data-table thead { display: none; }
+            .data-table, .data-table tbody, .data-table tr, .data-table td { display: block; width: 100%; }
+            .data-table tr { margin-bottom: 1rem; border: 1px solid #dee2e6; border-radius: 8px; padding: 0.5rem; }
+            .data-table td { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border: none; border-bottom: 1px solid #e9ecef; }
+            .data-table td:last-child { border-bottom: none; }
+            .data-table td::before { content: attr(data-label); font-weight: 600; margin-right: 1rem; color: #495057; }
         }
     </style>
 </head>
-<body x-data="productAdmin" x-init="init()" @keyup.escape="closeModal()">
+<body x-data="adminPage" x-init="init()" @keyup.escape="closeModal()">
 
     <div id="header-include"></div>
 
@@ -105,69 +123,118 @@
         <div class="container">
             <div class="dashboard-header">
                 <div class="dashboard-header-text">
-                    <h1 class="page-title">Manajemen Produk</h1>
-                    <p>Tambah, edit, atau hapus produk yang ditampilkan di toko.</p>
+                    <h1 class="page-title">Manajemen Konten</h1>
+                    <p>Kelola produk dan berita yang ditampilkan di situs Anda.</p>
                 </div>
-                 <button @click="openAddModal()" class="btn-add">+ Tambah Produk Baru</button>
+                <button @click="openAddModal()" class="btn-add">
+                    <span x-show="activeTab === 'products'">+ Tambah Produk</span>
+                    <span x-show="activeTab === 'news'">+ Tambah Berita</span>
+                </button>
             </div>
 
-            <div class="product-list-card">
-                <h2>Daftar Produk</h2>
-                <div class="product-table-wrapper">
-                    <table class="product-table">
-                        <thead>
-                            <tr><th>Gambar</th><th>Produk</th><th>Kategori</th><th>Harga</th><th>Aksi</th></tr>
-                        </thead>
-                        <tbody>
-                            <template x-if="isLoading">
-                                <tr><td colspan="5" style="text-align: center;">Memuat produk...</td></tr>
-                            </template>
-                            <template x-if="!isLoading && allProductsCache.length === 0">
-                                <tr><td colspan="5" style="text-align: center;">Belum ada produk.</td></tr>
-                            </template>
-                            <template x-for="product in allProductsCache" :key="product.id">
-                                <tr>
-                                    <td data-label="Gambar"><img :src="product.image_url" :alt="product.name" class="product-image"></td>
-                                    <td data-label="Produk" class="product-name" x-text="product.name"></td>
-                                    <td data-label="Kategori" x-text="product.category"></td>
-                                    <td data-label="Harga" x-text="formatRupiah(product.price)"></td>
-                                    <td data-label="Aksi">
-                                        <div class="action-buttons">
-                                            <button class="btn-edit" @click="openEditModal(product)">Edit</button>
-                                            <button class="btn-delete" @click="deleteProduct(product.id, product.image_url)">Hapus</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
+            <div class="content-card">
+                <div class="tabs">
+                    <button @click="activeTab = 'products'" :class="{ 'active': activeTab === 'products' }" class="tab-button">Manajemen Produk</button>
+                    <button @click="activeTab = 'news'" :class="{ 'active': activeTab === 'news' }" class="tab-button">Manajemen Berita</button>
                 </div>
-                 <div id="admin-message-container" class="message-container" style="display: none; margin-top: 1rem;"></div>
+
+                <!-- Products Tab -->
+                <div x-show="activeTab === 'products'" class="tab-content active">
+                    <div class="table-header">
+                        <h2>Daftar Produk</h2>
+                        <input type="text" x-model="searchQuery.products" placeholder="Cari produk..." class="search-input">
+                    </div>
+                    <div class="data-table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Gambar</th><th>Produk</th><th>Kategori</th><th>Harga</th><th>Aksi</th></tr>
+                            </thead>
+                            <tbody>
+                                <template x-if="isLoading.products"><tr><td colspan="5" style="text-align: center;">Memuat produk...</td></tr></template>
+                                <template x-if="!isLoading.products && filteredProducts.length === 0"><tr><td colspan="5" style="text-align: center;">Tidak ada produk yang cocok.</td></tr></template>
+                                <template x-for="product in filteredProducts" :key="product.id">
+                                    <tr>
+                                        <td data-label="Gambar"><img :src="product.image_url" :alt="product.name" class="item-image"></td>
+                                        <td data-label="Produk" class="item-name" x-text="product.name"></td>
+                                        <td data-label="Kategori" x-text="product.category"></td>
+                                        <td data-label="Harga" x-text="formatRupiah(product.price)"></td>
+                                        <td data-label="Aksi">
+                                            <div class="action-buttons">
+                                                <button class="btn-edit" @click="openEditModal(product)">Edit</button>
+                                                <button class="btn-delete" @click="deleteItem(product.id, product.image_url)">Hapus</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- News Tab -->
+                <div x-show="activeTab === 'news'" class="tab-content">
+                     <div class="table-header">
+                        <h2>Daftar Berita</h2>
+                        <input type="text" x-model="searchQuery.news" placeholder="Cari berita..." class="search-input">
+                    </div>
+                    <div class="data-table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>Gambar</th><th>Judul</th><th>Kutipan</th><th>Aksi</th></tr>
+                            </thead>
+                            <tbody>
+                                <template x-if="isLoading.news"><tr><td colspan="4" style="text-align: center;">Memuat berita...</td></tr></template>
+                                <template x-if="!isLoading.news && filteredNews.length === 0"><tr><td colspan="4" style="text-align: center;">Tidak ada berita yang cocok.</td></tr></template>
+                                <template x-for="item in filteredNews" :key="item.id">
+                                    <tr>
+                                        <td data-label="Gambar"><img :src="item.image_url" :alt="item.title" class="item-image"></td>
+                                        <td data-label="Judul" class="item-name" x-text="item.title"></td>
+                                        <td data-label="Kutipan" x-text="item.excerpt"></td>
+                                        <td data-label="Aksi">
+                                            <div class="action-buttons">
+                                                <button class="btn-edit" @click="openEditModal(item)">Edit</button>
+                                                <button class="btn-delete" @click="deleteItem(item.id, item.image_url)">Hapus</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
 
-    <!-- Product Form Modal -->
+    <!-- Generic Form Modal -->
     <div x-show="isModalOpen" x-transition class="modal-overlay" @click.self="closeModal()" style="display: none;">
         <div class="modal-content" @click.stop>
             <div class="modal-header">
-                <h2 x-text="modalMode === 'add' ? 'Tambah Produk Baru' : 'Edit Produk'"></h2>
+                <h2 x-text="getModalTitle()"></h2>
                 <button @click="closeModal()" class="btn-close">&times;</button>
             </div>
-            <form id="add-product-form" @submit.prevent="submitForm()">
+            <form @submit.prevent="submitForm()">
                 <div class="modal-body">
-                    <div class="form-grid">
-                        <div class="form-group"><label for="product-name">Nama Produk</label><input type="text" id="product-name" required></div>
-                        <div class="form-group"><label for="product-category">Kategori</label><select id="product-category" required><option value="benih">Benih</option><option value="nutrisi">Nutrisi</option><option value="media">Media Tanam</option><option value="peralatan">Peralatan</option><option value="promo">Promo</option></select></div>
-                        <div class="form-group"><label for="product-price">Harga (Rp)</label><input type="number" id="product-price" required></div>
-                        <div class="form-group"><label for="product-image">Gambar Produk</label><input type="file" id="product-image" accept="image/*"></div>
-                        <div class="form-group grid-col-span-2"><label for="product-char">Karakteristik</label><textarea id="product-char" placeholder="Contoh: 1 pack berisi ±12 biji, Super Pedas, Panen ±90 hari"></textarea></div>
-                        <div class="form-group grid-col-span-2"><label for="product-description">Deskripsi Lengkap</label><textarea id="product-description" required></textarea></div>
+                    <!-- Product Fields -->
+                    <div x-show="activeTab === 'products'" class="form-grid">
+                        <div class="form-group"><label for="product-name">Nama Produk</label><input type="text" x-model="currentItem.name" required></div>
+                        <div class="form-group"><label for="product-category">Kategori</label><select x-model="currentItem.category" required><option value="benih">Benih</option><option value="nutrisi">Nutrisi</option><option value="media">Media Tanam</option><option value="peralatan">Peralatan</option><option value="promo">Promo</option></select></div>
+                        <div class="form-group"><label for="product-price">Harga (Rp)</label><input type="number" x-model="currentItem.price" required></div>
+                        <div class="form-group"><label for="product-image">Gambar Produk</label><input type="file" id="product-image-input" accept="image/*"></div>
+                        <div class="form-group grid-col-span-2"><label for="product-characteristics">Karakteristik</label><textarea x-model="currentItem.characteristics" placeholder="Contoh: 1 pack berisi ±12 biji, Super Pedas, Panen ±90 hari"></textarea></div>
+                        <div class="form-group grid-col-span-2"><label for="product-description">Deskripsi Lengkap</label><textarea x-model="currentItem.description" required></textarea></div>
+                    </div>
+
+                    <!-- News Fields -->
+                     <div x-show="activeTab === 'news'" class="form-grid">
+                        <div class="form-group grid-col-span-2"><label for="news-title">Judul Berita</label><input type="text" x-model="currentItem.title" required></div>
+                        <div class="form-group"><label for="news-image">Gambar Berita</label><input type="file" id="news-image-input" accept="image/*"></div>
+                        <div class="form-group grid-col-span-2"><label for="news-excerpt">Kutipan</label><textarea x-model="currentItem.excerpt" required></textarea></div>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" @click="closeModal()" class="btn-cancel">Batal</button>
-                    <button type="submit" class="btn-submit" x-text="modalMode === 'add' ? 'Tambah Produk' : 'Simpan Perubahan'"></button>
+                    <button type="submit" class="btn-submit" x-text="getSubmitButtonText()"></button>
                 </div>
             </form>
         </div>
@@ -176,15 +243,12 @@
     <div id="footer-include"></div>
 
     <script src="https://unpkg.com/feather-icons"></script>
-    <!-- 1. Library Supabase & Alpine (harus dimuat sebelum skrip lain) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js?nounit=true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js?nounit=true" defer></script>
 
-    <!-- 2. Skrip Aplikasi (defer untuk menunggu DOM siap) -->
-    <script src="js/supabase-client.js" defer></script>
-    <!-- 4. Skrip Halaman (tergantung Alpine & Supabase) -->
-    <script src="js/admin-products.js" type="module"></script>
-    <!-- 5. Skrip lain-lain -->
-    <script src="js/include.js" defer></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/script.js"></script>
+    <script src="js/include.js"></script>
 </body>
 </html>
