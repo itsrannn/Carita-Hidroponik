@@ -91,9 +91,40 @@
             color: #fff;
             text-transform: capitalize;
         }
+        /* Modern Sort/Filter Controls */
+        .filter-container {
+            background-color: #fff;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            border: 1px solid rgba(0,0,0,0.06);
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .filter-group label {
+            font-size: 0.8rem;
+            color: #666;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+        }
+        .filter-select {
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            background-color: #f8f9fa;
+            font-weight: 500;
+            min-width: 200px;
+        }
     </style>
 </head>
-<body x-data="adminPage" x-init="init()">
+<body>
 
     <div id="header-include"></div>
 
@@ -108,6 +139,28 @@
             </div>
 
             <div id="admin-message-container" class="message-container" style="display: none;"></div>
+
+            <!-- Filter Controls -->
+            <div class="filter-container">
+                <div class="filter-group">
+                    <label for="sort-time">Urutkan Berdasarkan Waktu</label>
+                    <select id="sort-time" class="filter-select">
+                        <option value="newest">Terbaru</option>
+                        <option value="oldest">Terlama</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-status">Saring Berdasarkan Status</label>
+                    <select id="filter-status" class="filter-select">
+                        <option value="all">Semua Status</option>
+                        <option value="Menunggu Konfirmasi">Menunggu Konfirmasi</option>
+                        <option value="Diproses">Diproses</option>
+                        <option value="Dalam Pengiriman">Dalam Pengiriman</option>
+                        <option value="Selesai">Selesai</option>
+                        <option value="Ditolak">Ditolak</option>
+                    </select>
+                </div>
+            </div>
 
             <!-- Order Cards Grid -->
             <div id="orders-grid" class="order-management-grid">
