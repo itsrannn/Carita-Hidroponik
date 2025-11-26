@@ -147,6 +147,7 @@ CREATE TABLE IF NOT EXISTS public.news (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
     title TEXT NOT NULL,
     excerpt TEXT,
+    content TEXT,
     image_url TEXT
 );
 

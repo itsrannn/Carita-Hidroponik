@@ -73,34 +73,59 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- News Rendering Logic ---
-  const newsContainer = document.getElementById("index-news-container");
-  if (newsContainer && window.mockNewsData) {
-    // Ambil hanya 3 berita pertama untuk ditampilkan di halaman utama
-    const newsToShow = window.mockNewsData.slice(0, 3);
-    newsToShow.forEach((newsItem) => {
-      const newsCard = `
-        <a href="${newsItem.link}" class="news-card-link">
-          <article class="news-card">
-            <div class="news-card-image-wrapper">
-              <img src="${newsItem.imageUrl}" alt="${newsItem.title}" />
-            </div>
-            <div class="news-card-content">
-              <p class="news-card-meta">${new Date(
-                newsItem.date
-              ).toLocaleDateString("id-ID", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}</p>
-              <h3>${newsItem.title}</h3>
-              <p class="news-card-excerpt">${newsItem.summary}</p>
-            </div>
-          </article>
-        </a>
-      `;
-      newsContainer.innerHTML += newsCard;
-    });
+  async function fetchAndDisplayNews() {
+    const newsContainer = document.getElementById("index-news-container");
+    if (!newsContainer) return;
+
+    try {
+      // Show loading indicator
+      newsContainer.innerHTML = '<p class="loading-text" style="text-align: center; padding: 2rem;">Memuat berita...</p>';
+
+      if (!window.supabase) {
+        console.error("Supabase client is not available.");
+        newsContainer.innerHTML = '<p style="text-align: center; color: red;">Gagal memuat Supabase client.</p>';
+        return;
+      }
+
+      const { data, error } = await window.supabase
+        .from('news')
+        .select('id, created_at, title, excerpt, image_url')
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        newsContainer.innerHTML = ''; // Clear loading indicator
+        data.forEach(newsItem => {
+          const newsCard = `
+            <a href="news detail.html?id=${newsItem.id}" class="news-card-link">
+              <article class="news-card">
+                <div class="news-card-image-wrapper">
+                  <img src="${newsItem.image_url || 'img/coming soon.jpg'}" alt="${newsItem.title}" />
+                </div>
+                <div class="news-card-content">
+                  <p class="news-card-meta">${new Date(newsItem.created_at).toLocaleDateString("id-ID", {
+                    year: "numeric", month: "long", day: "numeric",
+                  })}</p>
+                  <h3>${newsItem.title}</h3>
+                  <p class="news-card-excerpt">${newsItem.excerpt}</p>
+                </div>
+              </article>
+            </a>
+          `;
+          newsContainer.innerHTML += newsCard;
+        });
+      } else {
+        newsContainer.innerHTML = '<p style="text-align: center;">Belum ada berita yang diterbitkan.</p>';
+      }
+    } catch (error) {
+      console.error('Error fetching news:', error);
+      newsContainer.innerHTML = '<p style="text-align: center; color: red;">Gagal memuat berita.</p>';
+    }
   }
+
+  fetchAndDisplayNews();
 
   // Mobile menu toggle logic might be added here later if needed
 

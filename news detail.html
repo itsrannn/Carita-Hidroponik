@@ -119,34 +119,13 @@
     <div id="footer-include"></div>
 
     <script src="https://unpkg.com/feather-icons"></script>
-    <script src="js/app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js" defer></script>
+
+    <script src="js/supabase-client.js"></script>
+    <script src="js/main.js"></script> <!-- Diperlukan untuk cart, dll. -->
     <script src="js/include.js"></script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js"
-      defer
-    ></script>
+    <script src="js/news-detail.js"></script> <!-- Skrip baru kita -->
     <script src="js/script.js"></script>
-
-    <script>
-      // Script untuk memuat berita saat halaman detail dibuka
-      document.addEventListener("DOMContentLoaded", () => {
-        feather.replace();
-
-        // 1. Dapatkan ID berita dari URL, misalnya: "news detail.html?id=pakcoy-pemula"
-        const urlParams = new URLSearchParams(window.location.search);
-        const newsId = urlParams.get("id");
-
-        // 2. Panggil fungsi yang ada di app.js
-        if (window.loadNewsById && newsId) {
-          window.loadNewsById(newsId);
-        } else if (!newsId) {
-          // Jika tidak ada ID di URL
-          document.getElementById("news-title").innerText =
-            "Parameter ID Berita Hilang";
-          document.getElementById("news-body").innerHTML =
-            "<p>Untuk melihat detail berita, Anda perlu menyertakan parameter <code>?id=[ID_BERITA]</code> di URL.</p>";
-        }
-      });
-    </script>
   </body>
 </html>

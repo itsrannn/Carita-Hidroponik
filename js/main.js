@@ -87,6 +87,33 @@ document.addEventListener("alpine:init", () => {
     modalMode: 'add',
     currentItem: {},
     searchQuery: { products: '', news: '' },
+    quill: null,
+
+    initQuill() {
+        this.$nextTick(() => {
+            if (document.getElementById('quill-editor')) {
+                this.quill = new Quill('#quill-editor', {
+                    theme: 'snow',
+                    modules: {
+                        toolbar: [
+                            [{ 'header': [1, 2, false] }],
+                            ['bold', 'italic', 'underline'],
+                            ['link'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            ['clean']
+                        ]
+                    }
+                });
+
+                // Set content if in edit mode
+                if (this.modalMode === 'edit' && this.currentItem.content) {
+                    this.quill.root.innerHTML = this.currentItem.content;
+                } else {
+                    this.quill.root.innerHTML = '';
+                }
+            }
+        });
+    },
 
     get filteredProducts() {
       if (!this.searchQuery.products) return this.products;
@@ -161,25 +188,36 @@ document.addEventListener("alpine:init", () => {
       this.currentItem =
         this.activeTab === 'products'
           ? { name: '', category: 'benih', price: 0, characteristics: '', description: '', image_url: '' }
-          : { title: '', excerpt: '', image_url: '' };
+          : { title: '', excerpt: '', content: '', image_url: '' };
       this.isModalOpen = true;
+      if (this.activeTab === 'news') {
+        this.initQuill();
+      }
     },
 
     openEditModal(item) {
       this.modalMode = 'edit';
       this.currentItem = JSON.parse(JSON.stringify(item));
       this.isModalOpen = true;
+      if (this.activeTab === 'news') {
+        this.initQuill();
+      }
     },
 
     closeModal() {
       this.isModalOpen = false;
       this.currentItem = {};
+      this.quill = null;
     },
 
     async submitForm() {
       const tableName = this.activeTab;
       const isAdd = this.modalMode === 'add';
       let itemData = { ...this.currentItem };
+
+      if (tableName === 'news' && this.quill) {
+        itemData.content = this.quill.root.innerHTML;
+      }
 
       try {
         // --- Handle image upload ---
