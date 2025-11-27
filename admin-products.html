@@ -4,44 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manajemen Konten | Carita Hidroponik</title>
-    <!-- Quill CSS -->
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/mobile.css" media="(max-width: 768px)" />
     <style>
         body { background-color: #f8f9fa; }
-        .ql-editor { min-height: 200px; }
-        .dashboard-header {
-            padding: 1.5rem;
-            background-color: white;
-            border-bottom: 1px solid #dee2e6;
-            margin-bottom: 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .dashboard-header { padding: 1.5rem; background-color: white; border-bottom: 1px solid #dee2e6; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; }
         .dashboard-header-text h1 { margin: 0; }
         .dashboard-header-text p { margin: 0; margin-top: 0.25rem; color: #6c757d; }
-
-        .back-link {
-            display: block;
-            margin-bottom: 1rem;
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 600;
-        }
-        .back-link:hover {
-            text-decoration: underline;
-        }
-
-        .content-card {
-            background-color: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-            border: 1px solid rgba(0,0,0,0.08);
-            padding: 2rem;
-            margin-bottom: 2rem;
-        }
+        .back-link { display: block; margin-bottom: 1rem; color: var(--primary); text-decoration: none; font-weight: 600; }
+        .back-link:hover { text-decoration: underline; }
+        .content-card { background-color: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.08); padding: 2rem; margin-bottom: 2rem; }
         .data-table-wrapper { overflow-x: auto; }
         .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; }
         .data-table thead th { padding: 1rem; background-color: #f8f9fa; font-weight: 600; color: #495057; border-bottom: 2px solid #dee2e6; }
@@ -52,72 +24,18 @@
         .data-table .item-name { font-weight: 600; }
         .data-table .action-buttons { display: flex; gap: 0.5rem; }
         .btn-edit, .btn-delete { border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background-color 0.2s, color 0.2s; font-size: 0.9rem; }
-        .btn-edit { background-color: #e7f3ff; color: #0d6efd; }
+        .btn-edit { background-color: #e7f3ff; color: #0d6efd; text-decoration: none; }
         .btn-edit:hover { background-color: #d0e7ff; }
         .btn-delete { background-color: #fce8e6; color: #c5221f; }
         .btn-delete:hover { background-color: #f7d5d2; }
-        .btn-add { background-color: #15803d; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
+        .btn-add { background-color: #15803d; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; text-decoration: none; }
         .btn-add:hover { background-color: #14532d; }
-
-        /* Tabs */
         .tabs { display: flex; border-bottom: 1px solid #dee2e6; margin-bottom: 2rem; }
         .tab-button { padding: 1rem 1.5rem; cursor: pointer; border: none; background: none; font-size: 1rem; font-weight: 600; color: #6c757d; border-bottom: 3px solid transparent; transition: color 0.2s, border-color 0.2s; }
         .tab-button.active { color: var(--primary); border-bottom-color: var(--primary); }
-
-        /* Table Header */
-        .table-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
+        .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
         .table-header h2 { margin: 0; }
-        .search-input {
-            padding: 0.75rem 1rem;
-            border-radius: 8px;
-            border: 1px solid #dee2e6;
-            font-size: 0.95rem;
-            width: 100%;
-            max-width: 300px;
-        }
-
-        /* Modal Styles */
-        .admin-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.6);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 4000;
-            padding: 1rem;
-        }
-        .admin-modal-content {
-            background-color: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            width: 100%;
-            max-width: 700px;
-            max-height: 90vh;
-            display: flex;
-            flex-direction: column;
-        }
-        .modal-header { padding: 1.5rem; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; }
-        .modal-header h2 { margin: 0; }
-        .modal-body { padding: 1.5rem; overflow-y: auto; }
-        .modal-footer { padding: 1.5rem; border-top: 1px solid #dee2e6; display: flex; justify-content: flex-end; gap: 1rem; }
-        .btn-close, .btn-cancel { border: 1px solid #ccc; background-color: #fff; color: #333; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
-        .btn-submit { background-color: var(--primary); color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
-        .form-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
-        @media (min-width: 768px) { .form-grid { grid-template-columns: repeat(2, 1fr); } .grid-col-span-2 { grid-column: span 2; } }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group label { font-weight: 600; margin-bottom: 0.5rem; color: #333; }
-        .form-group input, .form-group select, .form-group textarea { padding: 0.75rem; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
-        .form-group textarea { min-height: 120px; resize: vertical; }
-
+        .search-input { padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #dee2e6; font-size: 0.95rem; width: 100%; max-width: 300px; }
         @media (max-width: 768px) {
             .dashboard-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
             .data-table thead { display: none; }
@@ -129,7 +47,7 @@
         }
     </style>
 </head>
-<body x-data="contentManager" x-init="init()" @keyup.escape="closeModal()">
+<body x-data="contentManager" x-init="init()">
 
     <div id="header-include"></div>
 
@@ -141,10 +59,10 @@
                     <h1 class="page-title">Manajemen Konten</h1>
                     <p>Kelola produk dan berita yang ditampilkan di situs Anda.</p>
                 </div>
-                <button type="button" @click="openAddModal()" class="btn-add">
+                <a :href="`admin-editor.html?type=${activeTab}&action=add`" class="btn-add">
                     <span x-show="activeTab === 'products'">+ Tambah Produk</span>
                     <span x-show="activeTab === 'news'">+ Tambah Berita</span>
-                </button>
+                </a>
             </div>
 
             <div class="content-card">
@@ -175,12 +93,12 @@
                                         <td data-label="Harga" x-text="formatRupiah(product.price)"></td>
                                         <td data-label="Aksi">
                                             <div class="action-buttons">
-                                                <button type="button" class="btn-edit" @click="openEditModal(product)">Edit</button>
+                                                <a :href="`admin-editor.html?type=product&action=edit&id=${product.id}`" class="btn-edit">Edit</a>
                                                 <button type="button" class="btn-delete" @click="deleteItem(product.id, product.image_url)">Hapus</button>
                                             </div>
                                         </td>
                                     </tr>
-                                </template>
+                                 </template>
                             </tbody>
                         </table>
                     </div>
@@ -207,7 +125,7 @@
                                         <td data-label="Kutipan" x-text="item.excerpt"></td>
                                         <td data-label="Aksi">
                                             <div class="action-buttons">
-                                                <button type="button" class="btn-edit" @click="openEditModal(item)">Edit</button>
+                                                <a :href="`admin-editor.html?type=news&action=edit&id=${item.id}`" class="btn-edit">Edit</a>
                                                 <button type="button" class="btn-delete" @click="deleteItem(item.id, item.image_url)">Hapus</button>
                                             </div>
                                         </td>
@@ -221,52 +139,11 @@
         </div>
     </main>
 
-    <!-- Generic Form Modal -->
-    <div x-show="isModalOpen" class="admin-modal-overlay" @click.self="closeModal()">
-        <div class="admin-modal-content" @click.stop>
-            <div class="modal-header">
-                <h2 x-text="getModalTitle()"></h2>
-                <button type="button" @click="closeModal()" class="btn-close">&times;</button>
-            </div>
-            <form @submit.prevent="submitForm()">
-                <div class="modal-body">
-                    <!-- Product Fields -->
-                    <div x-show="activeTab === 'products'" class="form-grid">
-                        <div class="form-group"><label for="product-name">Nama Produk</label><input type="text" x-model="currentItem.name" required></div>
-                        <div class="form-group"><label for="product-category">Kategori</label><select x-model="currentItem.category" required><option value="benih">Benih</option><option value="nutrisi">Nutrisi</option><option value="media">Media Tanam</option><option value="peralatan">Peralatan</option><option value="promo">Promo</option></select></div>
-                        <div class="form-group"><label for="product-price">Harga (Rp)</label><input type="number" x-model="currentItem.price" required></div>
-                        <div class="form-group"><label for="product-image">Gambar Produk</label><input type="file" id="product-image-input" accept="image/*"></div>
-                        <div class="form-group grid-col-span-2"><label for="product-characteristics">Karakteristik</label><textarea x-model="currentItem.characteristics" placeholder="Contoh: 1 pack berisi ±12 biji, Super Pedas, Panen ±90 hari"></textarea></div>
-                        <div class="form-group grid-col-span-2"><label for="product-description">Deskripsi Lengkap</label><textarea x-model="currentItem.description" required></textarea></div>
-                    </div>
-
-                    <!-- News Fields -->
-                     <div x-show="activeTab === 'news'" class="form-grid">
-                        <div class="form-group grid-col-span-2"><label for="news-title">Judul Berita</label><input type="text" x-model="currentItem.title" required></div>
-                        <div class="form-group grid-col-span-2"><label for="news-image">Gambar Berita</label><input type="file" id="news-image-input" accept="image/*"></div>
-                        <div class="form-group grid-col-span-2"><label for="news-excerpt">Kutipan</label><textarea x-model="currentItem.excerpt" required rows="3"></textarea></div>
-                        <div class="form-group grid-col-span-2">
-                          <label for="news-content">Isi Konten Berita</label>
-                          <div id="quill-editor"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" @click="closeModal()" class="btn-cancel">Batal</button>
-                    <button type="submit" class="btn-submit" x-text="getSubmitButtonText()"></button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <div id="footer-include"></div>
 
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js?nounit=true" defer></script>
-
-    <!-- Quill JS -->
-    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
     <script src="js/supabase-client.js"></script>
     <script src="js/main.js"></script>

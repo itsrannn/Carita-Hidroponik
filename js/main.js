@@ -83,48 +83,7 @@ document.addEventListener("alpine:init", () => {
     products: [],
     news: [],
     isLoading: { products: true, news: true },
-    isModalOpen: false,
-    modalMode: 'add',
-    currentItem: {},
     searchQuery: { products: '', news: '' },
-    quill: null,
-
-    initQuill() {
-        if (this.quill) {
-            const content = (this.modalMode === 'edit' && this.currentItem.content) ? this.currentItem.content : '';
-            this.quill.root.innerHTML = content;
-            return;
-        }
-
-        this.$nextTick(() => {
-            const editorEl = document.getElementById('quill-editor');
-            if (editorEl) {
-                // Aggressively remove any old toolbars to prevent duplication bug
-                const parent = editorEl.parentElement;
-                const oldToolbars = parent.querySelectorAll('.ql-toolbar');
-                oldToolbars.forEach(tb => tb.remove());
-
-                // Re-check for instance before creating
-                if (!this.quill) {
-                    this.quill = new Quill('#quill-editor', {
-                        theme: 'snow',
-                        modules: {
-                            toolbar: [
-                                [{ 'header': [1, 2, false] }],
-                                ['bold', 'italic', 'underline'],
-                                ['link'],
-                                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                                ['clean']
-                            ]
-                        }
-                    });
-
-                    const content = (this.modalMode === 'edit' && this.currentItem.content) ? this.currentItem.content : '';
-                    this.quill.root.innerHTML = content;
-                }
-            }
-        });
-    },
 
     get filteredProducts() {
       if (!this.searchQuery.products) return this.products;
@@ -183,114 +142,6 @@ document.addEventListener("alpine:init", () => {
       }
     },
 
-    getModalTitle() {
-      const type = this.activeTab === 'products' ? 'Produk' : 'Berita';
-      return this.modalMode === 'add'
-        ? `Tambah ${type} Baru`
-        : `Edit ${type}`;
-    },
-
-    getSubmitButtonText() {
-      return this.modalMode === 'add' ? 'Tambah' : 'Simpan Perubahan';
-    },
-
-    openAddModal() {
-      this.modalMode = 'add';
-      this.currentItem =
-        this.activeTab === 'products'
-          ? { name: '', category: 'benih', price: 0, characteristics: '', description: '', image_url: '' }
-          : { title: '', excerpt: '', content: '', image_url: '' };
-      this.isModalOpen = true;
-      if (this.activeTab === 'news') {
-        this.initQuill();
-      }
-    },
-
-    openEditModal(item) {
-      this.modalMode = 'edit';
-      this.currentItem = JSON.parse(JSON.stringify(item));
-      this.isModalOpen = true;
-      if (this.activeTab === 'news') {
-        this.initQuill();
-      }
-    },
-
-    closeModal() {
-      this.isModalOpen = false;
-      this.currentItem = {};
-      // Destroy Quill instance to prevent duplicates
-      if (this.quill) {
-          const editor = document.getElementById('quill-editor');
-          if (editor) editor.innerHTML = ''; // Clear the content
-          this.quill = null;
-      }
-    },
-
-    async submitForm() {
-      const tableName = this.activeTab;
-      const isAdd = this.modalMode === 'add';
-      let itemData = { ...this.currentItem };
-
-      if (tableName === 'news' && this.quill) {
-        itemData.content = this.quill.root.innerHTML;
-      }
-
-      try {
-        // --- Handle image upload ---
-        const inputId = tableName === 'products' ? 'product-image-input' : 'news-image-input';
-        const imageInput = document.getElementById(inputId);
-        const file = imageInput.files[0];
-
-        if (file) {
-          const uploadedName = `${tableName}/${Date.now()}_${file.name}`;
-
-          const { error: uploadErr } = await supabase.storage
-            .from('product-images')
-            .upload(uploadedName, file);
-          if (uploadErr) throw uploadErr;
-
-          const { data: urlData } =
-            supabase.storage.from('product-images').getPublicUrl(uploadedName);
-
-          itemData.image_url = urlData.publicUrl;
-
-          // Delete old image when editing
-          if (!isAdd && this.currentItem.image_url) {
-            const oldName = this.currentItem.image_url.split('/').pop();
-            if (oldName) {
-              await supabase.storage.from('product-images').remove([`${tableName}/${oldName}`]);
-            }
-          }
-        }
-
-        // --- Prepare query ---
-        let finalData = { ...itemData };
-        if (isAdd) delete finalData.id;
-        else delete finalData.created_at;
-
-        let result = isAdd
-          ? await supabase.from(tableName).insert(finalData).select()
-          : await supabase.from(tableName).update(finalData).eq('id', itemData.id).select();
-
-        const { data, error } = result;
-        if (error) throw error;
-
-        // Update UI
-        if (isAdd) {
-          this[tableName].unshift(data[0]);
-        } else {
-          const idx = this[tableName].findIndex(i => i.id === data[0].id);
-          if (idx > -1) this[tableName][idx] = data[0];
-        }
-
-        window.showNotification(`${tableName === 'products' ? 'Produk' : 'Berita'} berhasil disimpan!`);
-        this.closeModal();
-      } catch (error) {
-        console.error('Error submitting form:', error);
-        window.showNotification('Terjadi kesalahan. Coba lagi.', true);
-      }
-    },
-
     async deleteItem(id, imageUrl) {
       if (!confirm('Anda yakin ingin menghapus item ini?')) return;
 
@@ -322,6 +173,152 @@ document.addEventListener("alpine:init", () => {
         minimumFractionDigits: 0
       }).format(number);
     }
+  }));
+
+  Alpine.data('editorPage', () => ({
+      type: null,
+      action: null,
+      id: null,
+      item: {},
+      title: 'Memuat...',
+      submitButtonText: 'Simpan',
+      isLoading: true,
+      quill: null,
+
+      async init() {
+          const params = new URLSearchParams(window.location.search);
+          this.type = params.get('type');
+          this.action = params.get('action');
+          this.id = params.get('id');
+
+          this.setupPage();
+
+          if (this.action === 'edit' && this.id) {
+              await this.fetchData();
+          } else {
+              this.initializeEmptyItem();
+              this.isLoading = false;
+          }
+
+           if (this.type === 'news') {
+              this.$nextTick(() => {
+                  this.initializeQuill();
+                  if (this.item.content) {
+                      this.quill.root.innerHTML = this.item.content;
+                  }
+              });
+          }
+      },
+
+      setupPage() {
+          if (this.type === 'product') {
+              this.title = this.action === 'add' ? 'Tambah Produk Baru' : 'Edit Produk';
+          } else if (this.type === 'news') {
+              this.title = this.action === 'add' ? 'Tambah Berita Baru' : 'Edit Berita';
+          }
+          this.submitButtonText = this.action === 'add' ? 'Simpan' : 'Simpan Perubahan';
+      },
+
+      initializeEmptyItem() {
+          if (this.type === 'product') {
+              this.item = { name: '', category: '', price: null, characteristics: '', description: '', image_url: '' };
+          } else if (this.type === 'news') {
+              this.item = { title: '', excerpt: '', content: '', image_url: '' };
+          }
+      },
+
+      async fetchData() {
+          this.isLoading = true;
+          const tableName = this.type === 'product' ? 'products' : 'news';
+          const { data, error } = await supabase
+              .from(tableName)
+              .select('*')
+              .eq('id', this.id)
+              .single();
+
+          if (error) {
+              console.error('Error fetching data:', error);
+              showNotification('Gagal memuat data. Silakan coba lagi.', true);
+              this.isLoading = false;
+              return;
+          }
+
+          this.item = data;
+          this.isLoading = false;
+      },
+
+      initializeQuill() {
+          if (document.getElementById('quill-editor') && !this.quill) {
+              this.quill = new Quill('#quill-editor', {
+                  theme: 'snow',
+                  modules: {
+                      toolbar: [
+                          [{ 'header': [1, 2, 3, false] }],
+                          ['bold', 'italic', 'underline'],
+                          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                          ['link', 'image'],
+                          ['clean']
+                      ]
+                  }
+              });
+          }
+      },
+
+      async submitForm() {
+          this.isLoading = true;
+
+          const imageInput = document.getElementById(this.type === 'product' ? 'image-input' : 'news-image-input');
+          const file = imageInput.files[0];
+          let imageUrl = this.item.image_url;
+
+          if (file) {
+              const filePath = `${this.type}-images/${Date.now()}-${file.name}`;
+              const { data: uploadData, error: uploadError } = await supabase.storage
+                  .from('product-images')
+                  .upload(filePath, file);
+
+              if (uploadError) {
+                  console.error('Error uploading image:', uploadError);
+                  showNotification('Gagal mengunggah gambar.', true);
+                  this.isLoading = false;
+                  return;
+              }
+
+              const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(uploadData.path);
+              imageUrl = urlData.publicUrl;
+          }
+
+          let dataToSubmit = { ...this.item, image_url: imageUrl };
+          if (this.type === 'news') {
+              dataToSubmit.content = this.quill.root.innerHTML;
+          }
+
+          if (this.action === 'add') {
+              delete dataToSubmit.id;
+          }
+
+          const tableName = this.type === 'product' ? 'products' : 'news';
+          let response;
+          if (this.action === 'add') {
+              response = await supabase.from(tableName).insert([dataToSubmit]);
+          } else {
+              response = await supabase.from(tableName).update(dataToSubmit).eq('id', this.id);
+          }
+
+          const { error } = response;
+
+          if (error) {
+              console.error('Error saving data:', error);
+              showNotification('Gagal menyimpan data. Silakan coba lagi.', true);
+              this.isLoading = false;
+              return;
+          }
+
+          showNotification('Data berhasil disimpan!', false);
+          setTimeout(() => {
+              window.location.href = 'admin-products.html';
+          }, 1500);
+      }
   }));
 });
 
