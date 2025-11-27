@@ -1,3 +1,4 @@
+
 document.addEventListener("alpine:init", () => {
   // --- Centralized Stores ---
   Alpine.store("products", {
@@ -230,9 +231,10 @@ document.addEventListener("alpine:init", () => {
       async fetchData() {
           this.isLoading = true;
           const tableName = this.type === 'product' ? 'products' : 'news';
+          const selectString = this.type === 'product' ? '*, characteristics:char' : '*';
           const { data, error } = await supabase
               .from(tableName)
-              .select('*')
+              .select(selectString)
               .eq('id', this.id)
               .single();
 
@@ -241,6 +243,11 @@ document.addEventListener("alpine:init", () => {
               showNotification('Gagal memuat data. Silakan coba lagi.', true);
               this.isLoading = false;
               return;
+          }
+
+          if (this.type === 'product' && data.characteristics) {
+              // Convert <br> to actual newlines for textarea
+              data.characteristics = data.characteristics.replace(/<br\s*\/?>/gi, '\n');
           }
 
           this.item = data;
@@ -291,6 +298,10 @@ document.addEventListener("alpine:init", () => {
           let dataToSubmit = { ...this.item, image_url: imageUrl };
           if (this.type === 'news') {
               dataToSubmit.content = this.quill.root.innerHTML;
+          } else if (this.type === 'product' && dataToSubmit.characteristics) {
+              // Convert newlines back to <br> for storage
+              dataToSubmit.char = dataToSubmit.characteristics.replace(/\n/g, '<br>');
+              delete dataToSubmit.characteristics;
           }
 
           if (this.action === 'add') {

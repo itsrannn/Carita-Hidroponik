@@ -35,7 +35,33 @@
   }
 </style>
 
+<style>
+  /* --- Global Notification Style --- */
+  #notification {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--accent);
+    color: white;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease, bottom 0.3s ease;
+  }
+  #notification.show {
+    opacity: 1;
+    visibility: visible;
+    bottom: 40px;
+  }
+</style>
+
 <header class="topbar">
+  <!-- Global Notification Element -->
+  <div id="notification"></div>
+
   <div class="container topbar-inner">
     <div class="brand">
       <a href="index.html">

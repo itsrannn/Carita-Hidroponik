@@ -44,6 +44,13 @@
         .form-group label { font-weight: 600; margin-bottom: 0.5rem; color: #333; }
         .form-group input, .form-group select, .form-group textarea { padding: 0.75rem; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
         .form-group textarea { min-height: 120px; resize: vertical; }
+        .btn-submit {
+            background-color: #15803d; /* Solid green */
+            transition: background-color 0.2s;
+        }
+        .btn-submit:hover {
+            background-color: #14532d; /* Darker green on hover */
+        }
     </style>
 </head>
 <body x-data="editorPage" x-init="init()">
