@@ -240,7 +240,8 @@
               let imageUrl = this.item.image_url;
 
               if (file) {
-                  const filePath = `${this.type}-images/${Date.now()}-${file.name}`;
+                  const folder = this.type === 'product' ? 'products' : 'news';
+                  const filePath = `${folder}/${Date.now()}-${file.name}`;
                   const { data: uploadData, error: uploadError } = await supabase.storage
                       .from('product-images')
                       .upload(filePath, file);

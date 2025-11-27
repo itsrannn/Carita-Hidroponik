@@ -132,9 +132,32 @@ USING (is_admin())
 WITH CHECK (is_admin());
 
 -- 4. Membuat Supabase Storage Bucket untuk gambar produk
--- Pastikan bucket 'product-images' dibuat di dashboard Supabase Anda
--- dengan akses publik.
--- (Ini adalah komentar, tindakan sebenarnya dilakukan di UI Supabase)
+-- Skrip ini sekarang secara otomatis membuat bucket jika belum ada.
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('product-images', 'product-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Kebijakan untuk mengizinkan unggahan publik ke bucket 'product-images'
+-- Pastikan untuk mengganti 'product-images' jika Anda menggunakan nama bucket yang berbeda.
+CREATE POLICY "Allow public uploads"
+ON storage.objects
+FOR INSERT
+TO public
+WITH CHECK ( bucket_id = 'product-images' );
+
+-- Kebijakan untuk mengizinkan pembaruan publik
+CREATE POLICY "Allow public updates"
+ON storage.objects
+FOR UPDATE
+TO public
+USING ( bucket_id = 'product-images' );
+
+-- Kebijakan untuk mengizinkan penghapusan publik
+CREATE POLICY "Allow public deletes"
+ON storage.objects
+FOR DELETE
+TO public
+USING ( bucket_id = 'product-images' );
 
 
 -- =====================================================================================
