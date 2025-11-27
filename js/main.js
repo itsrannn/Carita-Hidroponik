@@ -90,26 +90,37 @@ document.addEventListener("alpine:init", () => {
     quill: null,
 
     initQuill() {
-        this.$nextTick(() => {
-            if (document.getElementById('quill-editor')) {
-                this.quill = new Quill('#quill-editor', {
-                    theme: 'snow',
-                    modules: {
-                        toolbar: [
-                            [{ 'header': [1, 2, false] }],
-                            ['bold', 'italic', 'underline'],
-                            ['link'],
-                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                            ['clean']
-                        ]
-                    }
-                });
+        if (this.quill) {
+            const content = (this.modalMode === 'edit' && this.currentItem.content) ? this.currentItem.content : '';
+            this.quill.root.innerHTML = content;
+            return;
+        }
 
-                // Set content if in edit mode
-                if (this.modalMode === 'edit' && this.currentItem.content) {
-                    this.quill.root.innerHTML = this.currentItem.content;
-                } else {
-                    this.quill.root.innerHTML = '';
+        this.$nextTick(() => {
+            const editorEl = document.getElementById('quill-editor');
+            if (editorEl) {
+                // Aggressively remove any old toolbars to prevent duplication bug
+                const parent = editorEl.parentElement;
+                const oldToolbars = parent.querySelectorAll('.ql-toolbar');
+                oldToolbars.forEach(tb => tb.remove());
+
+                // Re-check for instance before creating
+                if (!this.quill) {
+                    this.quill = new Quill('#quill-editor', {
+                        theme: 'snow',
+                        modules: {
+                            toolbar: [
+                                [{ 'header': [1, 2, false] }],
+                                ['bold', 'italic', 'underline'],
+                                ['link'],
+                                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                ['clean']
+                            ]
+                        }
+                    });
+
+                    const content = (this.modalMode === 'edit' && this.currentItem.content) ? this.currentItem.content : '';
+                    this.quill.root.innerHTML = content;
                 }
             }
         });
@@ -207,7 +218,12 @@ document.addEventListener("alpine:init", () => {
     closeModal() {
       this.isModalOpen = false;
       this.currentItem = {};
-      this.quill = null;
+      // Destroy Quill instance to prevent duplicates
+      if (this.quill) {
+          const editor = document.getElementById('quill-editor');
+          if (editor) editor.innerHTML = ''; // Clear the content
+          this.quill = null;
+      }
     },
 
     async submitForm() {

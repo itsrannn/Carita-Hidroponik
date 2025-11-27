@@ -82,29 +82,28 @@
         }
 
         /* Modal Styles */
-        .modal-overlay {
+        .admin-modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.6);
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 4000; /* Make sure it's on top */
-            opacity: 1;   /* Override conflicting style from style.css */
+            z-index: 4000;
+            padding: 1rem;
         }
-        .modal-content {
+        .admin-modal-content {
             background-color: white;
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            width: 90%;
-            max-width: 600px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 700px;
             max-height: 90vh;
             display: flex;
             flex-direction: column;
-            transform: none; /* Override conflicting style from style.css */
         }
         .modal-header { padding: 1.5rem; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; }
         .modal-header h2 { margin: 0; }
@@ -223,8 +222,8 @@
     </main>
 
     <!-- Generic Form Modal -->
-    <div x-show="isModalOpen" class="modal-overlay" @click.self="closeModal()">
-        <div class="modal-content" @click.stop>
+    <div x-show="isModalOpen" class="admin-modal-overlay" @click.self="closeModal()">
+        <div class="admin-modal-content" @click.stop>
             <div class="modal-header">
                 <h2 x-text="getModalTitle()"></h2>
                 <button type="button" @click="closeModal()" class="btn-close">&times;</button>
