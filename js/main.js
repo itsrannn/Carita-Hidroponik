@@ -188,7 +188,11 @@ document.addEventListener("alpine:init", () => {
 
       async init() {
           const params = new URLSearchParams(window.location.search);
-          this.type = params.get('type');
+          let typeParam = params.get('type');
+          if (typeParam === 'products') {
+              typeParam = 'product'; // Normalize from plural to singular
+          }
+          this.type = typeParam;
           this.action = params.get('action');
           this.id = params.get('id');
 

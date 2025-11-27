@@ -65,7 +65,7 @@
             </div>
 
             <div class="content-card">
-                <form @submit.prevent="submitForm()">
+                <form id="editor-form">
                     <!-- Product Fields -->
                     <div x-show="type === 'product'" class="form-grid">
                         <div class="form-group"><label for="product-name">Nama Produk</label><input id="product-name" type="text" x-model="item.name" required></div>
@@ -89,7 +89,7 @@
 
                     <div class="form-footer">
                         <a href="admin-products.html" class="btn-cancel">Batal</a>
-                        <button type="submit" class="btn-submit" x-text="submitButtonText"></button>
+                        <button type="button" @click="submitForm()" class="btn-submit" x-text="submitButtonText"></button>
                     </div>
                 </form>
             </div>
