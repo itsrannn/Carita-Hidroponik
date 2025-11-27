@@ -71,7 +71,11 @@
                         <div class="form-group"><label for="product-name">Nama Produk</label><input id="product-name" type="text" x-model="item.name" required></div>
                         <div class="form-group"><label for="product-category">Kategori</label><select id="product-category" x-model="item.category" required><option value="" disabled>Pilih Kategori</option><option value="benih">Benih</option><option value="nutrisi">Nutrisi</option><option value="media">Media Tanam</option><option value="peralatan">Peralatan</option><option value="promo">Promo</option></select></div>
                         <div class="form-group"><label for="product-price">Harga (Rp)</label><input id="product-price" type="number" x-model="item.price" required></div>
-                        <div class="form-group"><label for="image-input">Gambar Produk</label><input type="file" id="image-input" accept="image/*"></div>
+                        <div class="form-group">
+                            <label for="image-input">Gambar Produk</label>
+                            <input type="file" id="image-input" @change="handleFileChange" accept="image/*">
+                            <img :src="imagePreviewUrl" x-show="imagePreviewUrl" alt="Pratinjau Gambar" style="max-width: 200px; margin-top: 1rem; border-radius: 8px;">
+                        </div>
                         <div class="form-group grid-col-span-2"><label for="product-characteristics">Karakteristik</label><textarea id="product-characteristics" x-model="item.characteristics" placeholder="Contoh: 1 pack berisi ±12 biji, Super Pedas, Panen ±90 hari"></textarea></div>
                         <div class="form-group grid-col-span-2"><label for="product-description">Deskripsi Lengkap</label><textarea id="product-description" x-model="item.description" required></textarea></div>
                     </div>
@@ -79,7 +83,11 @@
                     <!-- News Fields -->
                     <div x-show="type === 'news'" class="form-grid">
                         <div class="form-group grid-col-span-2"><label for="news-title">Judul Berita</label><input id="news-title" type="text" x-model="item.title" required></div>
-                        <div class="form-group grid-col-span-2"><label for="news-image-input">Gambar Berita</label><input type="file" id="news-image-input" accept="image/*"></div>
+                        <div class="form-group grid-col-span-2">
+                            <label for="news-image-input">Gambar Berita</label>
+                            <input type="file" id="news-image-input" @change="handleFileChange" accept="image/*">
+                            <img :src="imagePreviewUrl" x-show="imagePreviewUrl" alt="Pratinjau Gambar" style="max-width: 200px; margin-top: 1rem; border-radius: 8px;">
+                        </div>
                         <div class="form-group grid-col-span-2"><label for="news-excerpt">Kutipan</label><textarea id="news-excerpt" x-model="item.excerpt" required rows="3"></textarea></div>
                         <div class="form-group grid-col-span-2">
                           <label for="quill-editor">Isi Konten Berita</label>
@@ -103,9 +111,189 @@
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js?nounit=true" defer></script>
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
-    <script src="js/supabase-client.js"></script>
-    <script src="js/main.js"></script>
+    <script src="js/supabase-client.js" defer></script>
+    <script src="js/main.js" defer></script>
+    <script>
+      document.addEventListener('alpine:init', () => {
+        Alpine.data('editorPage', () => ({
+          type: null,
+          action: null,
+          id: null,
+          item: {},
+          title: 'Memuat...',
+          submitButtonText: 'Simpan',
+          isLoading: true,
+          quill: null,
+          imagePreviewUrl: null,
+
+          async init() {
+              const params = new URLSearchParams(window.location.search);
+              let typeParam = params.get('type');
+              if (typeParam === 'products') {
+                  typeParam = 'product';
+              }
+              this.type = typeParam;
+              this.action = params.get('action');
+              this.id = params.get('id');
+
+              this.setupPage();
+
+              if (this.action === 'edit' && this.id) {
+                  await this.fetchData();
+                  this.imagePreviewUrl = this.item.image_url;
+              } else {
+                  this.initializeEmptyItem();
+                  this.isLoading = false;
+              }
+
+              if (this.type === 'news') {
+                  this.$nextTick(() => {
+                      this.initializeQuill();
+                      if (this.item.content) {
+                          this.quill.root.innerHTML = this.item.content;
+                      }
+                  });
+              }
+          },
+
+          handleFileChange(event) {
+              const file = event.target.files[0];
+              if (file) {
+                  this.imagePreviewUrl = URL.createObjectURL(file);
+              } else {
+                  this.imagePreviewUrl = this.item ? this.item.image_url : null;
+              }
+          },
+
+          setupPage() {
+              if (this.type === 'product') {
+                  this.title = this.action === 'add' ? 'Tambah Produk Baru' : 'Edit Produk';
+              } else if (this.type === 'news') {
+                  this.title = this.action === 'add' ? 'Tambah Berita Baru' : 'Edit Berita';
+              }
+              this.submitButtonText = this.action === 'add' ? 'Simpan' : 'Simpan Perubahan';
+          },
+
+          initializeEmptyItem() {
+              if (this.type === 'product') {
+                  this.item = { name: '', category: '', price: null, characteristics: '', description: '', image_url: '' };
+              } else if (this.type === 'news') {
+                  this.item = { title: '', excerpt: '', content: '', image_url: '' };
+              }
+          },
+
+          async fetchData() {
+              this.isLoading = true;
+              const tableName = this.type === 'product' ? 'products' : 'news';
+              const selectString = this.type === 'product' ? '*, characteristics:char' : '*';
+              const { data, error } = await supabase
+                  .from(tableName)
+                  .select(selectString)
+                  .eq('id', this.id)
+                  .single();
+
+              if (error) {
+                  console.error('Error fetching data:', error);
+                  window.showNotification('Gagal memuat data. Silakan coba lagi.', true);
+                  this.isLoading = false;
+                  return;
+              }
+
+              if (this.type === 'product' && data.characteristics) {
+                  data.characteristics = data.characteristics.replace(/<br\s*\/?>/gi, '\n');
+              }
+
+              this.item = data;
+              this.isLoading = false;
+          },
+
+          initializeQuill() {
+              const editorElement = document.getElementById('quill-editor');
+              if (editorElement) {
+                  const existingToolbar = editorElement.previousElementSibling;
+                  if (existingToolbar && existingToolbar.classList.contains('ql-toolbar')) {
+                      existingToolbar.remove();
+                  }
+                  if (!this.quill) {
+                      this.quill = new Quill(editorElement, {
+                          theme: 'snow',
+                          modules: {
+                              toolbar: [
+                                  [{ 'header': [1, 2, 3, false] }],
+                                  ['bold', 'italic', 'underline'],
+                                  [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                                  ['link', 'image'],
+                                  ['clean']
+                              ]
+                          }
+                      });
+                  }
+              }
+          },
+
+          async submitForm() {
+              this.isLoading = true;
+              this.submitButtonText = 'Menyimpan...';
+
+              const imageInput = document.getElementById(this.type === 'product' ? 'image-input' : 'news-image-input');
+              const file = imageInput.files[0];
+              let imageUrl = this.item.image_url;
+
+              if (file) {
+                  const filePath = `${this.type}-images/${Date.now()}-${file.name}`;
+                  const { data: uploadData, error: uploadError } = await supabase.storage
+                      .from('product-images')
+                      .upload(filePath, file);
+
+                  if (uploadError) {
+                      console.error('Error uploading image:', uploadError);
+                      window.showNotification('Gagal mengunggah gambar.', true);
+                      this.isLoading = false;
+                      this.submitButtonText = this.action === 'add' ? 'Simpan' : 'Simpan Perubahan';
+                      return;
+                  }
+
+                  const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(uploadData.path);
+                  imageUrl = urlData.publicUrl;
+              }
+
+              let dataToSubmit = { ...this.item, image_url: imageUrl };
+              if (this.type === 'news') {
+                  dataToSubmit.content = this.quill.root.innerHTML;
+              } else if (this.type === 'product' && dataToSubmit.characteristics) {
+                  dataToSubmit.char = dataToSubmit.characteristics.replace(/\n/g, '<br>');
+                  delete dataToSubmit.characteristics;
+              }
+
+              delete dataToSubmit.id; // Always remove id before upsert
+
+              const tableName = this.type === 'product' ? 'products' : 'news';
+              let query = supabase.from(tableName);
+
+              if (this.action === 'add') {
+                query = query.insert([dataToSubmit]);
+              } else {
+                query = query.update(dataToSubmit).eq('id', this.id);
+              }
+
+              const { error } = await query;
+
+              if (error) {
+                  console.error('Error saving data:', error);
+                  window.showNotification('Gagal menyimpan data. Silakan coba lagi.', true);
+              } else {
+                  window.showNotification('Data berhasil disimpan!', false);
+                  setTimeout(() => {
+                      window.location.href = 'admin-products.html';
+                  }, 1500);
+              }
+              this.isLoading = false;
+              this.submitButtonText = this.action === 'add' ? 'Simpan' : 'Simpan Perubahan';
+          }
+        }));
+      });
+    </script>
     <script src="js/script.js"></script>
-    <script src="js/include.js"></script>
+    <script src="js/include.js" defer></script>
 </body>
 </html>

@@ -1,0 +1,147 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - banner [ref=e3]:
+    - generic [ref=e4]:
+      - link "Carita Hidroponik" [ref=e6] [cursor=pointer]:
+        - /url: index.html
+        - img "Carita Hidroponik" [ref=e7]
+      - generic [ref=e8]:
+        - button "Account" [ref=e10] [cursor=pointer]:
+          - img [ref=e11]
+        - link "Cart" [ref=e14] [cursor=pointer]:
+          - /url: my cart.html
+          - img [ref=e15]
+  - generic [ref=e20]:
+    - generic [ref=e21]:
+      - generic [ref=e22]:
+        - img "Starter Kit untuk Pemula" [ref=e23]
+        - generic [ref=e24]:
+          - heading "MULAI HIDROPONIK DENGAN MUDAH" [level=1] [ref=e25]
+          - paragraph [ref=e26]: Paket lengkap untuk pemula, termasuk panduan praktis dan instalasi mini.
+          - link "Dapatkan Kit" [ref=e27] [cursor=pointer]:
+            - /url: "#Product"
+      - button "Previous Slide" [ref=e28] [cursor=pointer]:
+        - img [ref=e29]
+      - button "Next Slide" [ref=e31] [cursor=pointer]:
+        - img [ref=e32]
+      - generic [ref=e34]:
+        - button "Go to slide 1" [ref=e35] [cursor=pointer]
+        - button "Go to slide 2" [ref=e36] [cursor=pointer]
+        - button "Go to slide 3" [ref=e37] [cursor=pointer]
+    - generic [ref=e38]:
+      - complementary [ref=e39]:
+        - generic [ref=e40]:
+          - heading "Kategori Produk" [level=4] [ref=e41]
+          - button "−" [expanded] [ref=e42] [cursor=pointer]
+        - navigation [ref=e43]:
+          - list [ref=e44]:
+            - listitem [ref=e45]:
+              - link "Semua Produk" [ref=e46] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e47]:
+              - link "Benih" [ref=e48] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e49]:
+              - link "Nutrisi & Pupuk" [ref=e50] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e51]:
+              - link "Media Tanam" [ref=e52] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e53]:
+              - link "Peralatan" [ref=e54] [cursor=pointer]:
+                - /url: "#"
+            - listitem [ref=e55]:
+              - link "Promo & Bundling" [ref=e56] [cursor=pointer]:
+                - /url: "#"
+        - paragraph [ref=e58]:
+          - text: Butuh bantuan?
+          - link "Hubungi kami" [ref=e59] [cursor=pointer]:
+            - /url: contact.html
+      - main [ref=e60]:
+        - generic [ref=e61]:
+          - searchbox [ref=e62]
+          - img [ref=e64] [cursor=pointer]
+        - generic [ref=e67]:
+          - generic [ref=e68]:
+            - heading "Produk Unggulan" [level=1] [ref=e69]
+            - paragraph [ref=e70]: Pilihan terbaik untuk kebun hidroponik dan hobi berkebun.
+          - generic [ref=e72]:
+            - generic [ref=e73]: Sort by
+            - combobox "Sort by" [ref=e74] [cursor=pointer]:
+              - option "Default" [selected]
+              - option "Price ↑"
+              - option "Price ↓"
+  - generic [ref=e75]:
+    - heading "🌱 Status Berita & Tutorial Terbaru" [level=2] [ref=e76]
+    - generic [ref=e77]:
+      - link [ref=e78] [cursor=pointer]:
+        - /url: news detail.html?id=1
+        - article [ref=e79]:
+          - img "5 Langkah Mudah Menanam Cabai Carolina Hidroponik untuk Pemula" [ref=e81]
+          - generic [ref=e82]:
+            - paragraph [ref=e83]: 27 November 2025
+            - heading "5 Langkah Mudah Menanam Cabai Carolina Hidroponik untuk Pemula" [level=3] [ref=e84]
+            - paragraph [ref=e85]: Cabai Carolina Reaper dikenal sebagai cabai terpedas di dunia. Meski ekstrem, cabai ini bisa ditanam di rumah menggunakan sistem hidroponik jika dilakukan dengan langkah yang benar.
+      - link [ref=e86] [cursor=pointer]:
+        - /url: news detail.html?id=2
+        - article [ref=e87]:
+          - 'img "Nutrisi AB Mix: Rahasia Pertumbuhan Cepat Tanaman Hidroponik" [ref=e89]'
+          - generic [ref=e90]:
+            - paragraph [ref=e91]: 27 November 2025
+            - 'heading "Nutrisi AB Mix: Rahasia Pertumbuhan Cepat Tanaman Hidroponik" [level=3] [ref=e92]'
+            - paragraph [ref=e93]: Nutrisi AB Mix adalah kunci utama pertumbuhan tanaman hidroponik yang sehat dan produktif. Terdiri dari dua larutan (A dan B) yang mengandung unsur hara makro dan mikro.
+      - link [ref=e94] [cursor=pointer]:
+        - /url: news detail.html?id=3
+        - article [ref=e95]:
+          - img "Cara Menyilangkan Cabai Super Pedas untuk Hasil Unik dan Lebih Tahan Hama" [ref=e97]
+          - generic [ref=e98]:
+            - paragraph [ref=e99]: 27 November 2025
+            - heading "Cara Menyilangkan Cabai Super Pedas untuk Hasil Unik dan Lebih Tahan Hama" [level=3] [ref=e100]
+            - paragraph [ref=e101]: Persilangan cabai (hybridisasi) adalah teknik menghasilkan varietas baru dengan karakter unggul, seperti lebih pedas, warna mencolok, atau tahan penyakit. Ini banyak digunakan oleh petani modern.
+  - generic [ref=e102]:
+    - heading "Tentang Carita Hidroponik" [level=2] [ref=e103]
+    - paragraph [ref=e104]: Carita Hidroponik menyediakan benih, nutrisi, dan perlengkapan hidroponik berkualitas untuk pemula dan profesional.
+  - contentinfo [ref=e106]:
+    - generic [ref=e107]:
+      - generic [ref=e108]:
+        - img "Carita Hidroponik" [ref=e109]
+        - paragraph [ref=e110]: Carita Hidroponik adalah penyedia benih, nutrisi, dan perlengkapan hidroponik terpercaya. Kami mendukung para petani dan penghobi untuk hasil panen terbaik.
+      - generic [ref=e111]:
+        - heading "Menu" [level=4] [ref=e112]
+        - list [ref=e113]:
+          - listitem [ref=e114]:
+            - link "Home" [ref=e115] [cursor=pointer]:
+              - /url: index.html
+          - listitem [ref=e116]:
+            - link "Produk" [ref=e117] [cursor=pointer]:
+              - /url: index.html
+          - listitem [ref=e118]:
+            - link "Akun Saya" [ref=e119] [cursor=pointer]:
+              - /url: my account.html
+          - listitem [ref=e120]:
+            - link "About Us" [ref=e121] [cursor=pointer]:
+              - /url: contact.html
+      - generic [ref=e122]:
+        - heading "Kontak Kami" [level=4] [ref=e123]
+        - paragraph [ref=e124]:
+          - text: "Email:"
+          - link "info@caritahidroponik.com" [ref=e125] [cursor=pointer]:
+            - /url: mailto:info@caritahidroponik.com
+        - paragraph [ref=e126]:
+          - text: "WhatsApp:"
+          - link "+62 821-3969-8804" [ref=e127] [cursor=pointer]:
+            - /url: https://wa.me/628213969880
+        - generic [ref=e128]:
+          - link [ref=e129] [cursor=pointer]:
+            - /url: "#"
+            - img [ref=e130]
+          - link [ref=e133] [cursor=pointer]:
+            - /url: "#"
+            - img [ref=e134]
+          - link [ref=e136] [cursor=pointer]:
+            - /url: "#"
+            - img [ref=e137]
+    - paragraph [ref=e141]: © 2025 Carita Hidroponik — All Rights Reserved.
+```
