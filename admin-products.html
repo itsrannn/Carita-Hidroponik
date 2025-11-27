@@ -92,7 +92,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 1000;
+            z-index: 4000; /* Make sure it's on top */
+            opacity: 1;   /* Override conflicting style from style.css */
         }
         .modal-content {
             background-color: white;
@@ -103,6 +104,7 @@
             max-height: 90vh;
             display: flex;
             flex-direction: column;
+            transform: none; /* Override conflicting style from style.css */
         }
         .modal-header { padding: 1.5rem; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; }
         .modal-header h2 { margin: 0; }
@@ -221,7 +223,7 @@
     </main>
 
     <!-- Generic Form Modal -->
-    <div x-show="isModalOpen" x-transition class="modal-overlay" @click.self="closeModal()">
+    <div x-show="isModalOpen" class="modal-overlay" @click.self="closeModal()">
         <div class="modal-content" @click.stop>
             <div class="modal-header">
                 <h2 x-text="getModalTitle()"></h2>
