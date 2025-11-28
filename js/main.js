@@ -1,4 +1,3 @@
-
 document.addEventListener("alpine:init", () => {
   // --- Centralized Stores ---
   Alpine.store("products", {
@@ -126,25 +125,41 @@ document.addEventListener("alpine:init", () => {
     goToPage(page) {
       if (page < 1 || page > this.totalPages()) return;
       this.currentPage = page;
+
       const productSection = document.getElementById('Product');
       if (productSection) {
         window.scrollTo({ top: productSection.offsetTop, behavior: 'smooth' });
       }
+
+      // versi fix: refresh feather icons setelah ganti halaman
+      this.$nextTick(() => feather.replace());
     },
 
     formatRupiah(number) {
-        if (isNaN(number)) return "Rp 0";
-        return new Intl.NumberFormat("id-ID", {
-            style: "currency",
-            currency: "IDR",
-            minimumFractionDigits: 0
-        }).format(number);
+      if (isNaN(number)) return "Rp 0";
+      return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        minimumFractionDigits: 0
+      }).format(number);
     },
 
     init() {
-      this.$watch('searchTerm', () => this.currentPage = 1);
-      this.$watch('selectedCategory', () => this.currentPage = 1);
-      this.$watch('sortOption', () => this.currentPage = 1);
+      // Reset ke halaman 1 dan refresh ikon saat filter berubah
+      const refreshOnFilterChange = () => {
+        this.currentPage = 1;
+        this.$nextTick(() => feather.replace());
+      };
+      this.$watch('searchTerm', refreshOnFilterChange);
+      this.$watch('selectedCategory', refreshOnFilterChange);
+      this.$watch('sortOption', refreshOnFilterChange);
+
+      // Refresh ikon saat data produk selesai dimuat
+      this.$watch('$store.products.isLoading', (loading) => {
+        if (!loading) {
+          this.$nextTick(() => feather.replace());
+        }
+      });
     }
   }));
 
