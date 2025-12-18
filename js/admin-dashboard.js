@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fetchAllOrders = async () => {
         const { data, error } = await supabase
             .from('orders')
-            .select('created_at, total_price, status, order_items')
+            .select('created_at, total_amount, status, order_details')
             .eq('status', 'Selesai');
 
         if (error) {
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Fungsi untuk menghitung dan menampilkan KPI
     const displayKPIs = (orders) => {
         // 1. Total Pendapatan
-        const totalRevenue = orders.reduce((acc, order) => acc + order.total_price, 0);
+        const totalRevenue = orders.reduce((acc, order) => acc + order.total_amount, 0);
         totalRevenueEl.textContent = formatCurrency(totalRevenue);
 
         // 2. Total Pesanan Selesai
@@ -47,8 +47,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // 3. Produk Terlaris
         const productCounts = {};
         orders.forEach(order => {
-            if (Array.isArray(order.order_items)) {
-                order.order_items.forEach(item => {
+            if (Array.isArray(order.order_details)) {
+                order.order_details.forEach(item => {
                     productCounts[item.name] = (productCounts[item.name] || 0) + item.quantity;
                 });
             }
@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (!dataMap.has(key)) {
                     dataMap.set(key, { value: 0, date: dateKey });
                 }
-                dataMap.get(key).value += order.total_price;
+                dataMap.get(key).value += order.total_amount;
             }
         });
 
@@ -149,8 +149,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const processProductSalesData = (orders) => {
         const productSales = {};
         orders.forEach(order => {
-            if (Array.isArray(order.order_items)) {
-                order.order_items.forEach(item => {
+            if (Array.isArray(order.order_details)) {
+                order.order_details.forEach(item => {
                     productSales[item.name] = (productSales[item.name] || 0) + (item.price * item.quantity);
                 });
             }
@@ -260,7 +260,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td>${shortOrderId}</td>
                     <td>${orderDate}</td>
                     <td>${customerName}</td>
-                    <td>${formatCurrency(order.total_price)}</td>
+                    <td>${formatCurrency(order.total_amount)}</td>
                     <td><span class="status-badge status-${order.status.toLowerCase().replace(' ', '-')}">${order.status}</span></td>
                 </tr>
             `;
