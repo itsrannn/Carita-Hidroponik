@@ -3,124 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard | Carita Hidroponik</title>
+    <title>Pusat Admin | Carita Hidroponik</title>
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/mobile.css" media="(max-width: 768px)" />
     <style>
-        body { background-color: #f8f9fa; }
-        .dashboard-header {
-            padding: 1.5rem;
+        body {
+            background-color: #f8f9fa;
+        }
+        .admin-hub-header {
+            padding: 2rem 1.5rem;
             background-color: white;
             border-bottom: 1px solid #dee2e6;
             margin-bottom: 2rem;
+            text-align: center;
         }
-        .dashboard-header { margin-bottom: 1.5rem; }
-        .order-management-grid {
+        .admin-hub-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 1.5rem;
-            margin-bottom: 5rem; /* Menambahkan margin bawah */
+            padding: 0 1.5rem 5rem 1.5rem;
         }
-        .admin-order-card {
+        .nav-card {
             background-color: #fff;
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.07);
             border: 1px solid rgba(0,0,0,0.08);
+            padding: 2rem;
+            text-align: center;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            text-decoration: none;
+            color: var(--dark);
             display: flex;
             flex-direction: column;
-        }
-        .admin-order-card .order-header {
-            padding: 1rem 1.25rem;
-            border-bottom: 1px solid #eee;
-        }
-        .admin-order-card .order-body {
-            padding: 1.25rem;
-            flex-grow: 1;
-        }
-        .admin-order-card .order-footer {
-            padding: 1rem 1.25rem;
-            background-color: #f8f9fa;
-            border-top: 1px solid #eee;
-        }
-        .info-group { margin-bottom: 1rem; }
-        .info-group label {
-            display: block;
-            font-size: 0.8rem;
-            color: #666;
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-        .info-group p { margin: 0; }
-        .action-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.5rem;
             align-items: center;
+            justify-content: center;
         }
-        /* Modern Admin Buttons */
-        .btn-admin {
-            border: none;
-            padding: 0.6rem 1rem;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
+        .nav-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
         }
-        .btn-admin-approve {
-            background-color: var(--accent);
-            color: white;
+        .nav-card i {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 1rem;
+            color: var(--primary);
         }
-        .btn-admin-approve:hover {
-            background-color: var(--green);
-            transform: translateY(-2px);
+        .nav-card h3 {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.25rem;
         }
-        .btn-admin-reject {
-            background-color: #fce8e6;
-            color: #c5221f;
-        }
-        .btn-admin-reject:hover {
-            background-color: #f7d5d2;
-            transform: translateY(-2px);
-        }
-        /* Modern Status Badge */
-        .status-badge {
-            font-weight: 600;
-            padding: 0.3rem 0.8rem;
-            border-radius: 50px;
-            font-size: 0.85em;
-            color: #fff;
-            text-transform: capitalize;
-        }
-        /* Modern Sort/Filter Controls */
-        .filter-container {
-            background-color: #fff;
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
-            border: 1px solid rgba(0,0,0,0.06);
-            display: flex;
-            gap: 1.5rem;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-        }
-        .filter-group label {
-            font-size: 0.8rem;
+        .nav-card p {
+            margin: 0;
+            font-size: 0.95rem;
             color: #666;
-            font-weight: 600;
-            margin-bottom: 0.4rem;
-        }
-        .filter-select {
-            padding: 0.6rem 1rem;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            background-color: #f8f9fa;
-            font-weight: 500;
-            min-width: 200px;
         }
     </style>
 </head>
@@ -130,59 +65,42 @@
 
     <main class="main-content">
         <div class="container">
-            <div class="dashboard-header">
-                <h1 class="page-title">Manajemen Pesanan</h1>
-                <p>Kelola dan perbarui status pesanan yang masuk.</p>
-                <div style="margin-top: 1rem;">
-                    <a href="admin-products.html" class="btn">Kelola Produk &rarr;</a>
-                </div>
+            <div class="admin-hub-header">
+                <h1 class="page-title">Pusat Admin</h1>
+                <p>Pilih salah satu menu di bawah untuk mengelola website.</p>
             </div>
 
-            <div id="admin-message-container" class="message-container" style="display: none;"></div>
-
-            <!-- Filter Controls -->
-            <div class="filter-container">
-                <div class="filter-group">
-                    <label for="sort-time">Urutkan Berdasarkan Waktu</label>
-                    <select id="sort-time" class="filter-select">
-                        <option value="newest">Terbaru</option>
-                        <option value="oldest">Terlama</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label for="filter-status">Saring Berdasarkan Status</label>
-                    <select id="filter-status" class="filter-select">
-                        <option value="all">Semua Status</option>
-                        <option value="Menunggu Konfirmasi">Menunggu Konfirmasi</option>
-                        <option value="Diproses">Diproses</option>
-                        <option value="Dalam Pengiriman">Dalam Pengiriman</option>
-                        <option value="Selesai">Selesai</option>
-                        <option value="Ditolak">Ditolak</option>
-                    </select>
-                </div>
+            <div class="admin-hub-grid">
+                <a href="admin-orders.html" class="nav-card">
+                    <i data-feather="package"></i>
+                    <h3>Kelola Pesanan</h3>
+                    <p>Lihat dan perbarui status pesanan pelanggan.</p>
+                </a>
+                <a href="admin-products.html" class="nav-card">
+                    <i data-feather="edit"></i>
+                    <h3>Kelola Konten</h3>
+                    <p>Tambah/ubah produk dan berita terbaru.</p>
+                </a>
+                <a href="admin-dashboard.html" class="nav-card">
+                    <i data-feather="bar-chart-2"></i>
+                    <h3>Dashboard Analitik</h3>
+                    <p>Lihat tren dan performa penjualan.</p>
+                </a>
             </div>
-
-            <!-- Order Cards Grid -->
-            <div id="orders-grid" class="order-management-grid"></div>
-
-            <p id="loading-message">Memuat pesanan...</p>
         </div>
     </main>
 
     <div id="footer-include"></div>
 
-    <!-- Scripts -->
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="js/include.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js?nounit=true" defer></script>
+    <script src="js/main.js" defer></script>
+    <script src="js/script.js" defer></script>
 
-    <!-- Alpine.js for dropdowns and other UI interactivity -->
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js" defer></script>
-
-    <script src="js/script.js"></script>
-
-    <!-- Supabase & Page Logic -->
+    <!-- Supabase & Auth Logic -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <script src="js/supabase-client.js"></script>
-    <script src="js/admin.js"></script>
+    <script src="js/admin-auth.js" defer></script>
 </body>
 </html>

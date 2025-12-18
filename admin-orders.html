@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Pesanan | Carita Hidroponik</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/mobile.css" media="(max-width: 768px)" />
+    <style>
+        body { background-color: #f8f9fa; }
+        .dashboard-header {
+            padding: 1.5rem;
+            background-color: white;
+            border-bottom: 1px solid #dee2e6;
+            margin-bottom: 2rem;
+        }
+        .dashboard-header { margin-bottom: 1.5rem; }
+        .order-management-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 5rem; /* Menambahkan margin bawah */
+        }
+        .admin-order-card {
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            border: 1px solid rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+        }
+        .admin-order-card .order-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid #eee;
+        }
+        .admin-order-card .order-body {
+            padding: 1.25rem;
+            flex-grow: 1;
+        }
+        .admin-order-card .order-footer {
+            padding: 1rem 1.25rem;
+            background-color: #f8f9fa;
+            border-top: 1px solid #eee;
+        }
+        .info-group { margin-bottom: 1rem; }
+        .info-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: #666;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        .info-group p { margin: 0; }
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        /* Modern Admin Buttons */
+        .btn-admin {
+            border: none;
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-admin-approve {
+            background-color: var(--accent);
+            color: white;
+        }
+        .btn-admin-approve:hover {
+            background-color: var(--green);
+            transform: translateY(-2px);
+        }
+        .btn-admin-reject {
+            background-color: #fce8e6;
+            color: #c5221f;
+        }
+        .btn-admin-reject:hover {
+            background-color: #f7d5d2;
+            transform: translateY(-2px);
+        }
+        /* Modern Status Badge */
+        .status-badge {
+            font-weight: 600;
+            padding: 0.3rem 0.8rem;
+            border-radius: 50px;
+            font-size: 0.85em;
+            color: #fff;
+            text-transform: capitalize;
+        }
+        /* Modern Sort/Filter Controls */
+        .filter-container {
+            background-color: #fff;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            border: 1px solid rgba(0,0,0,0.06);
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+        .filter-group label {
+            font-size: 0.8rem;
+            color: #666;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+        }
+        .filter-select {
+            padding: 0.6rem 1rem;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            background-color: #f8f9fa;
+            font-weight: 500;
+            min-width: 200px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="header-include"></div>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="dashboard-header">
+                <h1 class="page-title">Manajemen Pesanan</h1>
+                <p>Kelola dan perbarui status pesanan yang masuk.</p>
+                <div style="margin-top: 1rem;">
+                    <a href="admin.html" class="btn">&larr; Kembali ke Pusat Admin</a>
+                </div>
+            </div>
+
+            <div id="admin-message-container" class="message-container" style="display: none;"></div>
+
+            <!-- Filter Controls -->
+            <div class="filter-container">
+                <div class="filter-group">
+                    <label for="sort-time">Urutkan Berdasarkan Waktu</label>
+                    <select id="sort-time" class="filter-select">
+                        <option value="newest">Terbaru</option>
+                        <option value="oldest">Terlama</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="filter-status">Saring Berdasarkan Status</label>
+                    <select id="filter-status" class="filter-select">
+                        <option value="all">Semua Status</option>
+                        <option value="Menunggu Konfirmasi">Menunggu Konfirmasi</option>
+                        <option value="Diproses">Diproses</option>
+                        <option value="Dalam Pengiriman">Dalam Pengiriman</option>
+                        <option value="Selesai">Selesai</option>
+                        <option value="Ditolak">Ditolak</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Order Cards Grid -->
+            <div id="orders-grid" class="order-management-grid"></div>
+
+            <p id="loading-message">Memuat pesanan...</p>
+        </div>
+    </main>
+
+    <div id="footer-include"></div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="js/include.js"></script>
+
+    <!-- Alpine.js for dropdowns and other UI interactivity -->
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js?nounit=true" defer></script>
+    <script src="js/main.js" defer></script>
+    <script src="js/script.js" defer></script>
+
+    <!-- Supabase & Page Logic -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>
