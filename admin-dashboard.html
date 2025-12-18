@@ -83,6 +83,24 @@
         .modern-table tbody tr:hover {
             background-color: #f1f3f5;
         }
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+        /* Hapus margin bawah untuk item terakhir di dalam grid agar sejajar */
+        .charts-grid .chart-container {
+            margin-bottom: 0;
+        }
+        /* Atur ulang grid menjadi satu kolom di layar yang lebih kecil */
+        @media (max-width: 992px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+             .charts-grid .chart-container {
+                margin-bottom: 1.5rem; /* Tambahkan kembali margin bawah di tampilan seluler */
+            }
+        }
     </style>
 </head>
 <body>
@@ -115,21 +133,23 @@
                 </div>
             </div>
 
-            <!-- Sales Trend Chart -->
-            <div class="chart-container">
-                <h3>Tren Pendapatan</h3>
-                <div class="filter-controls">
-                    <button class="filter-btn active" data-period="daily">Harian</button>
-                    <button class="filter-btn" data-period="weekly">Mingguan</button>
-                    <button class="filter-btn" data-period="monthly">Bulanan</button>
+            <div class="charts-grid">
+                <!-- Sales Trend Chart -->
+                <div class="chart-container">
+                    <h3>Tren Pendapatan</h3>
+                    <div class="filter-controls">
+                        <button class="filter-btn active" data-period="daily">Harian</button>
+                        <button class="filter-btn" data-period="weekly">Mingguan</button>
+                        <button class="filter-btn" data-period="monthly">Bulanan</button>
+                    </div>
+                    <canvas id="salesTrendChart"></canvas>
                 </div>
-                <canvas id="salesTrendChart"></canvas>
-            </div>
 
-            <!-- Product Sales Chart -->
-            <div class="chart-container">
-                <h3>Penjualan per Produk</h3>
-                <canvas id="productSalesChart"></canvas>
+                <!-- Product Sales Chart -->
+                <div class="chart-container">
+                    <h3>Penjualan per Produk</h3>
+                    <canvas id="productSalesChart"></canvas>
+                </div>
             </div>
 
             <!-- Recent Transactions Table -->
