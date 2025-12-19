@@ -171,9 +171,11 @@
                             <h4 id="chart-date-range">Memuat...</h4>
                         </div>
                         <div class="filter-controls">
-                            <button class="filter-btn active" data-period="daily">Harian</button>
-                            <button class="filter-btn" data-period="weekly">Mingguan</button>
-                            <button class="filter-btn" data-period="monthly">Bulanan</button>
+                            <select id="revenue-period-filter" class="filter-select" style="padding: 0.5rem; border-radius: 8px; border: 1px solid #ccc;">
+                                <option value="daily">Harian</option>
+                                <option value="weekly">Mingguan</option>
+                                <option value="monthly">Bulanan</option>
+                            </select>
                         </div>
                     </div>
                     <canvas id="salesTrendChart"></canvas>
@@ -181,7 +183,22 @@
 
                 <!-- Product Sales Chart -->
                 <div class="chart-container">
-                    <h3>Penjualan per Produk</h3>
+                    <div class="chart-header-controls">
+                        <h3>Penjualan per Produk</h3>
+                        <div class="filter-controls">
+                            <select id="product-chart-type" class="filter-select" style="padding: 0.5rem; border-radius: 8px; border: 1px solid #ccc;">
+                                <option value="bar">Diagram Batang</option>
+                                <option value="pie">Diagram Lingkaran</option>
+                            </select>
+                            <select id="product-period-filter" class="filter-select" style="padding: 0.5rem; border-radius: 8px; border: 1px solid #ccc;">
+                                <option value="total">Total Penjualan</option>
+                                <option value="monthly">Per Bulan</option>
+                            </select>
+                            <select id="product-month-filter" class="filter-select" style="display: none; padding: 0.5rem; border-radius: 8px; border: 1px solid #ccc;">
+                                <!-- Opsi bulan akan diisi oleh JavaScript -->
+                            </select>
+                        </div>
+                    </div>
                     <canvas id="productSalesChart"></canvas>
                 </div>
             </div>

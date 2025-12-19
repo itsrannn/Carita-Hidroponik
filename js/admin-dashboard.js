@@ -12,10 +12,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const bestSellingProductEl = document.getElementById('best-selling-product');
     const salesTrendChartCanvas = document.getElementById('salesTrendChart');
     const productSalesChartCanvas = document.getElementById('productSalesChart');
-    const filterControls = document.querySelector('.filter-controls');
+    const revenuePeriodFilter = document.getElementById('revenue-period-filter');
     const chartDateRangeEl = document.getElementById('chart-date-range');
     const prevPeriodBtn = document.getElementById('prev-period');
     const nextPeriodBtn = document.getElementById('next-period');
+    const productChartTypeFilter = document.getElementById('product-chart-type');
+    const productPeriodFilter = document.getElementById('product-period-filter');
+    const productMonthFilter = document.getElementById('product-month-filter');
 
 
     let salesTrendChart;
@@ -23,6 +26,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     let allOrdersData = [];
     let currentDate = new Date();
     let activePeriod = 'daily';
+
+    // State untuk grafik penjualan produk
+    let productChartType = 'bar';
+    let productPeriod = 'total';
+    let selectedMonth = new Date().getMonth();
 
     // Fungsi untuk format mata uang
     const formatCurrency = (amount) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
@@ -173,10 +181,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else if (activePeriod === 'monthly') {
             currentDate.setFullYear(currentDate.getFullYear() + (direction === 'next' ? 1 : -1));
         }
-        updateChart();
+        updateRevenueChart();
     };
 
-    const updateChart = () => {
+    const updateRevenueChart = () => {
         let data;
         if (activePeriod === 'daily') {
             data = getWeekData(allOrdersData, currentDate);
@@ -222,92 +230,161 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
 
-    // Fungsi untuk mengolah data penjualan per produk
+    // --- LOGIKA BARU UNTUK GRAFIK PENJUALAN PRODUK ---
+
+    const populateMonthFilter = () => {
+        const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        months.forEach((month, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = month;
+            productMonthFilter.appendChild(option);
+        });
+        // Set bulan saat ini sebagai default
+        productMonthFilter.value = new Date().getMonth();
+    };
+
     const processProductSalesData = (orders) => {
         const productSales = {};
         orders.forEach(order => {
             if (Array.isArray(order.order_details)) {
                 order.order_details.forEach(item => {
-                    productSales[item.name] = (productSales[item.name] || 0) + (item.price * item.quantity);
+                    productSales[item.name] = (productSales[item.name] || 0) + item.quantity;
                 });
             }
         });
 
-        const sortedProducts = Object.entries(productSales).sort((a, b) => b[1] - a[1]);
-        const top5Products = sortedProducts.slice(0, 10);
+        let sortedProducts = Object.entries(productSales).sort((a, b) => b[1] - a[1]);
+
+        if (productChartType === 'pie' && sortedProducts.length > 5) {
+            const top5 = sortedProducts.slice(0, 5);
+            const othersCount = sortedProducts.slice(5).reduce((acc, curr) => acc + curr[1], 0);
+            const others = ['Lainnya', othersCount];
+            sortedProducts = [...top5, others];
+        }
 
         return {
-            labels: top5Products.map(p => p[0]),
-            values: top5Products.map(p => p[1])
+            labels: sortedProducts.map(p => p[0]),
+            values: sortedProducts.map(p => p[1])
         };
     };
 
-    // Fungsi untuk membuat grafik penjualan per produk
-    const renderProductSalesChart = () => {
-        const { labels, values } = processProductSalesData(allOrdersData);
+    const updateProductSalesChart = () => {
+        let dataToProcess = allOrdersData;
+
+        if (productPeriod === 'monthly') {
+            const currentYear = new Date().getFullYear();
+            dataToProcess = allOrdersData.filter(order => {
+                const orderDate = new Date(order.created_at);
+                return orderDate.getFullYear() === currentYear && orderDate.getMonth() == selectedMonth;
+            });
+        }
+
+        const { labels, values } = processProductSalesData(dataToProcess);
+
         if (productSalesChart) {
             productSalesChart.destroy();
         }
-        productSalesChart = new Chart(productSalesChartCanvas, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Total Penjualan',
-                    data: values,
-                    backgroundColor: [
-                        'rgba(255, 99, 132, 0.5)',
-                        'rgba(54, 162, 235, 0.5)',
-                        'rgba(255, 206, 86, 0.5)',
-                        'rgba(75, 192, 192, 0.5)',
-                        'rgba(153, 102, 255, 0.5)',
-                        'rgba(255, 159, 64, 0.5)'
-                    ],
-                    borderColor: [
-                        'rgba(255, 99, 132, 1)',
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 206, 86, 1)',
-                        'rgba(75, 192, 192, 1)',
-                        'rgba(153, 102, 255, 1)',
-                        'rgba(255, 159, 64, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: (value) => formatCurrency(value)
-                        }
-                    }
+
+        const chartOptions = {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: productChartType === 'pie', // Tampilkan legenda hanya untuk pie
+                    position: 'top',
                 },
-                plugins: {
-                    legend: {
-                        display: false
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed !== null) {
+                                if (productChartType === 'pie') {
+                                     const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                                     const percentage = ((context.parsed / total) * 100).toFixed(2) + '%';
+                                     label += `${context.raw} (${percentage})`;
+                                } else {
+                                     label += `${context.raw} terjual`;
+                                }
+                            }
+                            return label;
+                        }
                     }
                 }
             }
+        };
+
+        if (productChartType === 'bar') {
+            chartOptions.indexAxis = 'y';
+            chartOptions.scales = {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        precision: 0 // Hanya tampilkan angka bulat
+                    }
+                }
+            };
+             chartOptions.plugins.legend.display = false;
+        }
+
+
+        productSalesChart = new Chart(productSalesChartCanvas, {
+            type: productChartType,
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Jumlah Terjual',
+                    data: values,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)',
+                        'rgba(201, 203, 207, 0.7)'
+                    ],
+                    borderColor: '#fff',
+                    borderWidth: 1
+                }]
+            },
+            options: chartOptions
         });
     };
 
+    // --- Event Listeners ---
 
-    // Event listener untuk filter
-    filterControls.addEventListener('click', (e) => {
-        if (e.target.tagName === 'BUTTON') {
-            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-            e.target.classList.add('active');
-            activePeriod = e.target.dataset.period;
-            currentDate = new Date(); // Reset tanggal ke hari ini
-            updateChart();
-        }
+    revenuePeriodFilter.addEventListener('change', (e) => {
+        activePeriod = e.target.value;
+        currentDate = new Date(); // Reset tanggal ke hari ini
+        updateRevenueChart();
     });
 
     prevPeriodBtn.addEventListener('click', () => navigatePeriod('prev'));
     nextPeriodBtn.addEventListener('click', () => navigatePeriod('next'));
+
+    productChartTypeFilter.addEventListener('change', (e) => {
+        productChartType = e.target.value;
+        updateProductSalesChart();
+    });
+
+    productPeriodFilter.addEventListener('change', (e) => {
+        productPeriod = e.target.value;
+        if (productPeriod === 'monthly') {
+            productMonthFilter.style.display = 'inline-block';
+        } else {
+            productMonthFilter.style.display = 'none';
+        }
+        updateProductSalesChart();
+    });
+
+    productMonthFilter.addEventListener('change', (e) => {
+        selectedMonth = e.target.value;
+        updateProductSalesChart();
+    });
+
 
     const transactionsBody = document.getElementById('recent-transactions-body');
     const loadingTransactionsEl = document.getElementById('loading-transactions');
@@ -375,11 +452,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Inisialisasi
     const init = async () => {
-        // Ganti fetchAllOrders dengan yang baru
+        populateMonthFilter();
         allOrdersData = await fetchAllOrdersWithNames();
         displayKPIs(allOrdersData);
-        updateChart(); // Ganti renderSalesTrendChart dengan updateChart
-        renderProductSalesChart();
+        updateRevenueChart();
+        updateProductSalesChart();
         displayRecentTransactions(allOrdersData);
     };
 
