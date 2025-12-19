@@ -50,7 +50,6 @@
             margin-bottom: 1.5rem;
         }
         .filter-controls {
-            margin-bottom: 1rem;
             display: flex;
             gap: 0.5rem;
         }
@@ -101,6 +100,32 @@
                 margin-bottom: 1.5rem; /* Tambahkan kembali margin bawah di tampilan seluler */
             }
         }
+        .chart-header-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .chart-title-nav {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .nav-buttons button {
+             border: 1px solid #ccc;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 0.3rem 0.7rem;
+            font-size: 1rem;
+        }
+        #chart-date-range {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -137,10 +162,19 @@
                 <!-- Sales Trend Chart -->
                 <div class="chart-container">
                     <h3>Tren Pendapatan</h3>
-                    <div class="filter-controls">
-                        <button class="filter-btn active" data-period="daily">Harian</button>
-                        <button class="filter-btn" data-period="weekly">Mingguan</button>
-                        <button class="filter-btn" data-period="monthly">Bulanan</button>
+                    <div class="chart-header-controls">
+                        <div class="chart-title-nav">
+                             <div class="nav-buttons">
+                                <button id="prev-period">&lt;</button>
+                                <button id="next-period">&gt;</button>
+                            </div>
+                            <h4 id="chart-date-range">Memuat...</h4>
+                        </div>
+                        <div class="filter-controls">
+                            <button class="filter-btn active" data-period="daily">Harian</button>
+                            <button class="filter-btn" data-period="weekly">Mingguan</button>
+                            <button class="filter-btn" data-period="monthly">Bulanan</button>
+                        </div>
                     </div>
                     <canvas id="salesTrendChart"></canvas>
                 </div>
