@@ -249,7 +249,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         orders.forEach(order => {
             if (Array.isArray(order.order_details)) {
                 order.order_details.forEach(item => {
-                    productSales[item.name] = (productSales[item.name] || 0) + item.quantity;
+                    // Reverted logic to use price * quantity for total sales value
+                    const salesValue = (item.price || 0) * (item.quantity || 0);
+                    productSales[item.name] = (productSales[item.name] || 0) + salesValue;
                 });
             }
         });
@@ -288,6 +290,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const chartOptions = {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     display: productChartType === 'pie', // Tampilkan legenda hanya untuk pie
@@ -304,9 +307,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 if (productChartType === 'pie') {
                                      const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
                                      const percentage = ((context.parsed / total) * 100).toFixed(2) + '%';
-                                     label += `${context.raw} (${percentage})`;
+                                     label += `${formatCurrency(context.raw)} (${percentage})`;
                                 } else {
-                                     label += `${context.raw} terjual`;
+                                     label += formatCurrency(context.raw);
                                 }
                             }
                             return label;
@@ -322,7 +325,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 x: {
                     beginAtZero: true,
                     ticks: {
-                        precision: 0 // Hanya tampilkan angka bulat
+                        callback: (value) => formatCurrency(value)
                     }
                 }
             };
