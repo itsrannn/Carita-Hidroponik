@@ -13,10 +13,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const salesTrendChartCanvas = document.getElementById('salesTrendChart');
     const productSalesChartCanvas = document.getElementById('productSalesChart');
     const filterControls = document.querySelector('.filter-controls');
+    const chartDateRangeEl = document.getElementById('chart-date-range');
+    const prevPeriodBtn = document.getElementById('prev-period');
+    const nextPeriodBtn = document.getElementById('next-period');
+
 
     let salesTrendChart;
     let productSalesChart;
     let allOrdersData = [];
+    let currentDate = new Date();
+    let activePeriod = 'daily';
 
     // Fungsi untuk format mata uang
     const formatCurrency = (amount) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
@@ -62,57 +68,123 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-    // Fungsi untuk mengolah data tren penjualan
-    const processSalesTrendData = (orders, period) => {
-        const dataMap = new Map();
-        const now = new Date();
+    const updateChartDateRange = (startDate, endDate, period) => {
+        const options = { month: 'short', day: 'numeric', year: 'numeric' };
+        if (period === 'daily') {
+            chartDateRangeEl.textContent = `${startDate.toLocaleDateString('id-ID', options)} - ${endDate.toLocaleDateString('id-ID', options)}`;
+        } else if (period === 'weekly') {
+            chartDateRangeEl.textContent = startDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+        } else if (period === 'monthly') {
+            chartDateRangeEl.textContent = startDate.getFullYear();
+        }
+    };
 
-        orders.forEach(order => {
-            const date = new Date(order.created_at);
-            let key;
-            let dateKey; // a sortable date object
+    const getWeekData = (orders, date) => {
+        const startOfWeek = new Date(date);
+        startOfWeek.setDate(date.getDate() - date.getDay());
+        startOfWeek.setHours(0, 0, 0, 0);
 
-            if (period === 'daily') {
-                if ((now - date) > 7 * 24 * 60 * 60 * 1000) return;
-                date.setHours(0, 0, 0, 0);
-                dateKey = date;
-                key = date.toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' });
-            } else if (period === 'weekly') {
-                if ((now - date) > 28 * 24 * 60 * 60 * 1000) return;
-                const weekStart = new Date(date);
-                weekStart.setDate(date.getDate() - date.getDay());
-                weekStart.setHours(0, 0, 0, 0);
-                dateKey = weekStart;
-                key = `Minggu ${weekStart.toLocaleDateString('id-ID', { month: 'short', day: 'numeric' })}`;
-            } else if (period === 'monthly') {
-                const monthDiff = (now.getFullYear() - date.getFullYear()) * 12 + (now.getMonth() - date.getMonth());
-                if (monthDiff >= 12) return;
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        endOfWeek.setHours(23, 59, 59, 999);
 
-                const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
-                dateKey = monthStart;
-                key = date.toLocaleDateString('id-ID', { year: 'numeric', month: 'long' });
-            }
+        updateChartDateRange(startOfWeek, endOfWeek, 'daily');
 
-            if (key) {
-                if (!dataMap.has(key)) {
-                    dataMap.set(key, { value: 0, date: dateKey });
-                }
-                dataMap.get(key).value += order.total_amount;
+        const weekOrders = orders.filter(order => {
+            const orderDate = new Date(order.created_at);
+            return orderDate >= startOfWeek && orderDate <= endOfWeek;
+        });
+
+        const labels = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+        const values = Array(7).fill(0);
+
+        weekOrders.forEach(order => {
+            const dayIndex = new Date(order.created_at).getDay();
+            values[dayIndex] += order.total_amount;
+        });
+
+        return { labels, values };
+    };
+
+    const getMonthData = (orders, date) => {
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const startOfMonth = new Date(year, month, 1);
+        const endOfMonth = new Date(year, month + 1, 0);
+
+        updateChartDateRange(startOfMonth, endOfMonth, 'weekly');
+
+        const monthOrders = orders.filter(order => {
+            const orderDate = new Date(order.created_at);
+            return orderDate.getFullYear() === year && orderDate.getMonth() === month;
+        });
+
+        const labels = [];
+        const values = [];
+        const firstDayOfMonth = startOfMonth.getDay();
+        const daysInMonth = endOfMonth.getDate();
+
+        // Calculate number of weeks in the month
+        const numWeeks = Math.ceil((firstDayOfMonth + daysInMonth) / 7);
+        for (let i = 1; i <= numWeeks; i++) {
+            labels.push(`Minggu ${i}`);
+            values.push(0);
+        }
+
+        monthOrders.forEach(order => {
+            const orderDate = new Date(order.created_at);
+            // Day of the month (1-31)
+            const dayOfMonth = orderDate.getDate();
+            // Calculate which week of the month this day falls into
+            const weekIndex = Math.floor((firstDayOfMonth + dayOfMonth - 1) / 7);
+            if (weekIndex < values.length) {
+                 values[weekIndex] += order.total_amount;
             }
         });
 
-        // Convert map to array and sort by date
-        const sortedData = [...dataMap.entries()].sort((a, b) => a[1].date - b[1].date);
-
-        return {
-            labels: sortedData.map(item => item[0]),
-            values: sortedData.map(item => item[1].value)
-        };
+        return { labels, values };
     };
 
-    // Fungsi untuk membuat/memperbarui grafik tren penjualan
-    const renderSalesTrendChart = (period = 'daily') => {
-        const { labels, values } = processSalesTrendData(allOrdersData, period);
+    const getYearData = (orders, date) => {
+        const year = date.getFullYear();
+        const startOfYear = new Date(year, 0, 1);
+        const endOfYear = new Date(year, 11, 31);
+
+        updateChartDateRange(startOfYear, endOfYear, 'monthly');
+
+        const yearOrders = orders.filter(order => new Date(order.created_at).getFullYear() === year);
+
+        const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        const values = Array(12).fill(0);
+
+        yearOrders.forEach(order => {
+            const monthIndex = new Date(order.created_at).getMonth();
+            values[monthIndex] += order.total_amount;
+        });
+
+        return { labels, values };
+    };
+
+    const navigatePeriod = (direction) => {
+        if (activePeriod === 'daily') {
+            currentDate.setDate(currentDate.getDate() + (direction === 'next' ? 7 : -7));
+        } else if (activePeriod === 'weekly') {
+            currentDate.setMonth(currentDate.getMonth() + (direction === 'next' ? 1 : -1));
+        } else if (activePeriod === 'monthly') {
+            currentDate.setFullYear(currentDate.getFullYear() + (direction === 'next' ? 1 : -1));
+        }
+        updateChart();
+    };
+
+    const updateChart = () => {
+        let data;
+        if (activePeriod === 'daily') {
+            data = getWeekData(allOrdersData, currentDate);
+        } else if (activePeriod === 'weekly') {
+            data = getMonthData(allOrdersData, currentDate);
+        } else if (activePeriod === 'monthly') {
+            data = getYearData(allOrdersData, currentDate);
+        }
 
         if (salesTrendChart) {
             salesTrendChart.destroy();
@@ -121,10 +193,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         salesTrendChart = new Chart(salesTrendChartCanvas, {
             type: 'line',
             data: {
-                labels: labels,
+                labels: data.labels,
                 datasets: [{
                     label: 'Pendapatan',
-                    data: values,
+                    data: data.values,
                     borderColor: 'rgba(75, 192, 192, 1)',
                     backgroundColor: 'rgba(75, 192, 192, 0.2)',
                     tension: 0.1,
@@ -139,6 +211,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                         ticks: {
                             callback: (value) => formatCurrency(value)
                         }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
                     }
                 }
             }
@@ -223,9 +300,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (e.target.tagName === 'BUTTON') {
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
             e.target.classList.add('active');
-            renderSalesTrendChart(e.target.dataset.period);
+            activePeriod = e.target.dataset.period;
+            currentDate = new Date(); // Reset tanggal ke hari ini
+            updateChart();
         }
     });
+
+    prevPeriodBtn.addEventListener('click', () => navigatePeriod('prev'));
+    nextPeriodBtn.addEventListener('click', () => navigatePeriod('next'));
 
     const transactionsBody = document.getElementById('recent-transactions-body');
     const loadingTransactionsEl = document.getElementById('loading-transactions');
@@ -296,7 +378,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Ganti fetchAllOrders dengan yang baru
         allOrdersData = await fetchAllOrdersWithNames();
         displayKPIs(allOrdersData);
-        renderSalesTrendChart('daily');
+        updateChart(); // Ganti renderSalesTrendChart dengan updateChart
         renderProductSalesChart();
         displayRecentTransactions(allOrdersData);
     };
