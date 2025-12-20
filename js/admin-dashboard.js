@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const productChartTypeFilter = document.getElementById('product-chart-type');
     const productPeriodFilter = document.getElementById('product-period-filter');
     const productMonthFilter = document.getElementById('product-month-filter');
+    const productSalesChartWrapper = document.querySelector('#product-sales-chart-container .chart-canvas-wrapper');
 
 
     let salesTrendChart;
@@ -284,6 +285,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (productSalesChart) {
             productSalesChart.destroy();
+        }
+
+        // Terapkan styling dinamis berdasarkan tipe chart
+        if (productChartType === 'pie') {
+            productSalesChartWrapper.classList.add('limit-chart-width');
+        } else {
+            productSalesChartWrapper.classList.remove('limit-chart-width');
         }
 
         const chartOptions = {
