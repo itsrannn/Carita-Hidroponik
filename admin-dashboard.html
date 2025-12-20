@@ -126,11 +126,11 @@
             font-weight: 600;
             margin: 0;
         }
-
-        #product-sales-chart-container {
+        .chart-wrapper-small {
+            position: relative;
             max-width: 350px;
-            margin-left: auto;
-            margin-right: auto;
+            max-height: 350px;
+            margin: auto;
         }
     </style>
 </head>
@@ -188,7 +188,7 @@
                 </div>
 
                 <!-- Product Sales Chart -->
-                <div class="chart-container" id="product-sales-chart-container">
+                <div class="chart-container">
                     <div class="chart-header-controls">
                         <h3>Penjualan per Produk</h3>
                         <div class="filter-controls">
@@ -205,7 +205,9 @@
                             </select>
                         </div>
                     </div>
-                    <canvas id="productSalesChart"></canvas>
+                    <div class="chart-wrapper-small">
+                        <canvas id="productSalesChart"></canvas>
+                    </div>
                 </div>
             </div>
 
