@@ -13,6 +13,45 @@
       href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@300;400;600&display=swap"
       rel="stylesheet"
     />
+
+    <!-- Google Translate -->
+    <style>
+      #google_translate_element { display: none !important; }
+      .goog-te-banner-frame { display: none !important; }
+      body { top: 0 !important; }
+    </style>
+    <div id="google_translate_element"></div>
+    <script type="text/javascript">
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement(
+          {
+            pageLanguage: "id",
+            includedLanguages: "en,id",
+            layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+            autoDisplay: false,
+          },
+          "google_translate_element"
+        );
+      }
+
+      function changeLanguage(lang) {
+        var select = document.querySelector("#google_translate_element select");
+        if (select) {
+          select.value = lang;
+          select.dispatchEvent(new Event("change"));
+        }
+
+        // Update active button state
+        document.querySelectorAll(".lang-btn").forEach(function(btn) {
+          btn.classList.remove("active");
+        });
+        var activeButton = document.querySelector(`.lang-btn[data-lang='${lang}']`);
+        if (activeButton) {
+          activeButton.classList.add("active");
+        }
+      }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
   </head>
 
   <body x-data @alpine:init="
@@ -97,6 +136,11 @@
                 x-model="searchTerm"
               />
               <label for="search-box-home"><i data-feather="search"></i></label>
+
+              <div class="lang-switcher">
+                <button class="lang-btn" data-lang="en" onclick="changeLanguage('en')">EN</button>
+                <button class="lang-btn active" data-lang="id" onclick="changeLanguage('id')">ID</button>
+              </div>
             </section>
 
             <section id="Product" class="page-header">
