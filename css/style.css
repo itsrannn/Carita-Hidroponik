@@ -1404,3 +1404,29 @@ body {
   font-weight: bold;
   color: var(--green);
 }
+
+/* Language Switcher */
+.lang-switcher {
+  display: flex;
+  margin-left: 1rem;
+  background-color: black;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.lang-btn {
+  background-color: black;
+  color: white;
+  border: none;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.lang-btn.active {
+  background-color: white;
+  color: black;
+}
