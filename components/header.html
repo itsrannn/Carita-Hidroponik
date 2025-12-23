@@ -86,6 +86,13 @@
         <i data-feather="shopping-cart"></i>
         <span id="cart-count" class="badge" x-show="$store.cart.quantity > 0" x-text="$store.cart.quantity"></span>
       </a>
+
+      <!-- Desktop Language Switcher -->
+      <div class="lang-switcher lang-switcher-desktop">
+        <button class="lang-btn" data-lang="en" onclick="changeLanguage('en')">EN</button>
+        <span>|</span>
+        <button class="lang-btn active" data-lang="id" onclick="changeLanguage('id')">ID</button>
+      </div>
     </div>
   </div>
 </header>
