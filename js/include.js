@@ -15,6 +15,16 @@ document.addEventListener("DOMContentLoaded", async () => {
           hamburgerBtn.className = "icon-btn";
           hamburgerBtn.setAttribute("aria-label", "Buka Menu");
           hamburgerBtn.innerHTML = '<i data-feather="menu"></i>';
+
+          // --- LOGIKA BUKA/TUTUP SIDEBAR MOBILE ---
+          hamburgerBtn.addEventListener("click", () => {
+            const sidebar = document.getElementById("categorySidebar");
+            if (sidebar) {
+              sidebar.classList.toggle("mobile-active");
+              document.body.classList.toggle("sidebar-open");
+            }
+          });
+
           topActions.appendChild(hamburgerBtn);
         }
       }

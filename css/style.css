@@ -1408,25 +1408,48 @@ body {
 /* Language Switcher */
 .lang-switcher {
   display: flex;
-  margin-left: 1rem;
-  background-color: black;
-  border-radius: 5px;
-  overflow: hidden;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lang-switcher-desktop {
+  margin-left: 0.5rem; /* Jarak dari ikon keranjang */
+}
+
+.lang-switcher-mobile {
+  display: none; /* Sembunyikan di desktop */
+  padding: 1rem 1.25rem;
+  border-top: 1px solid rgba(0,0,0,0.08);
 }
 
 .lang-btn {
-  background-color: black;
-  color: white;
+  background: transparent;
   border: none;
-  padding: 0.6rem 1rem;
+  color: inherit; /* Mewarisi warna dari parent (putih di header, hitam di sidebar) */
   cursor: pointer;
   font-family: var(--font-heading);
   font-weight: 600;
   font-size: 0.9rem;
-  transition: background-color 0.2s, color 0.2s;
+  opacity: 0.7;
+  transition: opacity 0.2s;
 }
 
 .lang-btn.active {
-  background-color: white;
-  color: black;
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.lang-switcher span {
+  opacity: 0.5;
+}
+
+/* --- Responsive Controls for Switcher --- */
+@media (max-width: 768px) {
+  .lang-switcher-desktop {
+    display: none;
+  }
+  .lang-switcher-mobile {
+    display: flex;
+  }
 }
