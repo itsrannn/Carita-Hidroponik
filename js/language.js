@@ -1,6 +1,7 @@
 /**
- * Initializes the Google Translate widget.
- * This function is called by the Google Translate script once it's loaded.
+ * Initializes the Google Translate widget and sets up the language switcher buttons.
+ * This function is the single entry point for all language-related functionality.
+ * It's called by the Google Translate script once it's loaded.
  */
 function googleTranslateElementInit() {
   new google.translate.TranslateElement(
@@ -13,8 +14,21 @@ function googleTranslateElementInit() {
     "google_translate_element"
   );
 
-  // A short delay to allow the widget to render and its cookie to be processed.
-  setTimeout(syncLanguageButtons, 500);
+  // Attach event listeners to all language switcher buttons on the page.
+  // This ensures that any button, whether in the header or elsewhere, is functional.
+  document.querySelectorAll(".lang-btn").forEach(button => {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      const lang = button.dataset.lang;
+      if (lang) {
+        changeLanguage(lang);
+      }
+    });
+  });
+
+  // Immediately synchronize the visual state of the buttons to reflect the current
+  // language from the cookie. This removes the previous unreliable timeout.
+  syncLanguageButtons();
 }
 
 /**
@@ -45,6 +59,7 @@ function changeLanguage(lang) {
 function syncLanguageButtons() {
   const cookie = getCookie("googtrans");
   // Cookie value is '/sourceLang/targetLang', e.g., '/id/en'
+  // Default to 'id' if the cookie is not set or has an unexpected value.
   const currentLang = (cookie && cookie.endsWith("/en")) ? "en" : "id";
 
   document.querySelectorAll(".lang-btn").forEach((btn) => {
