@@ -18,31 +18,23 @@ function googleTranslateElementInit() {
 }
 
 /**
- * Changes the language by manipulating the hidden Google Translate dropdown.
- * This function now polls for the select element to avoid race conditions.
+ * Changes the language by setting the 'googtrans' cookie and reloading the page.
+ * This is a more reliable method than programmatically interacting with the widget.
  * @param {string} lang The target language code ('en' or 'id').
  */
 function changeLanguage(lang) {
-  const maxRetries = 15;
-  let retries = 0;
+  // The cookie's value is the path of the source and target languages.
+  // Example: /id/en for Indonesian to English.
+  // We set the domain to the current hostname to ensure it's applied correctly,
+  // especially when running on localhost.
+  const currentDomain = window.location.hostname;
+  document.cookie = `googtrans=/id/${lang}; path=/; domain=.${currentDomain}`;
 
-  const intervalId = setInterval(() => {
-    const select = document.querySelector(".goog-te-combo");
+  // A secondary cookie might be needed for root domains without subdomains (like localhost)
+  document.cookie = `googtrans=/id/${lang}; path=/;`;
 
-    if (select) {
-      clearInterval(intervalId); // Stop polling
-      select.value = lang;
-      select.dispatchEvent(new Event("change"));
-      // After triggering the change, wait for the cookie to be updated, then sync buttons.
-      setTimeout(syncLanguageButtons, 500);
-    } else {
-      retries++;
-      if (retries >= maxRetries) {
-        clearInterval(intervalId); // Stop polling
-        console.error("ERROR: Could not find the Google Translate select element (.goog-te-combo) after multiple retries. Translation cannot proceed.");
-      }
-    }
-  }, 200);
+  // Reload the page for the change to take effect.
+  window.location.reload();
 }
 
 
