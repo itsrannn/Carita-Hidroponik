@@ -51,25 +51,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
       }
 
-      // --- LOGIKA LANGUAGE SWITCHER ---
-      // Event listener dipasang setelah header dimuat untuk memastikan tombol ada.
-      // Ini akan menangani tombol di header (desktop) dan di body (mobile).
-      document.querySelectorAll(".lang-btn").forEach(button => {
-        button.addEventListener("click", (event) => {
-          event.preventDefault(); // Mencegah perilaku ganda jika onclick masih ada
-          const lang = button.dataset.lang;
-          if (lang) {
-            // Memanggil fungsi global dari language.js
-            changeLanguage(lang);
-          }
-        });
-      });
-
-      // Panggil sync setelah header dimuat untuk memastikan state awal tombol benar
-      if (typeof syncLanguageButtons === 'function') {
-        syncLanguageButtons();
-      }
-
     } catch (err) {
       // Gagal memuat header, biarkan kosong
     }
