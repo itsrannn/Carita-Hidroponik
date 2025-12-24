@@ -1,13 +1,3 @@
-// Global currency formatter
-window.formatRupiah = (number) => {
-  if (isNaN(number)) return "Rp 0";
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(number);
-};
-
 document.addEventListener("alpine:init", () => {
   // --- Centralized Stores ---
   Alpine.store("products", {
@@ -145,6 +135,15 @@ document.addEventListener("alpine:init", () => {
       this.$nextTick(() => feather.replace());
     },
 
+    formatRupiah(number) {
+      if (isNaN(number)) return "Rp 0";
+      return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        minimumFractionDigits: 0
+      }).format(number);
+    },
+
     init() {
       // Reset ke halaman 1 dan refresh ikon saat filter berubah
       const refreshOnFilterChange = () => {
@@ -247,6 +246,15 @@ document.addEventListener("alpine:init", () => {
       } catch (error) {
         window.showNotification('Gagal menghapus item.', true);
       }
+    },
+
+    formatRupiah(number) {
+      if (isNaN(number)) return "Rp 0";
+      return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        minimumFractionDigits: 0
+      }).format(number);
     }
   }));
 

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Content Editor | Carita Hidroponik</title>
+    <title>Editor Konten | Carita Hidroponik</title>
     <!-- Quill CSS -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css" />
@@ -60,43 +60,43 @@
     <main class="main-content">
         <div class="container">
             <div class="editor-header">
-                <a href="admin-products.html" class="back-link">&larr; Back to Content Management</a>
-                <h1 x-text="title">Loading...</h1>
+                <a href="admin-products.html" class="back-link">&larr; Kembali ke Manajemen Konten</a>
+                <h1 x-text="title">Memuat...</h1>
             </div>
 
             <div class="content-card">
                 <form id="editor-form">
                     <!-- Product Fields -->
                     <div x-show="type === 'product'" class="form-grid">
-                        <div class="form-group"><label for="product-name">Product Name</label><input id="product-name" type="text" x-model="item.name" required></div>
-                        <div class="form-group"><label for="product-category">Category</label><select id="product-category" x-model="item.category" required><option value="" disabled>Select Category</option><option value="benih">Seeds</option><option value="nutrisi">Nutrition</option><option value="media">Growing Media</option><option value="peralatan">Equipment</option><option value="promo">Promo</option></select></div>
-                        <div class="form-group"><label for="product-price">Price (IDR)</label><input id="product-price" type="number" x-model="item.price" required></div>
+                        <div class="form-group"><label for="product-name">Nama Produk</label><input id="product-name" type="text" x-model="item.name" required></div>
+                        <div class="form-group"><label for="product-category">Kategori</label><select id="product-category" x-model="item.category" required><option value="" disabled>Pilih Kategori</option><option value="benih">Benih</option><option value="nutrisi">Nutrisi</option><option value="media">Media Tanam</option><option value="peralatan">Peralatan</option><option value="promo">Promo</option></select></div>
+                        <div class="form-group"><label for="product-price">Harga (Rp)</label><input id="product-price" type="number" x-model="item.price" required></div>
                         <div class="form-group">
-                            <label for="image-input">Product Image</label>
+                            <label for="image-input">Gambar Produk</label>
                             <input type="file" id="image-input" @change="handleFileChange" accept="image/*">
-                            <img :src="imagePreviewUrl" x-show="imagePreviewUrl" alt="Image Preview" style="max-width: 200px; margin-top: 1rem; border-radius: 8px;">
+                            <img :src="imagePreviewUrl" x-show="imagePreviewUrl" alt="Pratinjau Gambar" style="max-width: 200px; margin-top: 1rem; border-radius: 8px;">
                         </div>
-                        <div class="form-group grid-col-span-2"><label for="product-characteristics">Characteristics</label><textarea id="product-characteristics" x-model="item.characteristics" placeholder="Example: 1 pack contains ±12 seeds, Super Spicy, Harvest in ±90 days"></textarea></div>
-                        <div class="form-group grid-col-span-2"><label for="product-description">Full Description</label><textarea id="product-description" x-model="item.description" required></textarea></div>
+                        <div class="form-group grid-col-span-2"><label for="product-characteristics">Karakteristik</label><textarea id="product-characteristics" x-model="item.characteristics" placeholder="Contoh: 1 pack berisi ±12 biji, Super Pedas, Panen ±90 hari"></textarea></div>
+                        <div class="form-group grid-col-span-2"><label for="product-description">Deskripsi Lengkap</label><textarea id="product-description" x-model="item.description" required></textarea></div>
                     </div>
 
                     <!-- News Fields -->
                     <div x-show="type === 'news'" class="form-grid">
-                        <div class="form-group grid-col-span-2"><label for="news-title">News Title</label><input id="news-title" type="text" x-model="item.title" required></div>
+                        <div class="form-group grid-col-span-2"><label for="news-title">Judul Berita</label><input id="news-title" type="text" x-model="item.title" required></div>
                         <div class="form-group grid-col-span-2">
-                            <label for="news-image-input">News Image</label>
+                            <label for="news-image-input">Gambar Berita</label>
                             <input type="file" id="news-image-input" @change="handleFileChange" accept="image/*">
-                            <img :src="imagePreviewUrl" x-show="imagePreviewUrl" alt="Image Preview" style="max-width: 200px; margin-top: 1rem; border-radius: 8px;">
+                            <img :src="imagePreviewUrl" x-show="imagePreviewUrl" alt="Pratinjau Gambar" style="max-width: 200px; margin-top: 1rem; border-radius: 8px;">
                         </div>
-                        <div class="form-group grid-col-span-2"><label for="news-excerpt">Excerpt</label><textarea id="news-excerpt" x-model="item.excerpt" required rows="3"></textarea></div>
+                        <div class="form-group grid-col-span-2"><label for="news-excerpt">Kutipan</label><textarea id="news-excerpt" x-model="item.excerpt" required rows="3"></textarea></div>
                         <div class="form-group grid-col-span-2">
-                          <label for="quill-editor">News Content</label>
+                          <label for="quill-editor">Isi Konten Berita</label>
                           <div id="quill-editor"></div>
                         </div>
                     </div>
 
                     <div class="form-footer">
-                        <a href="admin-products.html" class="btn-cancel">Cancel</a>
+                        <a href="admin-products.html" class="btn-cancel">Batal</a>
                         <button type="button" @click="submitForm()" class="btn-submit" x-text="submitButtonText"></button>
                     </div>
                 </form>
@@ -121,8 +121,8 @@
           action: null,
           id: null,
           item: {},
-          title: 'Loading...',
-          submitButtonText: 'Save',
+          title: 'Memuat...',
+          submitButtonText: 'Simpan',
           isLoading: true,
           quill: null,
           imagePreviewUrl: null,
@@ -168,11 +168,11 @@
 
           setupPage() {
               if (this.type === 'product') {
-                  this.title = this.action === 'add' ? 'Add New Product' : 'Edit Product';
+                  this.title = this.action === 'add' ? 'Tambah Produk Baru' : 'Edit Produk';
               } else if (this.type === 'news') {
-                  this.title = this.action === 'add' ? 'Add New News' : 'Edit News';
+                  this.title = this.action === 'add' ? 'Tambah Berita Baru' : 'Edit Berita';
               }
-              this.submitButtonText = this.action === 'add' ? 'Save' : 'Save Changes';
+              this.submitButtonText = this.action === 'add' ? 'Simpan' : 'Simpan Perubahan';
           },
 
           initializeEmptyItem() {
@@ -194,7 +194,7 @@
                   .single();
 
               if (error) {
-                  window.showNotification('Failed to load data. Please try again.', true);
+                  window.showNotification('Gagal memuat data. Silakan coba lagi.', true);
                   this.isLoading = false;
                   return;
               }
@@ -233,7 +233,7 @@
 
           async submitForm() {
               this.isLoading = true;
-              this.submitButtonText = 'Saving...';
+              this.submitButtonText = 'Menyimpan...';
 
               const imageInput = document.getElementById(this.type === 'product' ? 'image-input' : 'news-image-input');
               const file = imageInput.files[0];
@@ -246,9 +246,9 @@
                       .upload(filePath, file);
 
                   if (uploadError) {
-                      window.showNotification('Failed to upload image.', true);
+                      window.showNotification('Gagal mengunggah gambar.', true);
                       this.isLoading = false;
-                      this.submitButtonText = this.action === 'add' ? 'Save' : 'Save Changes';
+                      this.submitButtonText = this.action === 'add' ? 'Simpan' : 'Simpan Perubahan';
                       return;
                   }
 
@@ -278,15 +278,15 @@
               const { error } = await query;
 
               if (error) {
-                  window.showNotification('Failed to save data. Please try again.', true);
+                  window.showNotification('Gagal menyimpan data. Silakan coba lagi.', true);
               } else {
-                  window.showNotification('Data saved successfully!', false);
+                  window.showNotification('Data berhasil disimpan!', false);
                   setTimeout(() => {
                       window.location.href = 'admin-products.html';
                   }, 1500);
               }
               this.isLoading = false;
-              this.submitButtonText = this.action === 'add' ? 'Save' : 'Save Changes';
+              this.submitButtonText = this.action === 'add' ? 'Simpan' : 'Simpan Perubahan';
           }
         }));
       });
