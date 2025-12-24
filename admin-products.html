@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manajemen Konten | Carita Hidroponik</title>
+    <title>Content Management | Carita Hidroponik</title>
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/mobile.css" media="(max-width: 768px)" />
     <style>
@@ -55,46 +55,46 @@
         <div class="container">
             <div class="dashboard-header">
                 <div class="dashboard-header-text">
-                    <a href="admin.html" class="back-link">&larr; Kembali ke Dashboard</a>
-                    <h1 class="page-title">Manajemen Konten</h1>
-                    <p>Kelola produk dan berita yang ditampilkan di situs Anda.</p>
+                    <a href="admin.html" class="back-link">&larr; Back to Dashboard</a>
+                    <h1 class="page-title">Content Management</h1>
+                    <p>Manage the products and news displayed on your site.</p>
                 </div>
                 <a :href="`admin-editor.html?type=${activeTab}&action=add`" class="btn-add">
-                    <span x-show="activeTab === 'products'">+ Tambah Produk</span>
-                    <span x-show="activeTab === 'news'">+ Tambah Berita</span>
+                    <span x-show="activeTab === 'products'">+ Add Product</span>
+                    <span x-show="activeTab === 'news'">+ Add News</span>
                 </a>
             </div>
 
             <div class="content-card">
                 <div class="tabs">
-                    <button type="button" @click="activeTab = 'products'" :class="{ 'active': activeTab === 'products' }" class="tab-button">Manajemen Produk</button>
-                    <button type="button" @click="activeTab = 'news'" :class="{ 'active': activeTab === 'news' }" class="tab-button">Manajemen Berita</button>
+                    <button type="button" @click="activeTab = 'products'" :class="{ 'active': activeTab === 'products' }" class="tab-button">Product Management</button>
+                    <button type="button" @click="activeTab = 'news'" :class="{ 'active': activeTab === 'news' }" class="tab-button">News Management</button>
                 </div>
 
                 <!-- Products Tab -->
                 <div x-show="activeTab === 'products'" class="tab-content">
                     <div class="table-header">
-                        <h2>Daftar Produk</h2>
-                        <input type="text" x-model="searchQuery.products" placeholder="Cari produk..." class="search-input">
+                        <h2>Product List</h2>
+                        <input type="text" x-model="searchQuery.products" placeholder="Search products..." class="search-input">
                     </div>
                     <div class="data-table-wrapper">
                         <table class="data-table">
                             <thead>
-                                <tr><th>Gambar</th><th>Produk</th><th>Kategori</th><th>Harga</th><th>Aksi</th></tr>
+                                <tr><th>Image</th><th>Product</th><th>Category</th><th>Price</th><th>Actions</th></tr>
                             </thead>
                             <tbody>
-                                <template x-if="isLoading.products"><tr><td colspan="5" style="text-align: center;">Memuat produk...</td></tr></template>
-                                <template x-if="!isLoading.products && filteredProducts.length === 0"><tr><td colspan="5" style="text-align: center;">Tidak ada produk yang cocok.</td></tr></template>
+                                <template x-if="isLoading.products"><tr><td colspan="5" style="text-align: center;">Loading products...</td></tr></template>
+                                <template x-if="!isLoading.products && filteredProducts.length === 0"><tr><td colspan="5" style="text-align: center;">No matching products found.</td></tr></template>
                                 <template x-for="product in filteredProducts" :key="product.id">
                                     <tr>
-                                        <td data-label="Gambar"><img :src="product.image_url" :alt="product.name" class="item-image"></td>
-                                        <td data-label="Produk" class="item-name" x-text="product.name"></td>
-                                        <td data-label="Kategori" x-text="product.category"></td>
-                                        <td data-label="Harga" x-text="formatRupiah(product.price)"></td>
-                                        <td data-label="Aksi">
+                                        <td data-label="Image"><img :src="product.image_url" :alt="product.name" class="item-image"></td>
+                                        <td data-label="Product" class="item-name" x-text="product.name"></td>
+                                        <td data-label="Category" x-text="product.category"></td>
+                                        <td data-label="Price" x-text="window.formatRupiah(product.price)"></td>
+                                        <td data-label="Actions">
                                             <div class="action-buttons">
                                                 <a :href="`admin-editor.html?type=product&action=edit&id=${product.id}`" class="btn-edit">Edit</a>
-                                                <button type="button" class="btn-delete" @click="deleteItem(product.id, product.image_url)">Hapus</button>
+                                                <button type="button" class="btn-delete" @click="deleteItem(product.id, product.image_url)">Delete</button>
                                             </div>
                                         </td>
                                     </tr>
@@ -107,26 +107,26 @@
                 <!-- News Tab -->
                 <div x-show="activeTab === 'news'" class="tab-content">
                      <div class="table-header">
-                        <h2>Daftar Berita</h2>
-                        <input type="text" x-model="searchQuery.news" placeholder="Cari berita..." class="search-input">
+                        <h2>News List</h2>
+                        <input type="text" x-model="searchQuery.news" placeholder="Search news..." class="search-input">
                     </div>
                     <div class="data-table-wrapper">
                         <table class="data-table">
                             <thead>
-                                <tr><th>Gambar</th><th>Judul</th><th>Kutipan</th><th>Aksi</th></tr>
+                                <tr><th>Image</th><th>Title</th><th>Excerpt</th><th>Actions</th></tr>
                             </thead>
                             <tbody>
-                                <template x-if="isLoading.news"><tr><td colspan="4" style="text-align: center;">Memuat berita...</td></tr></template>
-                                <template x-if="!isLoading.news && filteredNews.length === 0"><tr><td colspan="4" style="text-align: center;">Tidak ada berita yang cocok.</td></tr></template>
+                                <template x-if="isLoading.news"><tr><td colspan="4" style="text-align: center;">Loading news...</td></tr></template>
+                                <template x-if="!isLoading.news && filteredNews.length === 0"><tr><td colspan="4" style="text-align: center;">No matching news found.</td></tr></template>
                                 <template x-for="item in filteredNews" :key="item.id">
                                     <tr>
-                                        <td data-label="Gambar"><img :src="item.image_url" :alt="item.title" class="item-image"></td>
-                                        <td data-label="Judul" class="item-name" x-text="item.title"></td>
-                                        <td data-label="Kutipan" x-text="item.excerpt"></td>
-                                        <td data-label="Aksi">
+                                        <td data-label="Image"><img :src="item.image_url" :alt="item.title" class="item-image"></td>
+                                        <td data-label="Title" class="item-name" x-text="item.title"></td>
+                                        <td data-label="Excerpt" x-text="item.excerpt"></td>
+                                        <td data-label="Actions">
                                             <div class="action-buttons">
                                                 <a :href="`admin-editor.html?type=news&action=edit&id=${item.id}`" class="btn-edit">Edit</a>
-                                                <button type="button" class="btn-delete" @click="deleteItem(item.id, item.image_url)">Hapus</button>
+                                                <button type="button" class="btn-delete" @click="deleteItem(item.id, item.image_url)">Delete</button>
                                             </div>
                                         </td>
                                     </tr>
