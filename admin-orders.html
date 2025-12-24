@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manajemen Pesanan | Carita Hidroponik</title>
+    <title>Order Management | Carita Hidroponik</title>
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/mobile.css" media="(max-width: 768px)" />
     <style>
@@ -19,7 +19,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
             gap: 1.5rem;
-            margin-bottom: 5rem; /* Menambahkan margin bawah */
+            margin-bottom: 5rem; /* Added bottom margin */
         }
         .admin-order-card {
             background-color: #fff;
@@ -131,10 +131,10 @@
     <main class="main-content">
         <div class="container">
             <div class="dashboard-header">
-                <h1 class="page-title">Manajemen Pesanan</h1>
-                <p>Kelola dan perbarui status pesanan yang masuk.</p>
+                <h1 class="page-title">Order Management</h1>
+                <p>Manage and update the status of incoming orders.</p>
                 <div style="margin-top: 1rem;">
-                    <a href="admin.html" class="btn">&larr; Kembali ke Pusat Admin</a>
+                    <a href="admin.html" class="btn">&larr; Back to Admin Center</a>
                 </div>
             </div>
 
@@ -143,21 +143,21 @@
             <!-- Filter Controls -->
             <div class="filter-container">
                 <div class="filter-group">
-                    <label for="sort-time">Urutkan Berdasarkan Waktu</label>
+                    <label for="sort-time">Sort by Time</label>
                     <select id="sort-time" class="filter-select">
-                        <option value="newest">Terbaru</option>
-                        <option value="oldest">Terlama</option>
+                        <option value="newest">Newest</option>
+                        <option value="oldest">Oldest</option>
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label for="filter-status">Saring Berdasarkan Status</label>
+                    <label for="filter-status">Filter by Status</label>
                     <select id="filter-status" class="filter-select">
-                        <option value="all">Semua Status</option>
-                        <option value="Menunggu Konfirmasi">Menunggu Konfirmasi</option>
-                        <option value="Diproses">Diproses</option>
-                        <option value="Dalam Pengiriman">Dalam Pengiriman</option>
-                        <option value="Selesai">Selesai</option>
-                        <option value="Ditolak">Ditolak</option>
+                        <option value="all">All Statuses</option>
+                        <option value="Awaiting Confirmation">Awaiting Confirmation</option>
+                        <option value="Processing">Processing</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Rejected">Rejected</option>
                     </select>
                 </div>
             </div>
@@ -165,7 +165,7 @@
             <!-- Order Cards Grid -->
             <div id="orders-grid" class="order-management-grid"></div>
 
-            <p id="loading-message">Memuat pesanan...</p>
+            <p id="loading-message">Loading orders...</p>
         </div>
     </main>
 
