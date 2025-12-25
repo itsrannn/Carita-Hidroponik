@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -13,56 +13,45 @@
       href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@300;400;600&display=swap"
       rel="stylesheet"
     />
-
-    <!-- Google Translate -->
-    <style>
-      #google_translate_element { display: none !important; }
-      .goog-te-banner-frame { display: none !important; }
-      /* This hides the container that Google Translate injects, preventing it from intercepting clicks. */
-      div.skiptranslate { display: none !important; }
-      body { top: 0 !important; }
-    </style>
-    <script src="js/language.js"></script>
   </head>
 
   <body x-data @alpine:init="
     $store.products.init();
     $store.cart.init();
   ">
-    <div id="google_translate_element"></div>
     <div id="header-include"></div>
 
     <section id="Home" class="hero-section">
       <div class="container">
         <div id="hero-slider" class="hero-slider">
           <div class="slide-item active">
-            <img src="img/Flyer 1.jpg" alt="Promo Diskon 12.12" class="hero-img" />
+            <img src="img/Flyer 1.jpg" alt="12.12 Sale Promo" class="hero-img" />
             <div class="hero-content">
-              <h1 class="hero-title">DISKON 30% UNTUK SEMUA BENIH!</h1>
-              <p class="hero-subtitle">Rayakan panen akhir tahun dengan benih unggul terbaik.</p>
-              <a href="#Product" class="btn btn-accent btn-lg">Lihat Benih</a>
+              <h1 class="hero-title">30% OFF ALL SEEDS!</h1>
+              <p class="hero-subtitle">Celebrate the end-of-year harvest with the best quality seeds.</p>
+              <a href="#Product" class="btn btn-accent btn-lg">View Seeds</a>
             </div>
           </div>
 
           <div class="slide-item">
-            <img src="img/Flyer 2.jpg" alt="Nutrisi A-B Mix Baru" class="hero-img" />
+            <img src="img/Flyer 2.jpg" alt="New A-B Mix Nutrition" class="hero-img" />
             <div class="hero-content">
-              <h1 class="hero-title">NUTRISI A-B MIX KEMBALI STOK!</h1>
+              <h1 class="hero-title">A-B MIX NUTRITION BACK IN STOCK!</h1>
               <p class="hero-subtitle">
-                Formula lengkap untuk pertumbuhan tanaman yang optimal. Jangan sampai kehabisan lagi.
+                A complete formula for optimal plant growth. Don't run out again.
               </p>
-              <a href="#Product" class="btn btn-accent btn-lg">Pesan Sekarang</a>
+              <a href="#Product" class="btn btn-accent btn-lg">Order Now</a>
             </div>
           </div>
 
           <div class="slide-item">
-            <img src="img/Flyer 3.jpg" alt="Starter Kit untuk Pemula" class="hero-img" />
+            <img src="img/Flyer 3.jpg" alt="Starter Kit for Beginners" class="hero-img" />
             <div class="hero-content">
-              <h1 class="hero-title">MULAI HIDROPONIK DENGAN MUDAH</h1>
+              <h1 class="hero-title">START HYDROPONICS WITH EASE</h1>
               <p class="hero-subtitle">
-                Paket lengkap untuk pemula, termasuk panduan praktis dan instalasi mini.
+                A complete package for beginners, including a practical guide and a mini installation.
               </p>
-              <a href="#Product" class="btn btn-accent btn-lg">Dapatkan Kit</a>
+              <a href="#Product" class="btn btn-accent btn-lg">Get Your Kit</a>
             </div>
           </div>
 
@@ -79,30 +68,23 @@
         <div class="layout container" x-data="products()" x-init="init()">
           <aside class="sidebar" id="categorySidebar">
             <div class="sidebar-header">
-              <h4>Kategori Produk</h4>
+              <h4>Product Categories</h4>
               <button id="sidebar-collapse" class="collapse-btn" aria-expanded="true" aria-controls="categoryList">−</button>
             </div>
 
             <nav id="categoryList" class="category-list">
               <ul>
-                <li><a href="#" @click.prevent="selectedCategory = 'all'" :class="{ 'active': selectedCategory === 'all' }">Semua Produk</a></li>
-                <li><a href="#" @click.prevent="selectedCategory = 'benih'" :class="{ 'active': selectedCategory === 'benih' }">Benih</a></li>
-                <li><a href="#" @click.prevent="selectedCategory = 'nutrisi'" :class="{ 'active': selectedCategory === 'nutrisi' }">Nutrisi & Pupuk</a></li>
-                <li><a href="#" @click.prevent="selectedCategory = 'media'" :class="{ 'active': selectedCategory === 'media' }">Media Tanam</a></li>
-                <li><a href="#" @click.prevent="selectedCategory = 'peralatan'" :class="{ 'active': selectedCategory === 'peralatan' }">Peralatan</a></li>
-                <li><a href="#" @click.prevent="selectedCategory = 'promo'" :class="{ 'active': selectedCategory === 'promo' }">Promo & Bundling</a></li>
+                <li><a href="#" @click.prevent="selectedCategory = 'all'" :class="{ 'active': selectedCategory === 'all' }">All Products</a></li>
+                <li><a href="#" @click.prevent="selectedCategory = 'benih'" :class="{ 'active': selectedCategory === 'benih' }">Seeds</a></li>
+                <li><a href="#" @click.prevent="selectedCategory = 'nutrisi'" :class="{ 'active': selectedCategory === 'nutrisi' }">Nutrition & Fertilizers</a></li>
+                <li><a href="#" @click.prevent="selectedCategory = 'media'" :class="{ 'active': selectedCategory === 'media' }">Growing Media</a></li>
+                <li><a href="#" @click.prevent="selectedCategory = 'peralatan'" :class="{ 'active': selectedCategory === 'peralatan' }">Equipment</a></li>
+                <li><a href="#" @click.prevent="selectedCategory = 'promo'" :class="{ 'active': selectedCategory === 'promo' }">Promos & Bundles</a></li>
               </ul>
             </nav>
 
             <div class="sidebar-footer">
-              <p class="small muted">Butuh bantuan? <a href="contact.html">Hubungi kami</a></p>
-            </div>
-
-            <!-- Mobile Language Switcher -->
-            <div class="lang-switcher lang-switcher-mobile">
-              <button class="lang-btn" data-lang="en" onclick="changeLanguage('en')">EN</button>
-              <span>|</span>
-              <button class="lang-btn active" data-lang="id" onclick="changeLanguage('id')">ID</button>
+              <p class="small muted">Need help? <a href="contact.html">Contact us</a></p>
             </div>
           </aside>
 
@@ -111,7 +93,7 @@
               <input
                 type="search"
                 id="search-box-home"
-                placeholder="Cari Benih, Alat, atau Pupuk..."
+                placeholder="Search for Seeds, Tools, or Fertilizers..."
                 x-model="searchTerm"
               />
               <label for="search-box-home"><i data-feather="search"></i></label>
@@ -120,8 +102,8 @@
 
             <section id="Product" class="page-header">
               <div class="header-left">
-                <h1>Produk Unggulan</h1>
-                <p class="muted">Pilihan terbaik untuk kebun hidroponik dan hobi berkebun.</p>
+                <h1>Featured Products</h1>
+                <p class="muted">The best choices for your hydroponic garden and gardening hobby.</p>
               </div>
               <div class="header-actions">
                 <label class="sort">
@@ -136,7 +118,7 @@
             </section>
 
             <p x-show="$store.products.isLoading" class="loading-text" style="text-align: center; padding: 2rem;">
-              Memuat produk...
+              Loading products...
             </p>
 
             <div x-show="!$store.products.isLoading" x-transition>
@@ -162,7 +144,7 @@
 
                 <template x-if="processedItems().length === 0">
                   <div class="no-products-message" style="text-align: center; padding: 2rem; width: 100%;">
-                    <p>Produk tidak ditemukan. Coba kata kunci atau kategori lain.</p>
+                    <p>No products found. Try a different keyword or category.</p>
                   </div>
                 </template>
               </section>
@@ -189,13 +171,13 @@
     </section>
 
     <section class="news-section container">
-      <h2 class="section-title">🌱 Status Berita & Tutorial Terbaru</h2>
+      <h2 class="section-title">🌱 Latest News & Tutorials</h2>
       <div class="news-grid" id="index-news-container"></div>
     </section>
 
     <section class="preview">
-      <h2>Tentang Carita Hidroponik</h2>
-      <p>Carita Hidroponik menyediakan benih, nutrisi, dan perlengkapan hidroponik berkualitas untuk pemula dan profesional.</p>
+      <h2>About Carita Hidroponik</h2>
+      <p>Carita Hidroponik provides quality seeds, nutrients, and hydroponic equipment for beginners and professionals.</p>
     </section>
 
     <div id="footer-include"></div>

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Detail Produk | Carita Hidroponik</title>
+    <title>Product Detail | Carita Hidroponik</title>
 
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/product detail.css" />
@@ -26,13 +26,13 @@
     <div id="header-include"></div>
 
     <main class="container" x-data="productDetail()" x-cloak>
-      <p x-show="$store.products.isLoading" class="loading-text">Memuat produk...</p>
+      <p x-show="$store.products.isLoading" class="loading-text">Loading product...</p>
 
       <div x-show="!$store.products.isLoading && !product">
-        <h1 class="product-detail-title">Produk Tidak Ditemukan</h1>
+        <h1 class="product-detail-title">Product Not Found</h1>
         <p>
-          Maaf, produk yang Anda cari tidak dapat ditemukan. Silakan kembali ke
-          halaman utama.
+          Sorry, the product you are looking for could not be found. Please return to the
+          homepage.
         </p>
       </div>
 
@@ -41,7 +41,7 @@
           <nav class="breadcrumb">
             <a href="index.html">Home</a>
             <span class="breadcrumb-separator">/</span>
-            <a href="index.html#Product">Produk</a>
+            <a href="index.html#Product">Products</a>
             <span class="breadcrumb-separator">/</span>
             <span x-text="product.name"></span>
           </nav>
@@ -64,20 +64,20 @@
               @click="$store.cart.add(product.id)"
               class="btn-sm add-cart"
             >
-              <i data-feather="shopping-bag"></i> Tambah ke Keranjang
+              <i data-feather="shopping-bag"></i> Add to Cart
             </button>
           </div>
         </section>
 
-        <!-- SECTION DESKRIPSI -->
+        <!-- SECTION DESCRIPTION -->
         <section class="product-detail-description">
-          <h2>Deskripsi Produk</h2>
+          <h2>Product Description</h2>
           <p x-text="product.description"></p>
         </section>
 
-        <!-- SECTION PRODUK TERKAIT -->
+        <!-- SECTION RELATED PRODUCTS -->
         <section class="related-products">
-          <h2>Produk Terkait</h2>
+          <h2>Related Products</h2>
 
           <div x-show="relatedProducts.length > 0" class="swiper related-product-slider">
             <div class="swiper-wrapper">
@@ -118,7 +118,7 @@
           </div>
 
           <p x-show="relatedProducts.length === 0" class="muted" style="text-align: center;">
-            Tidak ada produk terkait lainnya.
+            No other related products.
           </p>
         </section>
       </div>

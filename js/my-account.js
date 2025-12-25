@@ -1,5 +1,4 @@
 // js/my-account.js
-// This script assumes 'supabase' is a global variable.
 
 document.addEventListener('alpine:init', () => {
     Alpine.data('accountPage', () => ({
@@ -45,12 +44,11 @@ document.addEventListener('alpine:init', () => {
                 return;
             }
             this.user = session.user;
-            await this.fetchProvinces(); // Fetch provinces first
-            await this.getProfile(); // Then get the profile
+            await this.fetchProvinces();
+            await this.getProfile();
 
             this.$watch('editAddressMode', (value) => {
                 if (value) {
-                    // Use nextTick to ensure the map container is visible
                     this.$nextTick(() => {
                         this.initMap();
                     });
@@ -60,14 +58,12 @@ document.addEventListener('alpine:init', () => {
 
         // --- Map Functionality ---
         initMap() {
-            // Default coordinates (e.g., center of Indonesia)
             const defaultLat = -2.5489;
             const defaultLng = 118.0149;
 
             const lat = this.profile.latitude || defaultLat;
             const lng = this.profile.longitude || defaultLng;
 
-            // Check if map is already initialized
             if (this.map) {
                 this.map.remove();
             }
@@ -102,7 +98,7 @@ document.addEventListener('alpine:init', () => {
                 const response = await fetch('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json');
                 this.provinces = await response.json();
             } catch (error) {
-                // Gagal memuat provinsi
+                console.error("Failed to load provinces:", error);
             }
         },
 
@@ -119,7 +115,7 @@ document.addEventListener('alpine:init', () => {
                 this.districts = [];
                 this.villages = [];
             } catch (error) {
-                // Gagal memuat kabupaten
+                console.error("Failed to load regencies:", error);
             }
         },
 
@@ -134,7 +130,7 @@ document.addEventListener('alpine:init', () => {
                 this.districts = await response.json();
                 this.villages = [];
             } catch (error) {
-                // Gagal memuat kecamatan
+                console.error("Failed to load districts:", error);
             }
         },
 
@@ -147,12 +143,12 @@ document.addEventListener('alpine:init', () => {
                 const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/villages/${this.selectedDistrict}.json`);
                 this.villages = await response.json();
             } catch (error) {
-                // Gagal memuat desa
+                console.error("Failed to load villages:", error);
             }
         },
 
         updateProfileVillage() {
-            // Placeholder for future logic if needed when village changes
+            // Placeholder for future logic
         },
 
         // --- Profile and Address Management ---
@@ -170,24 +166,23 @@ document.addEventListener('alpine:init', () => {
                 if (data) {
                     this.profile = { ...this.profile, ...data };
 
-                    // Ensure fetches are sequential to prevent race conditions
                     if (this.profile.province && this.provinces.length > 0) {
                         const province = this.provinces.find(p => p.name === this.profile.province);
                         if (province) {
                             this.selectedProvince = province.id;
-                            await this.fetchRegencies(); // Wait for regencies to load
+                            await this.fetchRegencies();
 
                             if (this.profile.regency && this.regencies.length > 0) {
                                 const regency = this.regencies.find(r => r.name === this.profile.regency);
                                 if (regency) {
                                     this.selectedRegency = regency.id;
-                                    await this.fetchDistricts(); // Wait for districts to load
+                                    await this.fetchDistricts();
 
                                     if (this.profile.district && this.districts.length > 0) {
                                         const district = this.districts.find(d => d.name === this.profile.district);
                                         if (district) {
                                             this.selectedDistrict = district.id;
-                                            await this.fetchVillages(); // Wait for villages to load
+                                            await this.fetchVillages();
 
                                             if (this.profile.village && this.villages.length > 0) {
                                                 const village = this.villages.find(v => v.name === this.profile.village);
@@ -203,7 +198,7 @@ document.addEventListener('alpine:init', () => {
                     }
                 }
             } catch (error) {
-                alert('Gagal memuat profil: ' + error.message);
+                alert('Failed to load profile: ' + error.message);
             } finally {
                 this.loading = false;
             }
@@ -212,7 +207,6 @@ document.addEventListener('alpine:init', () => {
         async updateProfile() {
             this.loading = true;
             try {
-                // Save the new phone_number field
                 const { data, error } = await supabase.from('profiles').update({
                     full_name: this.profile.full_name,
                     phone_number: this.profile.phone_number,
@@ -236,7 +230,6 @@ document.addEventListener('alpine:init', () => {
         async updateAddress() {
             this.loading = true;
 
-            // Find the names of the selected items
             const provinceName = this.provinces.find(p => p.id === this.selectedProvince)?.name || '';
             const regencyName = this.regencies.find(r => r.id === this.selectedRegency)?.name || '';
             const districtName = this.districts.find(d => d.id === this.selectedDistrict)?.name || '';
@@ -274,7 +267,6 @@ document.addEventListener('alpine:init', () => {
             try {
                 const { error } = await supabase.auth.signOut();
                 if (error) throw error;
-                // Correctly redirect to the login page relative to the current path
                 window.location.href = 'login page.html';
             } catch (error) {
                 alert('Error logging out: ' + error.message);

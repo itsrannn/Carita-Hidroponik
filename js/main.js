@@ -8,6 +8,18 @@ window.formatRupiah = (number) => {
   }).format(number);
 };
 
+// Global status translator
+window.translateStatus = (status) => {
+  const statusMap = {
+    'Menunggu Konfirmasi': 'Awaiting Confirmation',
+    'Diproses': 'Processing',
+    'Dalam Pengiriman': 'Shipped',
+    'Selesai': 'Completed',
+    'Ditolak': 'Rejected',
+  };
+  return statusMap[status] || status;
+};
+
 document.addEventListener("alpine:init", () => {
   // --- Centralized Stores ---
   Alpine.store("products", {
@@ -23,7 +35,7 @@ document.addEventListener("alpine:init", () => {
         if (error) throw error;
         this.all = data;
       } catch (err) {
-        // Gagal memuat produk, biarkan array kosong
+        // Failed to load products, let the array be empty
       } finally {
         this.isLoading = false;
       }
@@ -141,12 +153,10 @@ document.addEventListener("alpine:init", () => {
         window.scrollTo({ top: productSection.offsetTop, behavior: 'smooth' });
       }
 
-      // versi fix: refresh feather icons setelah ganti halaman
       this.$nextTick(() => feather.replace());
     },
 
     init() {
-      // Reset ke halaman 1 dan refresh ikon saat filter berubah
       const refreshOnFilterChange = () => {
         this.currentPage = 1;
         this.$nextTick(() => feather.replace());
@@ -155,7 +165,6 @@ document.addEventListener("alpine:init", () => {
       this.$watch('selectedCategory', refreshOnFilterChange);
       this.$watch('sortOption', refreshOnFilterChange);
 
-      // Refresh ikon saat data produk selesai dimuat
       this.$watch('$store.products.isLoading', (loading) => {
         if (!loading) {
           this.$nextTick(() => feather.replace());
@@ -164,7 +173,6 @@ document.addEventListener("alpine:init", () => {
     }
   }));
 
-  // --- Page Component (FINAL FIXED VERSION) ---
   Alpine.data('contentManager', () => ({
     activeTab: 'products',
     products: [],
@@ -205,7 +213,7 @@ document.addEventListener("alpine:init", () => {
         if (error) throw error;
         this.products = data;
       } catch (error) {
-        window.showNotification('Gagal memuat produk.', true);
+        window.showNotification('Failed to load products.', true);
       } finally {
         this.isLoading.products = false;
       }
@@ -221,14 +229,14 @@ document.addEventListener("alpine:init", () => {
         if (error) throw error;
         this.news = data;
       } catch (error) {
-        window.showNotification('Gagal memuat berita.', true);
+        window.showNotification('Failed to load news.', true);
       } finally {
         this.isLoading.news = false;
       }
     },
 
     async deleteItem(id, imageUrl) {
-      if (!confirm('Anda yakin ingin menghapus item ini?')) return;
+      if (!confirm('Are you sure you want to delete this item?')) return;
 
       const tableName = this.activeTab;
       try {
@@ -243,9 +251,9 @@ document.addEventListener("alpine:init", () => {
         }
 
         this[tableName] = this[tableName].filter(item => item.id !== id);
-        window.showNotification('Item berhasil dihapus.');
+        window.showNotification('Item successfully deleted.');
       } catch (error) {
-        window.showNotification('Gagal menghapus item.', true);
+        window.showNotification('Failed to delete item.', true);
       }
     }
   }));

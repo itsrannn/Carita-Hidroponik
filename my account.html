@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Akun Saya | Carita Hidroponik</title>
+  <title>My Account | Carita Hidroponik</title>
 
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/mobile.css" media="(max-width: 768px)" />
@@ -20,15 +20,15 @@
 
   <main class="main-content my-account">
     <div class="container">
-      <h1 class="page-title">Akun Saya</h1>
+      <h1 class="page-title">My Account</h1>
       <div class="account-layout">
 
         <aside class="account-sidebar">
             <nav class="account-nav">
                 <ul>
-                    <li><a href="my account.html" class="active"><i data-feather="user"></i> Profil Saya</a></li>
-                    <li><a href="order-history.html"><i data-feather="shopping-bag"></i> Riwayat Pesanan</a></li>
-                    <li><a href="#" @click.prevent="handleLogout()"><i data-feather="log-out"></i> Keluar</a></li>
+                    <li><a href="my account.html" class="active"><i data-feather="user"></i> My Profile</a></li>
+                    <li><a href="order-history.html"><i data-feather="shopping-bag"></i> Order History</a></li>
+                    <li><a href="#" @click.prevent="handleLogout()"><i data-feather="log-out"></i> Logout</a></li>
                 </ul>
             </nav>
         </aside>
@@ -37,27 +37,27 @@
           <!-- Profile Details Section -->
           <div class="account-section">
             <div class="section-header">
-              <h2>Profil Saya</h2>
-              <button class="btn btn-sm btn-outline" @click="editProfileMode = !editProfileMode" x-text="editProfileMode ? 'Batal' : 'Ubah Profil'"></button>
+              <h2>My Profile</h2>
+              <button class="btn btn-sm btn-outline" @click="editProfileMode = !editProfileMode" x-text="editProfileMode ? 'Cancel' : 'Edit Profile'"></button>
             </div>
             <div class="section-body">
               <form class="account-form" @submit.prevent="updateProfile">
                 <div class="form-group">
-                  <label for="fullName">Nama Lengkap</label>
+                  <label for="fullName">Full Name</label>
                   <input type="text" id="fullName" x-model="profile.full_name" :disabled="!editProfileMode" />
                 </div>
                 <div class="form-group">
-                  <label for="email">Alamat Email</label>
+                  <label for="email">Email Address</label>
                   <input type="email" id="email" :value="user ? user.email : ''" disabled />
                 </div>
                 <div class="form-group">
-                  <label for="phone_number">Nomor Telepon</label>
+                  <label for="phone_number">Phone Number</label>
                   <input type="tel" id="phone_number" x-model="profile.phone_number" :disabled="!editProfileMode" />
                 </div>
                 <div class="form-actions" x-show="editProfileMode">
                   <button type="submit" class="btn btn-primary" :disabled="loading">
-                    <span x-show="!loading">Simpan Perubahan</span>
-                    <span x-show="loading">Menyimpan...</span>
+                    <span x-show="!loading">Save Changes</span>
+                    <span x-show="loading">Saving...</span>
                   </button>
                 </div>
               </form>
@@ -67,65 +67,65 @@
           <!-- Address Section -->
           <div class="account-section">
             <div class="section-header">
-              <h2>Alamat Pengiriman</h2>
-              <button class="btn btn-sm btn-outline" @click="editAddressMode = !editAddressMode" x-text="editAddressMode ? 'Batal' : 'Ubah Alamat'"></button>
+              <h2>Shipping Address</h2>
+              <button class="btn btn-sm btn-outline" @click="editAddressMode = !editAddressMode" x-text="editAddressMode ? 'Cancel' : 'Edit Address'"></button>
             </div>
             <div class="section-body">
               <form class="account-form" @submit.prevent="updateAddress">
                 <div class="form-group">
-                  <label for="province">Provinsi</label>
+                  <label for="province">Province</label>
                   <select id="province" x-model="selectedProvince" @change="fetchRegencies" :disabled="!editAddressMode">
-                    <option value="">Pilih Provinsi</option>
+                    <option value="">Select Province</option>
                     <template x-for="province in provinces" :key="province.id">
                       <option :value="province.id" x-text="province.name"></option>
                     </template>
                   </select>
                 </div>
                 <div class="form-group">
-                  <label for="regency">Kota/Kabupaten</label>
+                  <label for="regency">City/Regency</label>
                   <select id="regency" x-model="selectedRegency" @change="fetchDistricts" :disabled="!editAddressMode || !selectedProvince">
-                    <option value="">Pilih Kota/Kabupaten</option>
+                    <option value="">Select City/Regency</option>
                     <template x-for="regency in regencies" :key="regency.id">
                       <option :value="regency.id" x-text="regency.name"></option>
                     </template>
                   </select>
                 </div>
                 <div class="form-group">
-                  <label for="district">Kecamatan</label>
+                  <label for="district">District</label>
                   <select id="district" x-model="selectedDistrict" @change="fetchVillages" :disabled="!editAddressMode || !selectedRegency">
-                    <option value="">Pilih Kecamatan</option>
+                    <option value="">Select District</option>
                     <template x-for="district in districts" :key="district.id">
                       <option :value="district.id" x-text="district.name"></option>
                     </template>
                   </select>
                 </div>
                 <div class="form-group">
-                  <label for="village">Kelurahan/Desa</label>
+                  <label for="village">Village</label>
                   <select id="village" x-model="selectedVillage" @change="updateProfileVillage" :disabled="!editAddressMode || !selectedDistrict">
-                    <option value="">Pilih Kelurahan/Desa</option>
+                    <option value="">Select Village</option>
                     <template x-for="village in villages" :key="village.id">
                       <option :value="village.id" x-text="village.name"></option>
                     </template>
                   </select>
                 </div>
                 <div class="form-group">
-                  <label for="address">Nama Jalan, Gedung, No. Rumah</label>
+                  <label for="address">Street Name, Building, House No.</label>
                   <input type="text" id="address" x-model="profile.address" :disabled="!editAddressMode" />
                 </div>
                 <div class="form-group">
-                  <label for="postalCode">Kode Pos</label>
+                  <label for="postalCode">Postal Code</label>
                   <input type="text" id="postalCode" x-model="profile.postal_code" :disabled="!editAddressMode" />
                 </div>
                 <div class="form-group" x-show="editAddressMode">
-                  <label>Pinpoint Lokasi</label>
+                  <label>Pinpoint Location</label>
                   <div id="map" style="height: 400px; width: 100%;"></div>
                   <input type="hidden" id="latitude" x-model="profile.latitude" />
                   <input type="hidden" id="longitude" x-model="profile.longitude" />
                 </div>
                 <div class="form-actions" x-show="editAddressMode">
                   <button type="submit" class="btn btn-primary" :disabled="loading">
-                    <span x-show="!loading">Simpan Alamat</span>
-                    <span x-show="loading">Menyimpan...</span>
+                    <span x-show="!loading">Save Address</span>
+                    <span x-show="loading">Saving...</span>
                   </button>
                 </div>
               </form>
