@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Riwayat Pesanan | Carita Hidroponik</title>
+    <title>Order History | Carita Hidroponik</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/mobile.css" media="(max-width: 768px)" />
 </head>
@@ -12,15 +12,15 @@
 
     <main class="main-content my-account">
         <div class="container">
-             <h1 class="page-title">Akun Saya</h1>
+             <h1 class="page-title">My Account</h1>
             <div class="account-layout">
 
                 <aside class="account-sidebar">
                     <nav class="account-nav">
                         <ul>
-                            <li><a href="my account.html"><i data-feather="user"></i> Profil Saya</a></li>
-                            <li><a href="order-history.html" class="active"><i data-feather="shopping-bag"></i> Riwayat Pesanan</a></li>
-                            <li><a href="#" @click.prevent="handleLogout()"><i data-feather="log-out"></i> Keluar</a></li>
+                            <li><a href="my account.html"><i data-feather="user"></i> My Profile</a></li>
+                            <li><a href="order-history.html" class="active"><i data-feather="shopping-bag"></i> Order History</a></li>
+                            <li><a href="#" @click.prevent="handleLogout()"><i data-feather="log-out"></i> Logout</a></li>
                         </ul>
                     </nav>
                 </aside>
@@ -28,11 +28,11 @@
                 <section class="account-main">
                     <div class="account-section">
                         <div class="section-header">
-                          <h2>Riwayat Pesanan</h2>
+                          <h2>Order History</h2>
                         </div>
                         <div class="section-body">
                             <div id="order-list-container"></div>
-                             <p id="loading-message">Memuat riwayat pesanan...</p>
+                             <p id="loading-message">Loading order history...</p>
                         </div>
                       </div>
                 </section>

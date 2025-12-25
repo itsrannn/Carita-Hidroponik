@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    // Pastikan Supabase sudah tersedia
     if (!window.supabase) {
         return;
     }
@@ -7,10 +6,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const orderListContainer = document.getElementById('order-list-container');
     const loadingMessage = document.getElementById('loading-message');
 
-    // --- Autentikasi pengguna ---
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-        loadingMessage.innerHTML = 'Anda harus masuk untuk melihat riwayat pesanan. Mengalihkan ke halaman login...';
+        loadingMessage.innerHTML = 'You must be logged in to view your order history. Redirecting to login page...';
         setTimeout(() => {
             window.location.href = 'login page.html';
         }, 3000);
@@ -18,23 +16,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     const user = session.user;
 
-    // --- Fungsi status order ---
     function getStatusClass(status) {
-        const statusMap = {
-            'Menunggu Konfirmasi': 'status-menunggu-konfirmasi',
-            'Diproses': 'status-diproses',
-            'Ditolak': 'status-ditolak',
-            'Dalam Pengiriman': 'status-dalam-pengiriman',
-            'Selesai': 'status-selesai'
-        };
-        return statusMap[status] || 'status-default';
+        if (!status) return 'status-default';
+        return `status-${status.toLowerCase().replace(/\s+/g, '-')}`;
     }
 
-    // --- Fungsi render order ---
     function renderOrders(orders) {
-        orderListContainer.innerHTML = ''; // Kosongkan kontainer
+        orderListContainer.innerHTML = '';
         if (!orders || orders.length === 0) {
-            orderListContainer.innerHTML = '<p>Anda belum memiliki riwayat pesanan.</p>';
+            orderListContainer.innerHTML = '<p>You have no order history.</p>';
             return;
         }
 
@@ -43,14 +33,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             orderCard.className = 'order-card';
             orderCard.id = `order-${order.id}`;
 
-            const orderDate = new Date(order.created_at).toLocaleDateString('id-ID', {
+            const orderDate = new Date(order.created_at).toLocaleDateString('en-US', {
                 day: 'numeric',
                 month: 'long',
                 year: 'numeric'
             });
 
-            // Rincian item — gunakan order_details jika ada, fallback ke items
-            let itemsHtml = '<p>Rincian pesanan tidak tersedia.</p>';
+            let itemsHtml = '<p>Order details not available.</p>';
             const orderItems = order.order_details || order.items;
             if (orderItems && Array.isArray(orderItems) && orderItems.length > 0) {
                 itemsHtml = orderItems.map(item => {
@@ -59,7 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             <div class="item">
                                 <div class="item-info">
                                     <div class="item-name">${item.name}</div>
-                                    <div class="item-qty">Jumlah: ${item.quantity}</div>
+                                    <div class="item-qty">Quantity: ${item.quantity}</div>
                                 </div>
                             </div>
                         `;
@@ -68,30 +57,29 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }).join('');
             }
 
-            const statusText = order.status || 'Belum Diperbarui';
+            const statusText = window.translateStatus(order.status) || 'Not Updated';
             const statusClass = getStatusClass(order.status);
 
             orderCard.innerHTML = `
                 <div class="order-header">
                     <div>
-                        <div class="order-code">ID Pesanan: ${order.order_code || order.id}</div>
+                        <div class="order-code">Order ID: ${order.order_code || order.id}</div>
                         <div class="order-date">${orderDate}</div>
                     </div>
                     <div class="order-status ${statusClass}">${statusText}</div>
                 </div>
                 <div class="order-body">
-                    <strong>Ringkasan Pesanan:</strong>
+                    <strong>Order Summary:</strong>
                     ${itemsHtml}
                 </div>
                 <div class="order-footer">
-                    <strong>Total:</strong> Rp ${order.total_amount ? order.total_amount.toLocaleString('id-ID') : 'N/A'}
+                    <strong>Total:</strong> ${window.formatRupiah(order.total_amount) || 'N/A'}
                 </div>
             `;
             orderListContainer.appendChild(orderCard);
         });
     }
 
-    // --- Ambil data orders ---
     async function fetchOrders() {
         try {
             const { data: orders, error } = await supabase
@@ -105,14 +93,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadingMessage.style.display = 'none';
             renderOrders(orders);
         } catch (error) {
-            loadingMessage.textContent = 'Gagal memuat riwayat pesanan.';
+            loadingMessage.textContent = 'Failed to load order history.';
         }
     }
 
-    // Jalankan saat halaman dimuat
     fetchOrders();
 
-    // --- Real-time update ---
     const subscription = supabase
         .channel('public:orders')
         .on('postgres_changes', {
@@ -125,7 +111,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         })
         .subscribe();
 
-    // --- Logout Functionality ---
     const logoutButton = document.getElementById('logout-button');
     if (logoutButton) {
         logoutButton.addEventListener('click', async () => {

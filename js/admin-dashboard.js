@@ -1,12 +1,10 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    // Pastikan Supabase client sudah tersedia
     if (!window.supabase) {
         console.error('Supabase client not found. Make sure supabase-client.js is loaded correctly.');
         return;
     }
     const supabase = window.supabase;
 
-    // Elemen-elemen UI
     const totalRevenueEl = document.getElementById('total-revenue');
     const totalOrdersEl = document.getElementById('total-orders');
     const bestSellingProductEl = document.getElementById('best-selling-product');
@@ -21,22 +19,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     const productMonthFilter = document.getElementById('product-month-filter');
     const productSalesChartWrapper = document.querySelector('#product-sales-chart-container .chart-canvas-wrapper');
 
-
     let salesTrendChart;
     let productSalesChart;
     let allOrdersData = [];
     let currentDate = new Date();
     let activePeriod = 'daily';
 
-    // State untuk grafik penjualan produk
     let productChartType = 'bar';
     let productPeriod = 'total';
     let selectedMonth = new Date().getMonth();
 
-    // Fungsi untuk format mata uang
-    const formatCurrency = (amount) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
-
-    // Fungsi untuk mengambil semua data pesanan yang relevan
     const fetchAllOrders = async () => {
         const { data, error } = await supabase
             .from('orders')
@@ -50,16 +42,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         return data;
     };
 
-    // Fungsi untuk menghitung dan menampilkan KPI
     const displayKPIs = (orders) => {
-        // 1. Total Pendapatan
         const totalRevenue = orders.reduce((acc, order) => acc + order.total_amount, 0);
-        totalRevenueEl.textContent = formatCurrency(totalRevenue);
+        totalRevenueEl.textContent = window.formatRupiah(totalRevenue);
 
-        // 2. Total Pesanan Selesai
         totalOrdersEl.textContent = orders.length;
 
-        // 3. Produk Terlaris
         const productCounts = {};
         orders.forEach(order => {
             if (Array.isArray(order.order_details)) {
@@ -80,9 +68,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const updateChartDateRange = (startDate, endDate, period) => {
         const options = { month: 'short', day: 'numeric', year: 'numeric' };
         if (period === 'daily') {
-            chartDateRangeEl.textContent = `${startDate.toLocaleDateString('id-ID', options)} - ${endDate.toLocaleDateString('id-ID', options)}`;
+            chartDateRangeEl.textContent = `${startDate.toLocaleDateString('en-US', options)} - ${endDate.toLocaleDateString('en-US', options)}`;
         } else if (period === 'weekly') {
-            chartDateRangeEl.textContent = startDate.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+            chartDateRangeEl.textContent = startDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
         } else if (period === 'monthly') {
             chartDateRangeEl.textContent = startDate.getFullYear();
         }
@@ -104,7 +92,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return orderDate >= startOfWeek && orderDate <= endOfWeek;
         });
 
-        const labels = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+        const labels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         const values = Array(7).fill(0);
 
         weekOrders.forEach(order => {
@@ -133,18 +121,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         const firstDayOfMonth = startOfMonth.getDay();
         const daysInMonth = endOfMonth.getDate();
 
-        // Calculate number of weeks in the month
         const numWeeks = Math.ceil((firstDayOfMonth + daysInMonth) / 7);
         for (let i = 1; i <= numWeeks; i++) {
-            labels.push(`Minggu ${i}`);
+            labels.push(`Week ${i}`);
             values.push(0);
         }
 
         monthOrders.forEach(order => {
             const orderDate = new Date(order.created_at);
-            // Day of the month (1-31)
             const dayOfMonth = orderDate.getDate();
-            // Calculate which week of the month this day falls into
             const weekIndex = Math.floor((firstDayOfMonth + dayOfMonth - 1) / 7);
             if (weekIndex < values.length) {
                  values[weekIndex] += order.total_amount;
@@ -163,7 +148,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const yearOrders = orders.filter(order => new Date(order.created_at).getFullYear() === year);
 
-        const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const values = Array(12).fill(0);
 
         yearOrders.forEach(order => {
@@ -204,7 +189,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             data: {
                 labels: data.labels,
                 datasets: [{
-                    label: 'Pendapatan',
+                    label: 'Revenue',
                     data: data.values,
                     borderColor: 'rgba(75, 192, 192, 1)',
                     backgroundColor: 'rgba(75, 192, 192, 0.2)',
@@ -218,7 +203,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     y: {
                         beginAtZero: true,
                         ticks: {
-                            callback: (value) => formatCurrency(value)
+                            callback: (value) => window.formatRupiah(value)
                         }
                     }
                 },
@@ -231,17 +216,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
 
-    // --- LOGIKA BARU UNTUK GRAFIK PENJUALAN PRODUK ---
-
     const populateMonthFilter = () => {
-        const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
         months.forEach((month, index) => {
             const option = document.createElement('option');
             option.value = index;
             option.textContent = month;
             productMonthFilter.appendChild(option);
         });
-        // Set bulan saat ini sebagai default
         productMonthFilter.value = new Date().getMonth();
     };
 
@@ -260,7 +242,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (productChartType === 'pie' && sortedProducts.length > 5) {
             const top5 = sortedProducts.slice(0, 5);
             const othersCount = sortedProducts.slice(5).reduce((acc, curr) => acc + curr[1], 0);
-            const others = ['Lainnya', othersCount];
+            const others = ['Others', othersCount];
             sortedProducts = [...top5, others];
         }
 
@@ -287,7 +269,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             productSalesChart.destroy();
         }
 
-        // Terapkan styling dinamis berdasarkan tipe chart
         if (productChartType === 'pie') {
             productSalesChartWrapper.classList.add('limit-chart-width');
         } else {
@@ -298,7 +279,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             responsive: true,
             plugins: {
                 legend: {
-                    display: productChartType === 'pie', // Tampilkan legenda hanya untuk pie
+                    display: productChartType === 'pie',
                     position: 'top',
                 },
                 tooltip: {
@@ -314,7 +295,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                      const percentage = ((context.parsed / total) * 100).toFixed(2) + '%';
                                      label += `${context.raw} (${percentage})`;
                                 } else {
-                                     label += `${context.raw} terjual`;
+                                     label += `${context.raw} sold`;
                                 }
                             }
                             return label;
@@ -330,7 +311,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 x: {
                     beginAtZero: true,
                     ticks: {
-                        precision: 0 // Hanya tampilkan angka bulat
+                        precision: 0
                     }
                 }
             };
@@ -343,7 +324,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Jumlah Terjual',
+                    label: 'Quantity Sold',
                     data: values,
                     backgroundColor: [
                         'rgba(255, 99, 132, 0.7)',
@@ -362,11 +343,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     };
 
-    // --- Event Listeners ---
-
     revenuePeriodFilter.addEventListener('change', (e) => {
         activePeriod = e.target.value;
-        currentDate = new Date(); // Reset tanggal ke hari ini
+        currentDate = new Date();
         updateRevenueChart();
     });
 
@@ -397,28 +376,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     const transactionsBody = document.getElementById('recent-transactions-body');
     const loadingTransactionsEl = document.getElementById('loading-transactions');
 
-    // Fungsi untuk menampilkan transaksi terakhir
     const displayRecentTransactions = (orders) => {
         if (!transactionsBody) return;
 
         loadingTransactionsEl.style.display = 'block';
 
-        // Ambil 5 transaksi terbaru
         const recentOrders = orders
             .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
             .slice(0, 5);
 
         if (recentOrders.length === 0) {
-            transactionsBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Tidak ada transaksi yang selesai.</td></tr>';
+            transactionsBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No completed transactions found.</td></tr>';
             loadingTransactionsEl.style.display = 'none';
             return;
         }
 
         transactionsBody.innerHTML = recentOrders.map(order => {
-            const orderDate = new Date(order.created_at).toLocaleDateString('id-ID', {
+            const orderDate = new Date(order.created_at).toLocaleDateString('en-US', {
                 day: '2-digit', month: 'short', year: 'numeric'
             });
-            // Asumsi `order.user_fullname` ada dari join, jika tidak, kita butuh query baru
             const customerName = order.user_fullname || 'N/A';
             const shortOrderId = order.id ? `...${order.id.slice(-6)}` : 'N/A';
 
@@ -427,8 +403,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td>${shortOrderId}</td>
                     <td>${orderDate}</td>
                     <td>${customerName}</td>
-                    <td>${formatCurrency(order.total_amount)}</td>
-                    <td><span class="status-badge status-${order.status.toLowerCase().replace(' ', '-')}">${order.status}</span></td>
+                    <td>${window.formatRupiah(order.total_amount)}</td>
+                    <td><span class="status-badge status-${(order.status || '').toLowerCase().replace(' ', '-')}">${window.translateStatus(order.status)}</span></td>
                 </tr>
             `;
         }).join('');
@@ -436,21 +412,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadingTransactionsEl.style.display = 'none';
     };
 
-    // Fungsi untuk mengambil semua data pesanan yang relevan
     const fetchAllOrdersWithNames = async () => {
          const { data, error } = await supabase
             .from('orders')
             .select('*, profile:profiles(full_name)')
             .eq('status', 'Selesai')
             .order('created_at', { ascending: false })
-            .limit(100); // Batasi untuk performa
+            .limit(100);
 
         if (error) {
             console.error('Error fetching orders:', error);
             return [];
         }
 
-        // Flatten the profile data
         return data.map(order => ({
             ...order,
             user_fullname: order.profile ? order.profile.full_name : 'Guest'
@@ -458,7 +432,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
 
-    // Inisialisasi
     const init = async () => {
         populateMonthFilter();
         allOrdersData = await fetchAllOrdersWithNames();

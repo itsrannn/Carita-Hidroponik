@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    // Ensure Feather icons are replaced
     feather.replace();
 
     const newsTitleEl = document.getElementById('news-title');
@@ -7,25 +6,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     const newsHeroEl = document.getElementById('news-hero-content');
     const newsBodyEl = document.getElementById('news-body');
 
-    // Function to display error messages
     const showError = (message) => {
-        if (newsTitleEl) newsTitleEl.textContent = 'Kesalahan';
+        if (newsTitleEl) newsTitleEl.textContent = 'Error';
         if (newsBodyEl) newsBodyEl.innerHTML = `<p style="color: red;">${message}</p>`;
-        if (newsHeroEl) newsHeroEl.style.display = 'none'; // Hide hero on error
+        if (newsHeroEl) newsHeroEl.style.display = 'none';
     };
 
-    // 1. Get news ID from URL
     const urlParams = new URLSearchParams(window.location.search);
     const newsId = urlParams.get('id');
 
     if (!newsId) {
-        showError('ID berita tidak ditemukan di URL. Pastikan URL Anda benar, contoh: news%20detail.html?id=1');
+        showError('News ID not found in URL. Please ensure your URL is correct, e.g., news%20detail.html?id=1');
         return;
     }
 
-    // 2. Fetch data from Supabase
     if (!window.supabase) {
-        showError('Klien Supabase tidak dapat diakses. Pastikan supabase-client.js dimuat dengan benar.');
+        showError('Supabase client is not accessible. Make sure supabase-client.js is loaded correctly.');
         return;
     }
 
@@ -34,31 +30,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             .from('news')
             .select('*')
             .eq('id', newsId)
-            .single(); // Use .single() to get a single object, not an array
+            .single();
 
         if (error) throw error;
 
         if (data) {
-            // 3. Populate the page with the fetched data
-            document.title = `${data.title} | Carita Hidroponik`; // Update page title
+            document.title = `${data.title} | Carita Hidroponik`;
             newsTitleEl.textContent = data.title;
-            newsDateEl.textContent = new Date(data.created_at).toLocaleDateString("id-ID", {
+            newsDateEl.textContent = new Date(data.created_at).toLocaleDateString("en-US", {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
             });
 
-            // Populate hero image
             newsHeroEl.innerHTML = `<img src="${data.image_url || 'img/coming soon.jpg'}" alt="${data.title}" />`;
 
-            // Populate article content (it's safe because it comes from a trusted source via Quill)
             newsBodyEl.innerHTML = data.content;
 
         } else {
-            showError(`Berita dengan ID "${newsId}" tidak ditemukan.`);
+            showError(`News with ID "${newsId}" not found.`);
         }
 
     } catch (error) {
-        showError('Gagal memuat detail berita. Silakan coba lagi nanti.');
+        showError('Failed to load news detail. Please try again later.');
     }
 });

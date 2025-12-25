@@ -1,11 +1,5 @@
 // js/checkout.js
-// This script will handle the checkout process.
-// It assumes 'supabase' is a global variable.
 
-/**
- * Shows or hides the 'Profile Incomplete' modal.
- * @param {boolean} show True to show, false to hide.
- */
 window.toggleProfileModal = (show) => {
   const modal = document.getElementById('profile-incomplete-modal');
   if (modal) {
@@ -19,10 +13,6 @@ window.toggleProfileModal = (show) => {
   }
 };
 
-/**
- * Shows or hides the 'Login Required' modal.
- * @param {boolean} show True to show, false to hide.
- */
 window.toggleLoginModal = (show) => {
   const modal = document.getElementById('login-required-modal');
   if (modal) {
@@ -36,10 +26,6 @@ window.toggleLoginModal = (show) => {
   }
 };
 
-/**
- * Shows or hides the order confirmation modal and populates it with cart data.
- * @param {boolean} show True to show, false to hide.
- */
 window.toggleConfirmationModal = (show) => {
   const modal = document.getElementById('confirmation-modal');
   const summaryElement = document.getElementById('confirmation-summary');
@@ -48,7 +34,7 @@ window.toggleConfirmationModal = (show) => {
     if (show) {
       const cartStore = Alpine.store('cart');
       if (!cartStore || cartStore.items.length === 0) {
-        window.showNotification('Keranjang belanja Anda kosong.', true);
+        window.showNotification('Your shopping cart is empty.', true);
         return;
       }
 
@@ -57,13 +43,13 @@ window.toggleConfirmationModal = (show) => {
         summaryHTML += `
           <div class="summary-product-item">
             <span class="summary-product-name">${item.name} (x${item.quantity})</span>
-            <span class="summary-product-total">Rp ${item.subtotal.toLocaleString('id-ID')}</span>
+            <span class="summary-product-total">${window.formatRupiah(item.subtotal)}</span>
           </div>
         `;
       });
       summaryHTML += `
         <div class="summary-grand-total">
-          <span>Total: Rp ${cartStore.total.toLocaleString('id-ID')}</span>
+          <span>Total: ${window.formatRupiah(cartStore.total)}</span>
         </div>
       `;
       summaryElement.innerHTML = summaryHTML;
@@ -80,10 +66,6 @@ window.toggleConfirmationModal = (show) => {
   }
 };
 
-/**
- * Generates a unique order code.
- * Example: CH-20231115-A1B2
- */
 function generateOrderCode() {
   const date = new Date();
   const y = date.getFullYear();
@@ -93,9 +75,6 @@ function generateOrderCode() {
   return `CH-${y}${m}${d}-${random}`;
 }
 
-/**
- * Checks if the user's profile is complete enough for checkout.
- */
 async function isProfileComplete() {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return { complete: false, reason: 'Not logged in', profile: null };
@@ -123,14 +102,11 @@ async function isProfileComplete() {
   return { complete: true, reason: 'Profile is complete', profile: data };
 }
 
-/**
- * Processes the checkout: creates an order in Supabase and clears the cart.
- */
 async function processCheckout(profile) {
   const cartStore = Alpine.store('cart');
 
   if (!cartStore || cartStore.items.length === 0) {
-    window.showNotification('Keranjang belanja Anda kosong.', true);
+    window.showNotification('Your shopping cart is empty.', true);
     return;
   }
 
@@ -139,7 +115,7 @@ async function processCheckout(profile) {
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    alert('Sesi tidak ditemukan. Silakan login kembali.');
+    alert('Session not found. Please log in again.');
     return window.location.href = 'login page.html';
   }
 
@@ -165,20 +141,19 @@ async function processCheckout(profile) {
   });
 
   if (error) {
-    return window.showNotification(`Terjadi kesalahan: ${error.message}`, true);
+    return window.showNotification(`An error occurred: ${error.message}`, true);
   }
 
   localStorage.removeItem('cartItems');
   if (window.Alpine && Alpine.store('cart')) Alpine.store('cart').clear();
 
-  window.showNotification(`Pesanan Anda dengan kode ${orderCode} berhasil dibuat!`);
+  window.showNotification(`Your order with code ${orderCode} has been placed successfully!`);
 
   setTimeout(() => {
     window.location.href = 'order-history.html';
   }, 1500);
 }
 
-// --- Main Checkout Logic ---
 document.addEventListener('DOMContentLoaded', () => {
   const checkoutBtn = document.getElementById('checkout-btn');
   const closeProfileModalBtn = document.getElementById('close-modal-btn');
@@ -191,7 +166,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const cancelOrderBtn = document.getElementById('cancel-order-btn');
   const confirmationModalOverlay = document.getElementById('confirmation-modal');
 
-  // Checkout button click
   if (checkoutBtn) {
     checkoutBtn.addEventListener('click', async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -210,7 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Confirmation modal logic
   if (confirmOrderBtn) {
     confirmOrderBtn.addEventListener('click', async () => {
       const { complete, profile } = await isProfileComplete();
@@ -237,7 +210,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Profile modal close
   if (closeProfileModalBtn) {
     closeProfileModalBtn.addEventListener('click', () => {
       window.toggleProfileModal(false);
@@ -250,7 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Login modal close
   if (closeLoginModalBtn) {
     closeLoginModalBtn.addEventListener('click', () => {
       window.toggleLoginModal(false);

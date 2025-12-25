@@ -1,54 +1,113 @@
 const { test, expect } = require('@playwright/test');
 
-test.describe('Verifikasi Perbaikan Bug', () => {
+test.describe('Verification of Bug Fixes and Translations', () => {
 
   test.beforeEach(async ({ page }) => {
-    // Menangani dialog yang mungkin muncul (misalnya, saat item ditambahkan ke keranjang)
+    // Handle any dialogs that might appear (e.g., when adding items to the cart)
     page.on('dialog', dialog => dialog.accept());
   });
 
-  test('Dropdown admin sekarang dapat dibuka', async ({ page }) => {
+  test('Admin dropdown can now be opened', async ({ page }) => {
     await page.goto('http://localhost:8000/admin.html');
 
-    // Klik tombol dropdown pengguna
+    // Click the user dropdown button
     const userDropdownButton = page.locator('header .user-dropdown button');
     await userDropdownButton.click();
 
-    // Verifikasi bahwa konten dropdown sekarang terlihat
+    // Verify that the dropdown content is now visible and translated
     const dropdownContent = page.locator('header .dropdown-content');
     await expect(dropdownContent).toBeVisible();
+    await expect(dropdownContent).toContainText('My Profile');
 
-    // Ambil tangkapan layar untuk verifikasi visual
-    await page.screenshot({ path: '/home/jules/verification/admin_dropdown_fix_verified.png' });
-
-    // Klik di luar dropdown untuk menutupnya
+    // Click outside the dropdown to close it
     await page.locator('body').click({ position: { x: 10, y: 10 } });
     await expect(dropdownContent).not.toBeVisible();
   });
 
-  test('Lencana keranjang diperbarui setelah navigasi kembali', async ({ page }) => {
-    // Buka halaman utama
+  test('Cart badge updates correctly after back navigation', async ({ page }) => {
+    // Go to the main page
     await page.goto('http://localhost:8000/index.html');
 
-    // Tambahkan item pertama ke keranjang
+    // Add the first item to the cart
     await page.locator('.product-card .add-cart').first().click();
 
-    // Verifikasi bahwa lencana keranjang menunjukkan '1'
+    // Verify the cart badge shows '1'
     const cartBadge = page.locator('#cart-count');
     await expect(cartBadge).toHaveText('1');
 
-    // Navigasi ke halaman lain
+    // Navigate to another page
     await page.goto('http://localhost:8000/contact.html');
-    await expect(page).toHaveTitle(/Kontak/); // Pastikan halaman baru dimuat
+    await expect(page).toHaveTitle(/Contact Us/); // Check for translated title
 
-    // Navigasi kembali ke halaman utama menggunakan tombol kembali browser
+    // Navigate back to the main page using the browser's back button
     await page.goBack();
 
-    // Verifikasi bahwa lencana keranjang MASIH menunjukkan '1' berkat perbaikan bfcache
+    // Verify the cart badge STILL shows '1' thanks to the bfcache fix
     await expect(cartBadge).toHaveText('1');
-
-    // Ambil tangkapan layar
-    await page.screenshot({ path: '/home/jules/verification/cart_badge_fix_verified.png' });
   });
 
+  test('Home page main content is translated', async ({ page }) => {
+      await page.goto('http://localhost:8000/index.html');
+      const mainHeading = page.locator('#Product h1');
+      await expect(mainHeading).toHaveText('Featured Products');
+      const categoryTitle = page.locator('#categorySidebar h4');
+      await expect(categoryTitle).toHaveText('Product Categories');
+  });
+
+  test('Login page is translated', async ({ page }) => {
+      await page.goto('http://localhost:8000/login%20page.html');
+      const loginButton = page.locator('#login-form .btn');
+      await expect(loginButton).toHaveText('Login');
+      const registerLink = page.locator('#login-form .register-link a');
+      await expect(registerLink).toHaveText('Register');
+  });
+
+  test('My Account page redirects to login (as expected)', async ({ page }) => {
+      await page.goto('http://localhost:8000/my%20account.html');
+      // The page should redirect to the login page if not authenticated
+      await expect(page).toHaveTitle(/Login Page/);
+  });
+
+  test('Cart page is translated', async ({ page }) => {
+      await page.goto('http://localhost:8000/my%20cart.html');
+      const pageTitle = page.locator('.cart-section .section-title');
+      await expect(pageTitle).toHaveText('Shopping Cart');
+      const emptyCartMessage = page.locator('.cart-empty-message');
+      await expect(emptyCartMessage).toHaveText('Your shopping cart is empty.');
+  });
+
+  test('Product detail page is translated', async ({ page }) => {
+      // Mock the API call to ensure the product data is available for the test
+      await page.route('**/rest/v1/products**', route => {
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify([
+            { id: 1, name: 'Test Product', category: 'seeds', price: 10000, characteristics: 'Test char', description: 'Test desc', image_url: '' }
+          ]),
+        });
+      });
+      await page.goto('http://localhost:8000/product%20detail.html?id=1');
+      const addToCartButton = page.locator('.add-cart');
+      await expect(addToCartButton).toBeVisible();
+      await expect(addToCartButton).toContainText('Add to Cart');
+      const descriptionTitle = page.locator('.product-detail-description h2');
+      await expect(descriptionTitle).toHaveText('Product Description');
+  });
+
+  test('News detail page is translated', async ({ page }) => {
+      // Mock the API call to ensure news data is available
+      await page.route('**/rest/v1/news**', route => {
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(
+            { id: 1, title: 'Test News', created_at: new Date().toISOString(), content: 'Test content', image_url: '' }
+          ),
+        });
+      });
+      await page.goto('http://localhost:8000/news%20detail.html?id=1');
+      const shareTitle = page.locator('.share-buttons h4');
+      await expect(shareTitle).toHaveText('Share This Article:');
+  });
 });

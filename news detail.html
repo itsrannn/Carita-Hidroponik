@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -18,12 +18,12 @@
     <main class="main-content news-detail-page">
       <div class="container">
         <div class="news-layout">
-          <!-- Kolom Kiri: Artikel Utama -->
+          <!-- Left Column: Main Article -->
           <article class="news-article-content">
-            <h1 id="news-title">Memuat Berita...</h1>
+            <h1 id="news-title">Loading News...</h1>
 
             <div class="news-meta">
-              <span>By <strong id="news-author">Tim Redaksi</strong></span>
+              <span>By <strong id="news-author">Editorial Team</strong></span>
               <span>|</span>
               <span id="news-date"></span>
             </div>
@@ -37,12 +37,12 @@
 
             <div class="news-body" id="news-body">
               <p>
-                Sedang memuat isi artikel.
+                Loading article content.
               </p>
             </div>
 
             <div class="share-buttons">
-              <h4>Bagikan Artikel Ini:</h4>
+              <h4>Share This Article:</h4>
               <a href="#" class="btn btn-icon-only"
                 ><i data-feather="facebook"></i
               ></a>
@@ -55,28 +55,28 @@
             </div>
           </article>
 
-          <!-- Kolom Kanan: Sidebar -->
+          <!-- Right Column: Sidebar -->
           <aside class="news-sidebar">
             <div class="sidebar-widget">
-              <h4>Produk Terkait</h4>
+              <h4>Related Products</h4>
               <div id="related-products-list">
                 <a href="product-detail.html?id=2" class="sidebar-product">
                   <img
-                    src="https://placehold.co/80x80/c7eacb/333?text=Tomat"
-                    alt="Benih Tomat Cherry"
+                    src="https://placehold.co/80x80/c7eacb/333?text=Tomato"
+                    alt="Cherry Tomato Seeds"
                   />
                   <div>
-                    <h5>Benih Tomat Cherry</h5>
+                    <h5>Cherry Tomato Seeds</h5>
                     <span>Rp 12.000</span>
                   </div>
                 </a>
                 <a href="product-detail.html?id=5" class="sidebar-product">
                   <img
-                    src="https://placehold.co/80x80/c7eacb/333?text=Pupuk"
-                    alt="Pupuk Organik"
+                    src="https://placehold.co/80x80/c7eacb/333?text=Fertilizer"
+                    alt="Organic Fertilizer"
                   />
                   <div>
-                    <h5>Pupuk Organik (5kg)</h5>
+                    <h5>Organic Fertilizer (5kg)</h5>
                     <span>Rp 25.000</span>
                   </div>
                 </a>
@@ -84,15 +84,15 @@
             </div>
 
             <div class="sidebar-widget">
-              <h4>Berita Terbaru</h4>
+              <h4>Latest News</h4>
               <ul id="related-news-list" class="sidebar-news-list">
                 <li>
                   <a href="news detail.html?id=nutrisi-ab-mix"
-                    >Mengapa Nutrisi AB Mix Penting</a
+                    >Why AB Mix Nutrition is Important</a
                   >
                 </li>
-                <li><a href="#">Teknik NFT vs DFT, Mana yang Terbaik?</a></li>
-                <li><a href="#">5 Kesalahan Pemula Hidroponik</a></li>
+                <li><a href="#">NFT vs DFT Technique, Which is Best?</a></li>
+                <li><a href="#">5 Mistakes for Hydroponic Beginners</a></li>
               </ul>
             </div>
           </aside>
@@ -109,9 +109,9 @@
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js" defer></script>
 
     <script src="js/supabase-client.js"></script>
-    <script src="js/main.js"></script> <!-- Diperlukan untuk cart, dll. -->
+    <script src="js/main.js"></script> <!-- Required for cart, etc. -->
     <script src="js/include.js"></script>
-    <script src="js/news-detail.js"></script> <!-- Skrip baru kita -->
+    <script src="js/news-detail.js"></script> <!-- Our new script -->
     <script src="js/script.js"></script>
   </body>
 </html>

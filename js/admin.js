@@ -1,18 +1,13 @@
 // js/admin.js
 
-// Jalankan kode secara langsung karena skrip dimuat di akhir <body>
-
-// DOM Elements
 const ordersGrid = document.getElementById('orders-grid');
 const loadingMessage = document.getElementById('loading-message');
 const adminMessageContainer = document.getElementById('admin-message-container');
 const sortTimeSelect = document.getElementById('sort-time');
 const filterStatusSelect = document.getElementById('filter-status');
 
-// State
 let allOrders = [];
 
-// --- UTILITY FUNCTIONS ---
 function showAdminMessage(title, message) {
     adminMessageContainer.innerHTML = `
         <div style="padding: 1rem; background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 8px;">
@@ -23,7 +18,6 @@ function showAdminMessage(title, message) {
     adminMessageContainer.style.display = 'block';
 }
 
-// --- DATA FETCHING ---
 async function fetchOrders() {
     try {
         const { data: orders, error } = await supabase
@@ -38,10 +32,10 @@ async function fetchOrders() {
         if (error) throw error;
 
         if (!orders || orders.length === 0) {
-            loadingMessage.textContent = 'Tidak ada pesanan yang ditemukan.';
+            loadingMessage.textContent = 'No orders found.';
             showAdminMessage(
-                'Tidak Ada Pesanan Ditemukan',
-                'Ini bisa terjadi karena:<br>1. Belum ada pesanan masuk.<br>2. Anda belum terdaftar sebagai admin.<br>3. Kebijakan RLS salah.'
+                'No Orders Found',
+                'This could be because:<br>1. No orders have been placed yet.<br>2. You are not registered as an admin.<br>3. RLS policies are incorrect.'
             );
             return;
         }
@@ -51,17 +45,16 @@ async function fetchOrders() {
         loadingMessage.style.display = 'none';
 
     } catch (error) {
-        loadingMessage.textContent = 'Gagal memuat pesanan.';
+        loadingMessage.textContent = 'Failed to load orders.';
         showAdminMessage(
-            'Gagal Memuat Pesanan',
-            `Terjadi kesalahan: <strong>${error.message}</strong><br>Pastikan login & koneksi internet stabil.`
+            'Failed to Load Orders',
+            `An error occurred: <strong>${error.message}</strong><br>Ensure you are logged in & have a stable internet connection.`
         );
     }
 }
 
-// --- SORTING & FILTERING ---
 function applySortAndFilter() {
-    ordersGrid.innerHTML = ''; // Jaring pengaman #1
+    ordersGrid.innerHTML = '';
     let processedOrders = [...allOrders];
 
     const statusFilter = filterStatusSelect.value;
@@ -79,12 +72,11 @@ function applySortAndFilter() {
     renderOrders(processedOrders);
 }
 
-// --- RENDERING ---
 function renderOrders(orders) {
-    ordersGrid.innerHTML = ''; // Jaring pengaman #2
+    ordersGrid.innerHTML = '';
 
     if (orders.length === 0) {
-        ordersGrid.innerHTML = '<p>Tidak ada pesanan yang cocok dengan kriteria filter Anda.</p>';
+        ordersGrid.innerHTML = '<p>No orders match your filter criteria.</p>';
         return;
     }
 
@@ -93,35 +85,35 @@ function renderOrders(orders) {
         card.className = 'admin-order-card';
         card.id = `order-${order.id}`;
 
-        let itemsList = '<li>Tidak ada item</li>';
+        let itemsList = '<li>No items found</li>';
         const orderItems = order.order_details || order.items;
         if (orderItems && orderItems.length > 0) {
             itemsList = orderItems.map(item => `<li>${item.name} (x${item.quantity})</li>`).join('');
         }
 
         const profile = order.profiles;
-        const customerInfo = profile ? `${profile.full_name || 'Nama tidak ada'} <br><small>(${profile.phone_number || 'No HP tidak ada'})</small>` : 'Pelanggan tidak ditemukan';
+        const customerInfo = profile ? `${profile.full_name || 'Name not available'} <br><small>(${profile.phone_number || 'Phone not available'})</small>` : 'Customer not found';
 
-        let addressInfo = 'Alamat tidak tersedia';
+        let addressInfo = 'Address not available';
         if (order.shipping_address) {
             const addr = order.shipping_address;
             const addressParts = [addr.address, addr.village, addr.district, addr.regency, addr.province, addr.postal_code];
             addressInfo = addressParts.filter(part => part).join(', ');
         }
 
-        const orderDate = new Date(order.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+        const orderDate = new Date(order.created_at).toLocaleDateString('en-US', { day: '2-digit', month: 'long', year: 'numeric' });
 
         card.innerHTML = `
             <div class="admin-order-card">
                 <div class="order-header">
-                    <h3>Pesanan #${order.order_code || order.id}</h3>
-                    <span class="status-badge status-${order.status.toLowerCase().replace(/\s+/g, '-')}">${order.status}</span>
+                    <h3>Order #${order.order_code || order.id}</h3>
+                    <span class="status-badge status-${(order.status || '').toLowerCase().replace(/\s+/g, '-')}">${window.translateStatus(order.status)}</span>
                 </div>
                 <div class="order-body">
-                    <div class="info-group"><label>Tanggal</label><p>${orderDate}</p></div>
-                    <div class="info-group"><label>Pelanggan</label><p>${customerInfo}</p></div>
-                    <div class="info-group"><label>Alamat Kirim</label><p>${addressInfo}</p></div>
-                    <div class="info-group"><label>Item</label><ul>${itemsList}</ul></div>
+                    <div class="info-group"><label>Date</label><p>${orderDate}</p></div>
+                    <div class="info-group"><label>Customer</label><p>${customerInfo}</p></div>
+                    <div class="info-group"><label>Shipping Address</label><p>${addressInfo}</p></div>
+                    <div class="info-group"><label>Items</label><ul>${itemsList}</ul></div>
                 </div>
                 <div class="order-footer action-buttons"></div>
             </div>
@@ -144,11 +136,13 @@ function addActions(cell, order) {
     if (availableActions) {
         availableActions.forEach(action => {
             const buttonClass = action === 'Ditolak' ? 'btn-admin-reject' : 'btn-admin-approve';
-            const actionBtn = createButton(action, () => updateOrderStatus(order, action), buttonClass);
+            const actionBtn = createButton(window.translateStatus(action), () => updateOrderStatus(order, action), buttonClass);
             cell.appendChild(actionBtn);
         });
+    } else if (order.status === 'Selesai' || order.status === 'Ditolak'){
+        cell.textContent = window.translateStatus(order.status);
     } else {
-        cell.textContent = 'Selesai';
+        cell.textContent = 'No actions available';
     }
 }
 
@@ -163,14 +157,14 @@ function createButton(text, onClick, a_class) {
 async function updateOrderStatus(order, newStatus) {
     const { data, error } = await supabase.from('orders').update({ status: newStatus }).eq('id', order.id).select();
     if (error) {
-        alert(`Gagal memperbarui status pesanan: ${error.message}`);
+        alert(`Failed to update order status: ${error.message}`);
         return;
     }
     if (!data || data.length === 0) {
-        alert('Pembaruan Gagal: Anda mungkin tidak memiliki izin untuk mengubah pesanan ini.');
+        alert('Update Failed: You may not have permission to change this order.');
         return;
     }
-    alert('Status pesanan berhasil diperbarui.');
+    alert('Order status updated successfully.');
 
     const orderInState = allOrders.find(o => o.id === order.id);
     if (orderInState) {
@@ -179,7 +173,6 @@ async function updateOrderStatus(order, newStatus) {
     applySortAndFilter();
 }
 
-// --- INITIALIZATION ---
 sortTimeSelect.addEventListener('change', applySortAndFilter);
 filterStatusSelect.addEventListener('change', applySortAndFilter);
 
