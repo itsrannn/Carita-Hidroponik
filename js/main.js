@@ -12,8 +12,8 @@ window.formatRupiah = (number) => {
 window.translateStatus = (status) => {
   const statusMap = {
     'Menunggu Konfirmasi': 'Awaiting Confirmation',
-    'Diproses': 'Processing',
-    'Dalam Pengiriman': 'Shipped',
+    'Diproses': 'Preparing for Shipment',
+    'Dalam Pengiriman': 'On Its Way',
     'Selesai': 'Completed',
     'Ditolak': 'Rejected',
   };
