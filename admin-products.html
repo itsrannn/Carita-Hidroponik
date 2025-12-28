@@ -36,6 +36,14 @@
         .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
         .table-header h2 { margin: 0; }
         .search-input { padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #dee2e6; font-size: 0.95rem; width: 100%; max-width: 300px; }
+        .discount-badge { display: inline-block; padding: 0.2rem 0.5rem; font-size: 0.75rem; font-weight: 600; color: #fff; background-color: #15803d; border-radius: 0.5rem; margin-left: 0.5rem; vertical-align: middle; }
+        .bulk-discount-section { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; }
+        .bulk-discount-section h3 { margin-top: 0; margin-bottom: 0.5rem; }
+        .bulk-discount-section p { margin-top: 0; margin-bottom: 1rem; color: #6c757d; font-size: 0.9rem; }
+        .bulk-discount-controls { display: flex; gap: 1rem; align-items: center; }
+        .bulk-discount-controls input { padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #dee2e6; font-size: 0.95rem; width: 150px; }
+        .bulk-discount-controls button { background-color: #dc3545; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
+        .bulk-discount-controls button:hover { background-color: #c82333; }
         @media (max-width: 768px) {
             .dashboard-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
             .data-table thead { display: none; }
@@ -73,6 +81,16 @@
 
                 <!-- Products Tab -->
                 <div x-show="activeTab === 'products'" class="tab-content">
+
+                    <div class="bulk-discount-section">
+                        <h3>Bulk Discount Tool</h3>
+                        <p>Apply a percentage discount to all products that don't have a fixed discount price set.</p>
+                        <div class="bulk-discount-controls">
+                            <input type="number" x-model.number="bulkDiscountPercent" placeholder="e.g., 15" min="1" max="90">
+                            <button @click="applyBulkDiscount()">Apply Discount</button>
+                        </div>
+                    </div>
+
                     <div class="table-header">
                         <h2>Product List</h2>
                         <input type="text" x-model="searchQuery.products" placeholder="Search products..." class="search-input">
@@ -88,7 +106,18 @@
                                 <template x-for="product in filteredProducts" :key="product.id">
                                     <tr>
                                         <td data-label="Image"><img :src="product.image_url" :alt="product.name" class="item-image"></td>
-                                        <td data-label="Product" class="item-name" x-text="product.name"></td>
+                                        <td data-label="Product" class="item-name">
+                                            <span x-text="product.name"></span>
+                                            <template x-if="(product.discount_percent && product.discount_percent > 0) || (product.discount_price && product.discount_price > 0)">
+                                                <span class="discount-badge"
+                                                      x-text="`DISCOUNT -${
+                                                          product.discount_percent
+                                                          ? product.discount_percent
+                                                          : Math.round(((product.price - product.discount_price) / product.price) * 100)
+                                                      }%`">
+                                                </span>
+                                            </template>
+                                        </td>
                                         <td data-label="Category" x-text="product.category"></td>
                                         <td data-label="Price" x-text="window.formatRupiah(product.price)"></td>
                                         <td data-label="Actions">
