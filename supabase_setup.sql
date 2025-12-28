@@ -109,7 +109,9 @@ CREATE TABLE IF NOT EXISTS public.products (
     price NUMERIC NOT NULL,
     characteristics TEXT,
     description TEXT,
-    image_url TEXT
+    image_url TEXT,
+    discount_percent INTEGER DEFAULT NULL,
+    discount_price NUMERIC DEFAULT NULL
 );
 
 -- 2. Aktifkan Row Level Security (RLS)
