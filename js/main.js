@@ -181,17 +181,6 @@ document.addEventListener("alpine:init", () => {
       `;
     },
 
-    showOnlyPromos() {
-      this.selectedCategory = 'promo';
-      const productSection = document.getElementById('Product');
-      if (productSection) {
-        window.scrollTo({
-          top: productSection.offsetTop,
-          behavior: 'smooth'
-        });
-      }
-    },
-
     processedItems() {
       let items = Alpine.store('products').all;
 
