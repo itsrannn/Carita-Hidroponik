@@ -241,6 +241,7 @@ document.addEventListener("alpine:init", () => {
     news: [],
     isLoading: { products: true, news: true },
     searchQuery: { products: '', news: '' },
+    bulkDiscountPercent: null,
 
     get filteredProducts() {
       if (!this.searchQuery.products) return this.products;
@@ -316,6 +317,35 @@ document.addEventListener("alpine:init", () => {
         window.showNotification('Item successfully deleted.');
       } catch (error) {
         window.showNotification('Failed to delete item.', true);
+      }
+    },
+
+    async applyBulkDiscount() {
+      if (!this.bulkDiscountPercent || this.bulkDiscountPercent < 1 || this.bulkDiscountPercent > 90) {
+        window.showNotification('Please enter a valid discount percentage (1-90).', true);
+        return;
+      }
+
+      if (!confirm(`Are you sure you want to apply a ${this.bulkDiscountPercent}% discount to all eligible products? This action cannot be undone.`)) {
+        return;
+      }
+
+      try {
+        const { error } = await supabase
+          .from('products')
+          .update({
+            discount_percent: this.bulkDiscountPercent,
+            discount_price: null
+          })
+          .is('discount_price', null);
+
+        if (error) throw error;
+
+        window.showNotification('Bulk discount applied successfully!');
+        this.bulkDiscountPercent = null;
+        this.fetchProducts(); // Refresh the product list
+      } catch (error) {
+        window.showNotification('Failed to apply bulk discount.', true);
       }
     }
   }));
