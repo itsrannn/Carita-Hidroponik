@@ -313,6 +313,15 @@ body {
   justify-content: center;
 }
 
+.promo-section {
+  margin-bottom: 2.5rem;
+}
+
+.promo-actions {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
 .product-card {
   background: #ddd;
   border-radius: 12px;
@@ -323,6 +332,7 @@ body {
   aspect-ratio: 3 / 4;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .product-card:hover {
@@ -387,6 +397,38 @@ body {
   font-weight: 800;
   font-size: 0.95rem;
   margin-right: 1rem;
+}
+
+.product-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background-color: #E53935;
+  color: #FFFFFF;
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  z-index: 1;
+}
+
+.price-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.price-original {
+  text-decoration: line-through;
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-bottom: 0.1rem;
+}
+
+.price-discounted {
+  color: #2E7D32;
+  font-weight: 800;
+  font-size: 0.95rem;
 }
 
 .product-link {
