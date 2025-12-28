@@ -112,23 +112,27 @@ document.addEventListener("alpine:init", () => {
     },
 
     renderProductCard(item) {
-      const isPromo = item.discount_price || item.discount_percent > 0;
+      const isPromo = (item.discount_price && item.discount_price > 0) || (item.discount_percent && item.discount_percent > 0);
       let discountedPrice = 0;
       let percent = 0;
 
       if (isPromo) {
-        if (item.discount_price) {
+        // A fixed-price discount exists
+        if (item.discount_price && item.discount_price > 0) {
           discountedPrice = item.discount_price;
-          percent = Math.round(((item.price - item.discount_price) / item.price) * 100);
-        } else {
+          // Calculate the percentage discount and round down
+          percent = Math.floor(((item.price - item.discount_price) / item.price) * 100);
+        } else { // A percentage-based discount exists
           discountedPrice = item.price - (item.price * item.discount_percent / 100);
           percent = item.discount_percent;
         }
       }
 
-      const badgeHtml = isPromo ? `<div class="product-badge">-${percent}%</div>` : '';
+      const ribbonHtml = isPromo && percent > 0 ? `
+        <div class="discount-ribbon"><span>${percent}% OFF</span></div>
+      ` : '';
 
-      const priceHtml = isPromo ? `
+      const priceHtml = isPromo && discountedPrice > 0 ? `
         <div class="price-container">
           <div class="price-original">${window.formatRupiah(item.price)}</div>
           <div class="price-discounted">${window.formatRupiah(discountedPrice)}</div>
@@ -138,7 +142,7 @@ document.addEventListener("alpine:init", () => {
       return `
         <a href="product detail.html?id=${item.id}" class="product-link">
           <article class="product-card">
-            ${badgeHtml}
+            ${ribbonHtml}
             <figure class="product-media">
               <img src="${item.image_url ? item.image_url : 'img/coming soon.jpg'}" alt="${item.name}" />
             </figure>
