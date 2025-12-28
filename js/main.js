@@ -107,6 +107,66 @@ document.addEventListener("alpine:init", () => {
     currentPage: 1,
     itemsPerPage: 12,
 
+    promoItems() {
+      return Alpine.store('products').all.filter(p => p.discount_price || p.discount_percent > 0).slice(0, 4);
+    },
+
+    renderProductCard(item) {
+      const isPromo = item.discount_price || item.discount_percent > 0;
+      let discountedPrice = 0;
+      let percent = 0;
+
+      if (isPromo) {
+        if (item.discount_price) {
+          discountedPrice = item.discount_price;
+          percent = Math.round(((item.price - item.discount_price) / item.price) * 100);
+        } else {
+          discountedPrice = item.price - (item.price * item.discount_percent / 100);
+          percent = item.discount_percent;
+        }
+      }
+
+      const badgeHtml = isPromo ? `<div class="product-badge">-${percent}%</div>` : '';
+
+      const priceHtml = isPromo ? `
+        <div class="price-container">
+          <div class="price-original">${window.formatRupiah(item.price)}</div>
+          <div class="price-discounted">${window.formatRupiah(discountedPrice)}</div>
+        </div>
+      ` : `<div class="price">${window.formatRupiah(item.price)}</div>`;
+
+      return `
+        <a href="product detail.html?id=${item.id}" class="product-link">
+          <article class="product-card">
+            ${badgeHtml}
+            <figure class="product-media">
+              <img src="${item.image_url ? item.image_url : 'img/coming soon.jpg'}" alt="${item.name}" />
+            </figure>
+            <div class="product-body">
+              <h3 class="product-title">${item.name}</h3>
+              <div class="product-meta">
+                ${priceHtml}
+                <button class="btn-sm add-cart" @click.prevent.stop="$store.cart.add(${item.id})">
+                  <i data-feather="shopping-bag"></i> Add
+                </button>
+              </div>
+            </div>
+          </article>
+        </a>
+      `;
+    },
+
+    showOnlyPromos() {
+      this.selectedCategory = 'promo';
+      const productSection = document.getElementById('Product');
+      if (productSection) {
+        window.scrollTo({
+          top: productSection.offsetTop,
+          behavior: 'smooth'
+        });
+      }
+    },
+
     processedItems() {
       let items = Alpine.store('products').all;
 
@@ -118,7 +178,9 @@ document.addEventListener("alpine:init", () => {
         );
       }
 
-      if (this.selectedCategory !== 'all') {
+      if (this.selectedCategory === 'promo') {
+        items = items.filter(item => item.discount_price || (item.discount_percent && item.discount_percent > 0));
+      } else if (this.selectedCategory !== 'all') {
         items = items.filter(item => item.category === this.selectedCategory);
       }
 
