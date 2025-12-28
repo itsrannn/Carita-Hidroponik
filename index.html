@@ -65,6 +65,17 @@
           <div class="slider-dots"></div>
         </div>
 
+        <div class="container" style="padding: 2rem 0;">
+          <div x-data="{ searchTerm: '' }">
+            <form class="search-bar" @submit.prevent="handleSearch(searchTerm)" style="margin: auto; max-width: 600px;">
+              <input type="search" x-model="searchTerm" placeholder="Search for seeds, nutrients, tools..." aria-label="Search for products">
+              <button type="submit" aria-label="Search" class="search-button">
+                <i data-feather="search"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+
         <div class="layout container" x-data="products()" x-init="init()">
           <aside class="sidebar" id="categorySidebar">
             <div class="sidebar-header">
@@ -89,17 +100,6 @@
           </aside>
 
           <main class="main-content">
-            <section class="search-bar desktop-only" x-show="promoItems().length == 0">
-              <input
-                type="search"
-                id="search-box-home"
-                placeholder="Search for Seeds, Tools, or Fertilizers..."
-                x-model="searchTerm"
-              />
-              <label for="search-box-home"><i data-feather="search"></i></label>
-
-            </section>
-
             <template x-if="!$store.products.isLoading && promoItems().length > 0">
               <section id="promo" class="promo-section">
                 <div class="page-header">
@@ -114,16 +114,6 @@
                     <div x-html="renderProductCard(item)"></div>
                   </template>
                 </div>
-
-                <section class="search-bar desktop-only" style="margin-top: 2rem;">
-                  <input
-                    type="search"
-                    id="search-box-home-promo"
-                    placeholder="Search for Seeds, Tools, or Fertilizers..."
-                    x-model="searchTerm"
-                  />
-                  <label for="search-box-home-promo"><i data-feather="search"></i></label>
-                </section>
               </section>
             </template>
 

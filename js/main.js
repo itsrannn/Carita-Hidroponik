@@ -8,6 +8,12 @@ window.formatRupiah = (number) => {
   }).format(number);
 };
 
+window.handleSearch = (searchTerm) => {
+  if (searchTerm.trim() !== '') {
+    window.location.href = `products.html?s=${encodeURIComponent(searchTerm.trim())}`;
+  }
+};
+
 /**
  * Calculates the final price and discount percentage for a product.
  * @param {object} product - The product object.
