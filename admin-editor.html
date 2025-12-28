@@ -145,7 +145,7 @@
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js?nounit=true" defer></script>
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
-    <script src="js/supabase-client.js" defer></script>
+    <script src="js/supabase-client.js"></script>
     <script src="js/admin-auth.js" defer></script>
     <script src="js/main.js" defer></script>
     <script>
@@ -358,7 +358,10 @@
                   imageUrl = urlData.publicUrl;
               }
 
-              let dataToSubmit = { ...this.item, image_url: imageUrl };
+              // Create a clean copy of the item to avoid issues with Alpine's proxy
+              let dataToSubmit = JSON.parse(JSON.stringify(this.item));
+              dataToSubmit.image_url = imageUrl;
+
               if (this.type === 'news') {
                   dataToSubmit.content = this.quill.root.innerHTML;
               } else if (this.type === 'product') {
@@ -378,8 +381,9 @@
 
                   if (dataToSubmit.characteristics) {
                     dataToSubmit.char = dataToSubmit.characteristics.replace(/\n/g, '<br>');
-                    delete dataToSubmit.characteristics;
                   }
+                  // This field doesn't exist on the db, so it must be removed.
+                  delete dataToSubmit.characteristics;
               }
 
               delete dataToSubmit.id; // Always remove id before upsert
@@ -396,7 +400,6 @@
               const { error } = await query;
 
               if (error) {
-                  console.error('Supabase save error:', error);
                   window.showNotification('Failed to save data. Please try again.', true);
               } else {
                   window.showNotification('Data saved successfully!', false);
