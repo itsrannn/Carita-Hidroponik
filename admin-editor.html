@@ -51,10 +51,6 @@
         .btn-submit:hover {
             background-color: #14532d; /* Darker green on hover */
         }
-        .form-check { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0; }
-        .form-check-input { width: 1.25em; height: 1.25em; margin: 0; accent-color: var(--primary); }
-        .form-check-label { font-weight: normal; user-select: none; }
-        .discount-options { border-left: 3px solid #15803d; padding-left: 1.5rem; margin-top: 1rem; }
     </style>
 </head>
 <body x-data="editorPage" x-init="init()">
@@ -75,36 +71,6 @@
                         <div class="form-group"><label for="product-name">Product Name</label><input id="product-name" type="text" x-model="item.name" required></div>
                         <div class="form-group"><label for="product-category">Category</label><select id="product-category" x-model="item.category" required><option value="" disabled>Select Category</option><option value="benih">Seeds</option><option value="nutrisi">Nutrition</option><option value="media">Growing Media</option><option value="peralatan">Equipment</option><option value="promo">Promo</option></select></div>
                         <div class="form-group"><label for="product-price">Price (IDR)</label><input id="product-price" type="number" x-model="item.price" required></div>
-
-                        <!-- Discount Management Section -->
-                        <div class="form-group grid-col-span-2">
-                            <label>Discount Management</label>
-                            <div class="form-check">
-                                <input id="enable-discount" type="checkbox" x-model="discount.enabled" class="form-check-input">
-                                <label for="enable-discount" class="form-check-label">Enable Discount</label>
-                            </div>
-
-                            <div x-show="discount.enabled" class="discount-options" x-transition>
-                                <div style="display: flex; gap: 2rem; margin-top: 1rem;">
-                                    <div class="form-check">
-                                        <input type="radio" id="discount-percent" value="percent" x-model="discount.type" name="discount_type" class="form-check-input">
-                                        <label for="discount-percent">Percentage (%)</label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input type="radio" id="discount-fixed" value="fixed" x-model="discount.type" name="discount_type" class="form-check-input">
-                                        <label for="discount-fixed">Fixed Price</label>
-                                    </div>
-                                </div>
-
-                                <div class="form-group" style="margin-top: 1rem;">
-                                    <label for="discount-value">Discount Value</label>
-                                    <input id="discount-value" type="number" x-model.number="discount.value"
-                                           :placeholder="discount.type === 'percent' ? 'e.g., 20 for 20%' : 'e.g., 96000 for Rp 96.000'">
-                                    <template x-if="discount.error"><p x-text="discount.error" style="color: #c5221f; margin-top: 0.5rem;"></p></template>
-                                </div>
-                            </div>
-                        </div>
-
                         <div class="form-group">
                             <label for="image-input">Product Image</label>
                             <input type="file" id="image-input" @change="handleFileChange" accept="image/*">
@@ -155,12 +121,6 @@
           action: null,
           id: null,
           item: {},
-          discount: {
-              enabled: false,
-              type: 'percent',
-              value: null,
-              error: null
-          },
           title: 'Loading...',
           submitButtonText: 'Save',
           isLoading: true,
@@ -195,18 +155,6 @@
                       }
                   });
               }
-
-              this.$watch('discount.type', () => {
-                  this.discount.value = null;
-                  this.discount.error = null;
-              });
-
-              this.$watch('discount.enabled', (enabled) => {
-                  if (!enabled) {
-                      this.discount.value = null;
-                      this.discount.error = null;
-                  }
-              });
           },
 
           handleFileChange(event) {
@@ -256,29 +204,7 @@
               }
 
               this.item = data;
-              this.initializeDiscountState();
               this.isLoading = false;
-          },
-
-          initializeDiscountState() {
-              if (this.type !== 'product') return;
-
-              const hasPercentDiscount = this.item.discount_percent && this.item.discount_percent > 0;
-              const hasFixedDiscount = this.item.discount_price && this.item.discount_price > 0;
-
-              if (hasFixedDiscount) {
-                  this.discount.enabled = true;
-                  this.discount.type = 'fixed';
-                  this.discount.value = this.item.discount_price;
-              } else if (hasPercentDiscount) {
-                  this.discount.enabled = true;
-                  this.discount.type = 'percent';
-                  this.discount.value = this.item.discount_percent;
-              } else {
-                  this.discount.enabled = false;
-                  this.discount.type = 'percent';
-                  this.discount.value = null;
-              }
           },
 
           initializeQuill() {
@@ -305,35 +231,7 @@
               }
           },
 
-          validateDiscount() {
-              this.discount.error = null;
-              if (!this.discount.enabled) return true;
-
-              const value = this.discount.value;
-              if (!value || value <= 0) {
-                  this.discount.error = 'Discount value must be greater than 0.';
-                  return false;
-              }
-
-              if (this.discount.type === 'percent') {
-                  if (value < 1 || value > 90) {
-                      this.discount.error = 'Percentage must be between 1 and 90.';
-                      return false;
-                  }
-              } else if (this.discount.type === 'fixed') {
-                  if (value >= this.item.price) {
-                      this.discount.error = 'Fixed discount price must be lower than the original price.';
-                      return false;
-                  }
-              }
-              return true;
-          },
-
           async submitForm() {
-              if (this.type === 'product' && !this.validateDiscount()) {
-                  return;
-              }
-
               this.isLoading = true;
               this.submitButtonText = 'Saving...';
 
@@ -368,10 +266,10 @@
                           dataToSubmit.discount_price = null;
                       } else { // fixed
                           dataToSubmit.discount_price = this.discount.value;
-                          dataToSubmit.discount_percent = null;
+                          dataToSubmit.discount_percent = 0;
                       }
                   } else {
-                      dataToSubmit.discount_percent = null;
+                      dataToSubmit.discount_percent = 0;
                       dataToSubmit.discount_price = null;
                   }
 
@@ -395,6 +293,7 @@
               const { error } = await query;
 
               if (error) {
+                  console.error('Supabase save error:', error);
                   window.showNotification('Failed to save data. Please try again.', true);
               } else {
                   window.showNotification('Data saved successfully!', false);
