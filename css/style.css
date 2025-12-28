@@ -1495,3 +1495,62 @@ body {
     display: flex;
   }
 }
+
+/* --- 3D Discount Ribbon --- */
+.discount-ribbon {
+  position: absolute;
+  width: 160px;
+  height: 32px;
+  line-height: 32px;
+  top: 18px;
+  left: -45px;
+  z-index: 2;
+
+  transform: rotate(-45deg);
+  background: #ef4444; /* A modern, vibrant red */
+  color: #fff;
+
+  text-align: center;
+  font-family: var(--font-body, "Open Sans", sans-serif);
+  font-weight: 700;
+  font-size: 14px;
+
+  box-shadow: 0 4px 6px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.2); /* 3D Floating shadow */
+
+  /* Subtle highlight for a more plastic/realistic look */
+  border: 1px solid rgba(0,0,0,0.1);
+  border-top-color: rgba(255,255,255,0.2);
+  border-bottom-color: rgba(0,0,0,0.3);
+}
+
+.discount-ribbon span {
+  display: inline-block;
+  font-weight: bold;
+  color: white;
+}
+
+/* Creating the "folded" look */
+.discount-ribbon::before,
+.discount-ribbon::after {
+  content: '';
+  position: absolute;
+  border-style: solid;
+  border-color: transparent;
+  z-index: -1; /* Place them behind the main ribbon */
+}
+
+/* The darker fold at the top-left edge */
+.discount-ribbon::before {
+  top: 0;
+  left: 0;
+  border-width: 0 45px 32px 0; /* Creates the top-left fold shape */
+  border-right-color: #b91c1c; /* Darker red for shadow */
+}
+
+/* The darker fold at the bottom-right edge */
+.discount-ribbon::after {
+  bottom: 0;
+  right: 0;
+  border-width: 32px 45px 0 0; /* Creates the bottom-right fold shape */
+  border-top-color: #b91c1c; /* Darker red for shadow */
+}
