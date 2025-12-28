@@ -89,7 +89,7 @@
           </aside>
 
           <main class="main-content">
-            <section class="search-bar desktop-only">
+            <section class="search-bar desktop-only" x-show="promoItems().length == 0">
               <input
                 type="search"
                 id="search-box-home"
@@ -104,8 +104,8 @@
               <section id="promo" class="promo-section">
                 <div class="page-header">
                   <div class="header-left">
-                    <h1>Promo & Diskon</h1>
-                    <p class="muted">Dapatkan penawaran terbaik untuk produk pilihan.</p>
+                    <h1>Promotions & Discounts</h1>
+                    <p class="muted">Get the best deals on selected products.</p>
                   </div>
                 </div>
 
@@ -115,9 +115,15 @@
                   </template>
                 </div>
 
-                <div class="promo-actions">
-                  <button class="btn btn-secondary" @click.prevent="showOnlyPromos()">Lihat Semua Promo</button>
-                </div>
+                <section class="search-bar desktop-only" style="margin-top: 2rem;">
+                  <input
+                    type="search"
+                    id="search-box-home-promo"
+                    placeholder="Search for Seeds, Tools, or Fertilizers..."
+                    x-model="searchTerm"
+                  />
+                  <label for="search-box-home-promo"><i data-feather="search"></i></label>
+                </section>
               </section>
             </template>
 
