@@ -363,15 +363,16 @@
                   dataToSubmit.content = this.quill.root.innerHTML;
               } else if (this.type === 'product') {
                   if (this.discount.enabled && this.discount.value) {
+                      const discountValue = Number(this.discount.value);
                       if (this.discount.type === 'percent') {
-                          dataToSubmit.discount_percent = this.discount.value;
+                          dataToSubmit.discount_percent = discountValue || null;
                           dataToSubmit.discount_price = null;
                       } else { // fixed
-                          dataToSubmit.discount_price = this.discount.value;
-                          dataToSubmit.discount_percent = null;
+                          dataToSubmit.discount_price = discountValue || null;
+                          dataToSubmit.discount_percent = 0;
                       }
                   } else {
-                      dataToSubmit.discount_percent = null;
+                      dataToSubmit.discount_percent = 0;
                       dataToSubmit.discount_price = null;
                   }
 
@@ -395,6 +396,7 @@
               const { error } = await query;
 
               if (error) {
+                  console.error('Supabase save error:', error);
                   window.showNotification('Failed to save data. Please try again.', true);
               } else {
                   window.showNotification('Data saved successfully!', false);
