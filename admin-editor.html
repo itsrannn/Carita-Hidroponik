@@ -145,6 +145,8 @@
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js?nounit=true" defer></script>
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
+    <!-- supabase-client.js is loaded without defer to prevent a race condition. -->
+    <!-- This ensures the global 'supabase' object is available before the Alpine component initializes. -->
     <script src="js/supabase-client.js"></script>
     <script src="js/admin-auth.js" defer></script>
     <script src="js/main.js" defer></script>
@@ -386,13 +388,14 @@
                   delete dataToSubmit.characteristics;
               }
 
-              delete dataToSubmit.id; // Always remove id before upsert
+              delete dataToSubmit.id;
+              delete dataToSubmit.created_at;
 
               const tableName = this.type === 'product' ? 'products' : 'news';
               let query = supabase.from(tableName);
 
               if (this.action === 'add') {
-                query = query.insert([dataToSubmit]);
+                query = query.insert(dataToSubmit);
               } else {
                 query = query.update(dataToSubmit).eq('id', this.id);
               }
@@ -400,6 +403,7 @@
               const { error } = await query;
 
               if (error) {
+                  console.error('Supabase save error:', error);
                   window.showNotification('Failed to save data. Please try again.', true);
               } else {
                   window.showNotification('Data saved successfully!', false);
