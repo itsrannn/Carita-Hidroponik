@@ -362,18 +362,19 @@
               if (this.type === 'news') {
                   dataToSubmit.content = this.quill.root.innerHTML;
               } else if (this.type === 'product') {
+                  // Always initialize discount fields to meet the hard rule
+                  dataToSubmit.discount_percent = 0;
+                  dataToSubmit.discount_price = null;
+
                   if (this.discount.enabled && this.discount.value) {
-                      const discountValue = Number(this.discount.value);
+                      const discountValue = Number(this.discount.value) || 0;
                       if (this.discount.type === 'percent') {
-                          dataToSubmit.discount_percent = discountValue || null;
-                          dataToSubmit.discount_price = null;
+                          dataToSubmit.discount_percent = discountValue;
+                          // discount_price remains null
                       } else { // fixed
-                          dataToSubmit.discount_price = discountValue || null;
-                          dataToSubmit.discount_percent = 0;
+                          dataToSubmit.discount_price = discountValue;
+                          // discount_percent remains 0
                       }
-                  } else {
-                      dataToSubmit.discount_percent = 0;
-                      dataToSubmit.discount_price = null;
                   }
 
                   if (dataToSubmit.characteristics) {
@@ -396,7 +397,6 @@
               const { error } = await query;
 
               if (error) {
-                  console.error('Supabase save error:', error);
                   window.showNotification('Failed to save data. Please try again.', true);
               } else {
                   window.showNotification('Data saved successfully!', false);
