@@ -46,7 +46,17 @@
                       <img :src="item.img" :alt="item.name" class="cart-item-image" />
                       <div class="cart-item-details">
                         <h4 class="item-name" x-text="item.name"></h4>
-                        <div class="item-price" x-text="window.formatRupiah(item.price)"></div>
+                        <div class="price-container-cart">
+                          <template x-if="item.percentOff > 0">
+                            <div>
+                              <span class="item-price-original" x-text="window.formatRupiah(item.price)"></span>
+                              <span class="item-price-final" x-text="window.formatRupiah(item.finalPrice)"></span>
+                            </div>
+                          </template>
+                          <template x-if="!(item.percentOff > 0)">
+                            <div class="item-price" x-text="window.formatRupiah(item.price)"></div>
+                          </template>
+                        </div>
                       </div>
                     </div>
                     <div class="cart-item-quantity">

@@ -58,7 +58,20 @@
           <div class="product-detail-info">
             <h2 x-text="product.category.toUpperCase()" class="badge-category"></h2>
             <h1 x-text="product.name" class="product-detail-title"></h1>
-            <p x-text="formatRupiah(product.price)" class="product-detail-price"></p>
+
+            <div class="price-container-detail" x-data="{ priceInfo: calculateDiscount(product) }">
+              <template x-if="priceInfo.percentOff > 0">
+                <div>
+                  <span class="product-detail-price-original" x-text="formatRupiah(priceInfo.originalPrice)"></span>
+                  <span class="product-detail-price-final" x-text="formatRupiah(priceInfo.finalPrice)"></span>
+                  <span class="product-detail-discount-badge" x-text="'-' + priceInfo.percentOff + '%'"></span>
+                </div>
+              </template>
+              <template x-if="!(priceInfo.percentOff > 0)">
+                <p x-text="formatRupiah(priceInfo.originalPrice)" class="product-detail-price"></p>
+              </template>
+            </div>
+
             <p x-html="product.char" class="product-detail-desc-short"></p>
             <button
               @click="$store.cart.add(product.id)"
@@ -82,34 +95,7 @@
           <div x-show="relatedProducts.length > 0" class="swiper related-product-slider">
             <div class="swiper-wrapper">
               <template x-for="item in relatedProducts" :key="item.id">
-                <div class="swiper-slide">
-                  <a :href="'product detail.html?id=' + item.id" class="product-link">
-                    <article class="product-card">
-                      <figure class="product-media">
-                        <img
-                          :src="item.image_url ? item.image_url : 'img/general/default.jpg'"
-                          :alt="item.name"
-                        />
-                      </figure>
-                      <div class="product-body">
-                        <h3 class="product-title" x-text="item.name"></h3>
-                        <div class="product-meta">
-                          <div
-                            class="price"
-                            x-text="formatRupiah(item.price)"
-                          ></div>
-                          <button
-                            class="btn-sm add-cart"
-                            @click.prevent.stop="$store.cart.add(item.id)"
-                          >
-                            <i data-feather="shopping-bag"></i>
-                            Add
-                          </button>
-                        </div>
-                      </div>
-                    </article>
-                  </a>
-                </div>
+                <div class="swiper-slide" x-html="$store.products.renderProductCard(item)"></div>
               </template>
             </div>
             <div class="swiper-button-prev"></div>

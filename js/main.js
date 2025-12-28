@@ -8,6 +8,34 @@ window.formatRupiah = (number) => {
   }).format(number);
 };
 
+/**
+ * Calculates the final price and discount percentage for a product.
+ * @param {object} product - The product object.
+ * @returns {{finalPrice: number, percentOff: number, originalPrice: number}}
+ */
+window.calculateDiscount = (product) => {
+  const originalPrice = product.price;
+  let finalPrice = originalPrice;
+  let percentOff = 0;
+
+  const hasFixedDiscount = product.discount_price && product.discount_price > 0;
+  const hasPercentDiscount = product.discount_percent && product.discount_percent > 0;
+
+  if (hasFixedDiscount) {
+    finalPrice = product.discount_price;
+    percentOff = Math.floor(((originalPrice - finalPrice) / originalPrice) * 100);
+  } else if (hasPercentDiscount) {
+    percentOff = product.discount_percent;
+    finalPrice = originalPrice - (originalPrice * percentOff / 100);
+  }
+
+  // Clamp price to 0 if discount is too high
+  finalPrice = Math.max(0, finalPrice);
+
+  return { finalPrice, percentOff, originalPrice };
+};
+
+
 // Global status translator
 window.translateStatus = (status) => {
   const statusMap = {
@@ -82,11 +110,17 @@ document.addEventListener("alpine:init", () => {
         .map(item => {
           const product = Alpine.store("products").getProductById(item.id);
           if (!product) return null;
+
+          const { finalPrice, percentOff } = window.calculateDiscount(product);
+
           return {
             ...product,
             quantity: item.quantity,
             img: product.image_url,
-            subtotal: product.price * item.quantity,
+            price: product.price,
+            finalPrice: finalPrice,
+            percentOff: percentOff,
+            subtotal: finalPrice * item.quantity,
           };
         })
         .filter(Boolean);
@@ -112,32 +146,19 @@ document.addEventListener("alpine:init", () => {
     },
 
     renderProductCard(item) {
-      const isPromo = (item.discount_price && item.discount_price > 0) || (item.discount_percent && item.discount_percent > 0);
-      let discountedPrice = 0;
-      let percent = 0;
+      const { finalPrice, percentOff, originalPrice } = window.calculateDiscount(item);
+      const isPromo = percentOff > 0;
 
-      if (isPromo) {
-        // A fixed-price discount exists
-        if (item.discount_price && item.discount_price > 0) {
-          discountedPrice = item.discount_price;
-          // Calculate the percentage discount and round down
-          percent = Math.floor(((item.price - item.discount_price) / item.price) * 100);
-        } else { // A percentage-based discount exists
-          discountedPrice = item.price - (item.price * item.discount_percent / 100);
-          percent = item.discount_percent;
-        }
-      }
-
-      const ribbonHtml = isPromo && percent > 0 ? `
-        <div class="discount-ribbon"><span>${percent}% OFF</span></div>
+      const ribbonHtml = isPromo ? `
+        <div class="discount-ribbon"><span>${percentOff}% OFF</span></div>
       ` : '';
 
-      const priceHtml = isPromo && discountedPrice > 0 ? `
+      const priceHtml = isPromo ? `
         <div class="price-container">
-          <div class="price-original">${window.formatRupiah(item.price)}</div>
-          <div class="price-discounted">${window.formatRupiah(discountedPrice)}</div>
+          <div class="price-original">${window.formatRupiah(originalPrice)}</div>
+          <div class="price-discounted">${window.formatRupiah(finalPrice)}</div>
         </div>
-      ` : `<div class="price">${window.formatRupiah(item.price)}</div>`;
+      ` : `<div class="price">${window.formatRupiah(originalPrice)}</div>`;
 
       return `
         <a href="product detail.html?id=${item.id}" class="product-link">
