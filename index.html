@@ -22,7 +22,7 @@
     <div id="header-include"></div>
 
     <section id="Home" class="hero-section">
-      <div class="container">
+      <div class="container" x-data="products()" x-init="init()">
         <div id="hero-slider" class="hero-slider">
           <div class="slide-item active">
             <img src="img/Flyer 1.jpg" alt="12.12 Sale Promo" class="hero-img" />
@@ -66,17 +66,15 @@
         </div>
 
         <div class="container" style="padding: 2rem 0;">
-          <div x-data="{ searchTerm: '' }">
-            <form class="search-bar" @submit.prevent="handleSearch(searchTerm)" style="margin: auto; max-width: 600px;">
-              <input type="search" x-model="searchTerm" placeholder="Search for seeds, nutrients, tools..." aria-label="Search for products">
-              <button type="submit" aria-label="Search" class="search-button">
-                <i data-feather="search"></i>
-              </button>
-            </form>
-          </div>
+          <form class="search-bar" @submit.prevent="handleSearch(searchTerm)" style="margin: auto; max-width: 600px;">
+            <input type="search" x-model="searchTerm" placeholder="Search for seeds, nutrients, tools..." aria-label="Search for products">
+            <button type="submit" aria-label="Search" class="search-button search-button-borderless">
+              <i data-feather="search"></i>
+            </button>
+          </form>
         </div>
 
-        <div class="layout container" x-data="products()" x-init="init()">
+        <div class="layout container">
           <aside class="sidebar" id="categorySidebar">
             <div class="sidebar-header">
               <h4>Product Categories</h4>
