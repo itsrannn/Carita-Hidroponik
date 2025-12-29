@@ -1047,6 +1047,11 @@ body {
   transition: background-color 0.2s;
 }
 
+.search-button-borderless {
+  border: none !important;
+  background: none !important;
+}
+
 .contact-form .btn-primary:hover {
   background-color: var(--accent);
 }

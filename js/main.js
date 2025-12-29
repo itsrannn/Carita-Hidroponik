@@ -10,7 +10,7 @@ window.formatRupiah = (number) => {
 
 window.handleSearch = (searchTerm) => {
   if (searchTerm.trim() !== '') {
-    window.location.href = `products.html?s=${encodeURIComponent(searchTerm.trim())}`;
+    window.location.href = `index.html?s=${encodeURIComponent(searchTerm.trim())}`;
   }
 };
 
@@ -239,6 +239,9 @@ document.addEventListener("alpine:init", () => {
     },
 
     init() {
+      const urlParams = new URLSearchParams(window.location.search);
+      this.searchTerm = urlParams.get('s') || '';
+
       const refreshOnFilterChange = () => {
         this.currentPage = 1;
         this.$nextTick(() => feather.replace());
