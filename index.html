@@ -13,6 +13,43 @@
       href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@300;400;600&display=swap"
       rel="stylesheet"
     />
+    <style>
+      .product-card-skeleton {
+        background-color: #fff;
+        border: 1px solid #f0f0f0;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .skeleton-image {
+        width: 100%;
+        padding-top: 100%; /* 1:1 Aspect Ratio */
+        background-color: #e0e0e0;
+      }
+      .skeleton-text-group {
+        padding: 1rem;
+      }
+      .skeleton-text {
+        background-color: #e0e0e0;
+        border-radius: 4px;
+        height: 1.25rem;
+        margin-bottom: 0.5rem;
+      }
+      .skeleton-title {
+        width: 80%;
+      }
+      .skeleton-price {
+        width: 40%;
+      }
+      .product-card-skeleton .skeleton-image,
+      .product-card-skeleton .skeleton-text {
+        animation: pulse 1.5s infinite ease-in-out;
+      }
+      @keyframes pulse {
+        0% { background-color: #e0e0e0; }
+        50% { background-color: #f0f0f0; }
+        100% { background-color: #e0e0e0; }
+      }
+    </style>
   </head>
 
   <body x-data @alpine:init="
@@ -23,7 +60,7 @@
     <div id="header-include"></div>
 
     <section id="Home" class="hero-section">
-      <div class="container" x-data="products()" x-init="init()">
+      <div class="container" x-data="products" x-init="init()">
         <div id="hero-slider" class="hero-slider">
           <div class="slide-item active">
             <img src="img/Flyer 1.jpg" alt="12.12 Sale Promo" class="hero-img" />
@@ -129,8 +166,20 @@
               </div>
             </section>
 
-            <p x-show="$store.products.isLoading" class="loading-text" style="text-align: center; padding: 2rem;" x-text="$store.i18n.t('home.loading')">
-            </p>
+            <!-- Skeleton Loading Grid -->
+            <template x-if="$store.products.isLoading">
+              <section class="products-grid">
+                <template x-for="i in 8" :key="i">
+                  <div class="product-card-skeleton">
+                    <div class="skeleton-image"></div>
+                    <div class="skeleton-text-group">
+                      <div class="skeleton-text skeleton-title"></div>
+                      <div class="skeleton-text skeleton-price"></div>
+                    </div>
+                  </div>
+                </template>
+              </section>
+            </template>
 
             <div x-show="!$store.products.isLoading" x-transition>
               <section id="productsGrid" class="products-grid">
@@ -182,8 +231,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js" defer></script>
 
-    <script src="js/supabase-client.js" defer></script>
-    <script src="js/main.js" defer></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/main.js"></script>
     <script src="js/include.js" defer></script>
     <script src="js/script.js" defer></script>
   </body>
