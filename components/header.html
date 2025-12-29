@@ -36,29 +36,29 @@
 </style>
 
 <style>
-  .lang-switcher {
+  /* --- Language Dropdown --- */
+  .lang-dropdown {
+    position: relative;
+    display: inline-block;
+    margin-left: 0.5rem;
+  }
+  .lang-dropdown .icon-btn {
+    font-size: 1.5rem; /* Make flag emoji larger */
+    padding: 0.25rem;
+    line-height: 1;
+    border-radius: 50%;
+  }
+  .lang-dropdown .dropdown-content {
+    min-width: 140px; /* Slightly smaller width */
+  }
+  .lang-dropdown .dropdown-content a {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    margin-left: 1rem;
+    gap: 0.75rem; /* Space between flag and text */
   }
-  .lang-switcher button {
-    background: none;
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    opacity: 0.6;
-    transition: opacity 0.2s ease-in-out;
-    font-size: 1.5rem;
-    line-height: 1;
-  }
-  .lang-switcher button:hover,
-  .lang-switcher button:focus {
-    opacity: 1;
-    outline: none;
-  }
-  .lang-switcher button.active {
-    opacity: 1;
+  .lang-dropdown .dropdown-content a.active {
+    background-color: #f1f1f1; /* Highlight for active lang */
+    font-weight: 600;
   }
 </style>
 
@@ -114,10 +114,19 @@
         <span id="cart-count" class="badge" x-show="$store.cart.quantity > 0" x-text="$store.cart.quantity"></span>
       </a>
 
-      <!-- Language Switcher -->
-      <div class="lang-switcher">
-        <button @click="$store.i18n.setLang('en')" :class="{ 'active': $store.i18n.lang === 'en' }" aria-label="Switch to English">🇬🇧</button>
-        <button @click="$store.i18n.setLang('id')" :class="{ 'active': $store.i18n.lang === 'id' }" aria-label="Switch to Indonesian">🇮🇩</button>
+      <!-- Language Dropdown -->
+      <div x-data="{ open: false }" class="lang-dropdown">
+        <button @click="open = !open" class="icon-btn" aria-label="Select Language">
+          <span x-text="$store.i18n.lang === 'id' ? '🇮🇩' : '🇬🇧'"></span>
+        </button>
+        <div x-show="open" @click.outside="open = false" class="dropdown-content" x-transition>
+          <a href="#" @click.prevent="$store.i18n.load('en'); open = false" :class="{ 'active': $store.i18n.lang === 'en' }">
+            <span>🇬🇧</span> English
+          </a>
+          <a href="#" @click.prevent="$store.i18n.load('id'); open = false" :class="{ 'active': $store.i18n.lang === 'id' }">
+            <span>🇮🇩</span> Indonesia
+          </a>
+        </div>
       </div>
     </div>
   </div>
