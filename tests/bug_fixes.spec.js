@@ -10,12 +10,18 @@ test.describe('Verification of Bug Fixes and Translations', () => {
   test('Admin dropdown can now be opened', async ({ page }) => {
     await page.goto('http://localhost:8000/admin.html');
 
+    // Switch to English first
+    await page.locator('.lang-dropdown .icon-btn').click();
+    const englishButton = page.locator('.lang-dropdown .dropdown-content a').filter({ hasText: 'English' });
+    await englishButton.waitFor({ state: 'visible' });
+    await englishButton.click();
+
     // Click the user dropdown button
     const userDropdownButton = page.locator('header .user-dropdown button');
     await userDropdownButton.click();
 
     // Verify that the dropdown content is now visible and translated
-    const dropdownContent = page.locator('header .dropdown-content');
+    const dropdownContent = page.locator('#user-dropdown-content');
     await expect(dropdownContent).toBeVisible();
     await expect(dropdownContent).toContainText('My Profile');
 
@@ -48,6 +54,13 @@ test.describe('Verification of Bug Fixes and Translations', () => {
 
   test('Home page main content is translated', async ({ page }) => {
       await page.goto('http://localhost:8000/index.html');
+
+      // Click the language dropdown and select English
+      await page.locator('.lang-dropdown .icon-btn').click();
+      const englishButton = page.locator('.lang-dropdown .dropdown-content a').filter({ hasText: 'English' });
+      await englishButton.waitFor({ state: 'visible' });
+      await englishButton.click();
+
       const mainHeading = page.locator('#Product h1');
       await expect(mainHeading).toHaveText('Featured Products');
       const categoryTitle = page.locator('#categorySidebar h4');

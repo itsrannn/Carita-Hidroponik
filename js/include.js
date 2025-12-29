@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       const response = await fetch("components/header.html");
       headerContainer.innerHTML = await response.text();
+      Alpine.initTree(headerContainer);
 
       // Cek apakah ini halaman index.html, jika iya, tambahkan tombol hamburger
       if (window.location.pathname.endsWith("index.html") || window.location.pathname === "/") {
