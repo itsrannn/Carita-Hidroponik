@@ -36,6 +36,33 @@
 </style>
 
 <style>
+  .lang-switcher {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-left: 1rem;
+  }
+  .lang-switcher button {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s ease-in-out;
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+  .lang-switcher button:hover,
+  .lang-switcher button:focus {
+    opacity: 1;
+    outline: none;
+  }
+  .lang-switcher button.active {
+    opacity: 1;
+  }
+</style>
+
+<style>
   /* --- Global Notification Style --- */
   #notification {
     position: fixed;
@@ -75,8 +102,8 @@
           <i data-feather="user"></i>
         </button>
         <div id="user-dropdown-content" class="dropdown-content">
-          <a href="my account.html">My Profile</a>
-          <a href="order-history.html">Order History</a>
+          <a href="my account.html" x-text="$store.i18n.t('header.my_profile')">My Profile</a>
+          <a href="order-history.html" x-text="$store.i18n.t('header.order_history')">Order History</a>
           <!-- Logout link can be added here if needed -->
         </div>
       </div>
@@ -86,6 +113,12 @@
         <i data-feather="shopping-cart"></i>
         <span id="cart-count" class="badge" x-show="$store.cart.quantity > 0" x-text="$store.cart.quantity"></span>
       </a>
+
+      <!-- Language Switcher -->
+      <div class="lang-switcher">
+        <button @click="$store.i18n.setLang('en')" :class="{ 'active': $store.i18n.lang === 'en' }" aria-label="Switch to English">🇬🇧</button>
+        <button @click="$store.i18n.setLang('id')" :class="{ 'active': $store.i18n.lang === 'id' }" aria-label="Switch to Indonesian">🇮🇩</button>
+      </div>
     </div>
   </div>
 </header>
