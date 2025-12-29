@@ -16,6 +16,7 @@
   </head>
 
   <body x-data @alpine:init="
+    $store.i18n.init();
     $store.products.init();
     $store.cart.init();
   ">
@@ -27,31 +28,27 @@
           <div class="slide-item active">
             <img src="img/Flyer 1.jpg" alt="12.12 Sale Promo" class="hero-img" />
             <div class="hero-content">
-              <h1 class="hero-title">30% OFF ALL SEEDS!</h1>
-              <p class="hero-subtitle">Celebrate the end-of-year harvest with the best quality seeds.</p>
-              <a href="#Product" class="btn btn-accent btn-lg">View Seeds</a>
+              <h1 class="hero-title" x-text="$store.i18n.t('home.promo_title')"></h1>
+              <p class="hero-subtitle" x-text="$store.i18n.t('home.promo_subtitle')"></p>
+              <a href="#Product" class="btn btn-accent btn-lg" x-text="$store.i18n.t('home.promo_button')"></a>
             </div>
           </div>
 
           <div class="slide-item">
             <img src="img/Flyer 2.jpg" alt="New A-B Mix Nutrition" class="hero-img" />
             <div class="hero-content">
-              <h1 class="hero-title">A-B MIX NUTRITION BACK IN STOCK!</h1>
-              <p class="hero-subtitle">
-                A complete formula for optimal plant growth. Don't run out again.
-              </p>
-              <a href="#Product" class="btn btn-accent btn-lg">Order Now</a>
+              <h1 class="hero-title" x-text="$store.i18n.t('home.nutrient_title')"></h1>
+              <p class="hero-subtitle" x-text="$store.i18n.t('home.nutrient_subtitle')"></p>
+              <a href="#Product" class="btn btn-accent btn-lg" x-text="$store.i18n.t('home.nutrient_button')"></a>
             </div>
           </div>
 
           <div class="slide-item">
             <img src="img/Flyer 3.jpg" alt="Starter Kit for Beginners" class="hero-img" />
             <div class="hero-content">
-              <h1 class="hero-title">START HYDROPONICS WITH EASE</h1>
-              <p class="hero-subtitle">
-                A complete package for beginners, including a practical guide and a mini installation.
-              </p>
-              <a href="#Product" class="btn btn-accent btn-lg">Get Your Kit</a>
+              <h1 class="hero-title" x-text="$store.i18n.t('home.starter_kit_title')"></h1>
+              <p class="hero-subtitle" x-text="$store.i18n.t('home.starter_kit_subtitle')"></p>
+              <a href="#Product" class="btn btn-accent btn-lg" x-text="$store.i18n.t('home.starter_kit_button')"></a>
             </div>
           </div>
 
@@ -67,8 +64,8 @@
 
         <div class="container" style="padding: 2rem 0;">
           <form class="search-bar" @submit.prevent="handleSearch(searchTerm)" style="margin: auto; max-width: 600px;">
-            <input type="search" x-model="searchTerm" placeholder="Search for seeds, nutrients, tools..." aria-label="Search for products">
-            <button type="submit" aria-label="Search" class="search-button search-button-borderless">
+            <input type="search" x-model="searchTerm" :placeholder="$store.i18n.t('home.search_placeholder')" :aria-label="$store.i18n.t('home.search_aria_label')">
+            <button type="submit" :aria-label="$store.i18n.t('home.search_aria_label')" class="search-button search-button-borderless">
               <i data-feather="search"></i>
             </button>
           </form>
@@ -77,23 +74,23 @@
         <div class="layout container">
           <aside class="sidebar" id="categorySidebar">
             <div class="sidebar-header">
-              <h4>Product Categories</h4>
+              <h4 x-text="$store.i18n.t('home.sidebar.title')"></h4>
               <button id="sidebar-collapse" class="collapse-btn" aria-expanded="true" aria-controls="categoryList">−</button>
             </div>
 
             <nav id="categoryList" class="category-list">
               <ul>
-                <li><a href="#" @click.prevent="selectedCategory = 'all'" :class="{ 'active': selectedCategory === 'all' }">All Products</a></li>
-                <li><a href="#" @click.prevent="selectedCategory = 'benih'" :class="{ 'active': selectedCategory === 'benih' }">Seeds</a></li>
-                <li><a href="#" @click.prevent="selectedCategory = 'nutrisi'" :class="{ 'active': selectedCategory === 'nutrisi' }">Nutrition & Fertilizers</a></li>
-                <li><a href="#" @click.prevent="selectedCategory = 'media'" :class="{ 'active': selectedCategory === 'media' }">Growing Media</a></li>
-                <li><a href="#" @click.prevent="selectedCategory = 'peralatan'" :class="{ 'active': selectedCategory === 'peralatan' }">Equipment</a></li>
-                <li><a href="#" @click.prevent="selectedCategory = 'promo'" :class="{ 'active': selectedCategory === 'promo' }">Promos & Bundles</a></li>
+                <li><a href="#" @click.prevent="selectedCategory = 'all'" :class="{ 'active': selectedCategory === 'all' }" x-text="$store.i18n.t('home.sidebar.all_products')"></a></li>
+                <li><a href="#" @click.prevent="selectedCategory = 'benih'" :class="{ 'active': selectedCategory === 'benih' }" x-text="$store.i18n.t('home.sidebar.seeds')"></a></li>
+                <li><a href="#" @click.prevent="selectedCategory = 'nutrisi'" :class="{ 'active': selectedCategory === 'nutrisi' }" x-text="$store.i18n.t('home.sidebar.nutrition')"></a></li>
+                <li><a href="#" @click.prevent="selectedCategory = 'media'" :class="{ 'active': selectedCategory === 'media' }" x-text="$store.i18n.t('home.sidebar.media')"></a></li>
+                <li><a href="#" @click.prevent="selectedCategory = 'peralatan'" :class="{ 'active': selectedCategory === 'peralatan' }" x-text="$store.i18n.t('home.sidebar.equipment')"></a></li>
+                <li><a href="#" @click.prevent="selectedCategory = 'promo'" :class="{ 'active': selectedCategory === 'promo' }" x-text="$store.i18n.t('home.sidebar.promos')"></a></li>
               </ul>
             </nav>
 
             <div class="sidebar-footer">
-              <p class="small muted">Need help? <a href="contact.html">Contact us</a></p>
+              <p class="small muted"><span x-text="$store.i18n.t('home.sidebar.help')"></span> <a href="contact.html" x-text="$store.i18n.t('home.sidebar.contact_us')"></a></p>
             </div>
           </aside>
 
@@ -102,8 +99,8 @@
               <section id="promo" class="promo-section">
                 <div class="page-header">
                   <div class="header-left">
-                    <h1>Promotions & Discounts</h1>
-                    <p class="muted">Get the best deals on selected products.</p>
+                    <h1 x-text="$store.i18n.t('home.promotions.title')"></h1>
+                    <p class="muted" x-text="$store.i18n.t('home.promotions.subtitle')"></p>
                   </div>
                 </div>
 
@@ -117,23 +114,22 @@
 
             <section id="Product" class="page-header">
               <div class="header-left">
-                <h1>Featured Products</h1>
-                <p class="muted">The best choices for your hydroponic garden and gardening hobby.</p>
+                <h1 x-text="$store.i18n.t('home.featured_products.title')"></h1>
+                <p class="muted" x-text="$store.i18n.t('home.featured_products.subtitle')"></p>
               </div>
               <div class="header-actions">
                 <label class="sort">
-                  <span class="muted">Sort by</span>
+                  <span class="muted" x-text="$store.i18n.t('home.sort_by')"></span>
                   <select id="sortSelect" x-model="sortOption">
-                    <option value="default">Default</option>
-                    <option value="price-asc">Price ↑</option>
-                    <option value="price-desc">Price ↓</option>
+                    <option value="default" x-text="$store.i18n.t('home.sort.default')"></option>
+                    <option value="price-asc" x-text="$store.i18n.t('home.sort.price_asc')"></option>
+                    <option value="price-desc" x-text="$store.i18n.t('home.sort.price_desc')"></option>
                   </select>
                 </label>
               </div>
             </section>
 
-            <p x-show="$store.products.isLoading" class="loading-text" style="text-align: center; padding: 2rem;">
-              Loading products...
+            <p x-show="$store.products.isLoading" class="loading-text" style="text-align: center; padding: 2rem;" x-text="$store.i18n.t('home.loading')">
             </p>
 
             <div x-show="!$store.products.isLoading" x-transition>
@@ -144,7 +140,7 @@
 
                 <template x-if="processedItems().length === 0">
                   <div class="no-products-message" style="text-align: center; padding: 2rem; width: 100%;">
-                    <p>No products found. Try a different keyword or category.</p>
+                    <p x-text="$store.i18n.t('home.no_products')"></p>
                   </div>
                 </template>
               </section>
@@ -171,13 +167,13 @@
     </section>
 
     <section class="news-section container">
-      <h2 class="section-title">🌱 Latest News & Tutorials</h2>
+      <h2 class="section-title" x-text="$store.i18n.t('home.news.title')"></h2>
       <div class="news-grid" id="index-news-container"></div>
     </section>
 
     <section class="preview">
-      <h2>About Carita Hidroponik</h2>
-      <p>Carita Hidroponik provides quality seeds, nutrients, and hydroponic equipment for beginners and professionals.</p>
+      <h2 x-text="$store.i18n.t('home.about.title')"></h2>
+      <p x-text="$store.i18n.t('home.about.subtitle')"></p>
     </section>
 
     <div id="footer-include"></div>

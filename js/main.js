@@ -56,6 +56,39 @@ window.translateStatus = (status) => {
 
 document.addEventListener("alpine:init", () => {
   // --- Centralized Stores ---
+  Alpine.store("i18n", {
+    lang: localStorage.getItem("language") || "id",
+    messages: {},
+    async init() {
+      await this.load(this.lang);
+      window.addEventListener('storage', (event) => {
+        if (event.key === 'language' && event.newValue) {
+            this.setLang(event.newValue);
+        }
+      });
+    },
+    async load(lang) {
+      if (!lang) return;
+      try {
+        const response = await fetch(`./locales/${lang}.json?v=${new Date().getTime()}`);
+        if (!response.ok) throw new Error(`Could not load ${lang}.json`);
+        this.messages = await response.json();
+        this.lang = lang;
+        document.documentElement.lang = lang;
+      } catch (error) {
+        this.messages = {};
+      }
+    },
+    setLang(lang) {
+      this.lang = lang;
+      localStorage.setItem("language", lang);
+      this.load(lang);
+    },
+    t(key) {
+      return key.split('.').reduce((obj, i) => (obj ? obj[i] : null), this.messages) || key;
+    }
+  });
+
   Alpine.store("products", {
     all: [],
     isLoading: true,
@@ -92,6 +125,7 @@ document.addEventListener("alpine:init", () => {
         this.items.push({ id: productId, quantity: 1 });
       }
       this.save();
+      window.showNotification('cart.item_added');
     },
     remove(productId, force = false) {
       const itemIndex = this.items.findIndex(item => String(item.id) === String(productId));
@@ -376,7 +410,8 @@ document.addEventListener("alpine:init", () => {
 });
 
 // Global notification
-window.showNotification = (message, isError = false) => {
+window.showNotification = (messageKey, isError = false) => {
+  const message = Alpine.store('i18n').t(messageKey);
   const notificationElement = document.getElementById('notification');
   if (!notificationElement) {
     alert(message);
