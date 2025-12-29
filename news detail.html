@@ -12,10 +12,10 @@
     />
   </head>
 
-  <body>
-    <div id="header-include"></div>
-
-    <main class="main-content news-detail-page">
+  <body x-data x-init="$store.i18n.load($store.i18n.lang)">
+    <div x-cloak x-show="$store.i18n.ready">
+      <div id="header-include"></div>
+      <main class="main-content news-detail-page">
       <div class="container">
         <div class="news-layout">
           <!-- Left Column: Main Article -->
@@ -103,6 +103,7 @@
     <div id="notification" class="notification"></div>
 
     <div id="footer-include"></div>
+    </div>
 
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>

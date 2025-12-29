@@ -16,13 +16,10 @@
     />
   </head>
 
-  <body x-data @alpine:init="
-    $store.products.init();
-    $store.cart.init();
-  ">
-    <div id="header-include"></div>
-
-    <main class="main-content">
+  <body x-data @alpine:init="$store.products.init(); $store.cart.init();" x-init="$store.i18n.load($store.i18n.lang)">
+    <div x-cloak x-show="$store.i18n.ready">
+      <div id="header-include"></div>
+      <main class="main-content">
       <section class="cart-section">
         <div class="container">
           <h2 class="section-title">Shopping Cart</h2>
@@ -156,6 +153,7 @@
     </main>
 
     <div id="footer-include"></div>
+    </div>
 
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js?nounit=true" defer></script>

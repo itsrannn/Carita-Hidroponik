@@ -19,13 +19,10 @@
     />
   </head>
 
-  <body x-data @alpine:init="
-    $store.products.init();
-    $store.cart.init();
-  ">
-    <div id="header-include"></div>
-
-    <main class="container" x-data="productDetail()" x-cloak>
+  <body x-data @alpine:init="$store.products.init(); $store.cart.init();" x-init="$store.i18n.load($store.i18n.lang)">
+    <div x-cloak x-show="$store.i18n.ready">
+      <div id="header-include"></div>
+      <main class="container" x-data="productDetail()">
       <p x-show="$store.products.isLoading" class="loading-text">Loading product...</p>
 
       <div x-show="!$store.products.isLoading && !product">
@@ -111,6 +108,7 @@
     </main>
 
     <div id="footer-include"></div>
+    </div>
 
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper@12/swiper-bundle.min.js"></script>
