@@ -84,8 +84,12 @@ document.addEventListener("alpine:init", () => {
       }
     },
     t(key) {
-      // Navigate through nested keys, e.g., 'home.sidebar.title'
-      return key.split('.').reduce((o, i) => (o ? o[i] : undefined), this.messages) || key;
+      const translation = key.split('.').reduce((o, i) => (o ? o[i] : undefined), this.messages);
+      if (translation === undefined) {
+        console.warn(`Translation not found for key: ${key}`);
+        return key;
+      }
+      return translation;
     }
   });
 
@@ -100,9 +104,10 @@ document.addEventListener("alpine:init", () => {
           .select("*")
           .order("id", { ascending: true });
         if (error) throw error;
-        this.all = data;
+        this.all = data || [];
       } catch (err) {
-        // Failed to load products, let the array be empty
+        console.error("Failed to fetch products:", err);
+        this.all = []; // Ensure data is empty on error
       } finally {
         this.isLoading = false;
       }
@@ -182,7 +187,7 @@ document.addEventListener("alpine:init", () => {
     itemsPerPage: 12,
 
     promoItems() {
-      return Alpine.store('products').all.filter(p => p.discount_price || p.discount_percent > 0).slice(0, 4);
+      return this.$store.products.all.filter(p => p.discount_price || p.discount_percent > 0).slice(0, 4);
     },
 
     renderProductCard(item) {
@@ -222,7 +227,7 @@ document.addEventListener("alpine:init", () => {
     },
 
     processedItems() {
-      let items = Alpine.store('products').all;
+      let items = this.$store.products.all;
 
       if (this.searchTerm.trim()) {
         const query = this.searchTerm.toLowerCase();
@@ -406,9 +411,6 @@ document.addEventListener("alpine:init", () => {
       }
     }
   }));
-
-  // Start Alpine AFTER all stores and components are defined
-  Alpine.start();
 });
 
 // Global notification
