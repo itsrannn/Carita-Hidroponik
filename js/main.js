@@ -120,7 +120,7 @@ document.addEventListener("alpine:init", () => {
   Alpine.store("cart", {
     items: [],
     init() {
-      this.items = JSON.parse(localStorage.getItem("cartItems")) || [];
+      this.items = JSON.parse(localStorage.getItem("cart")) || [];
     },
     add(productId) {
       const existing = this.items.find(item => String(item.id) === String(productId));
@@ -148,7 +148,7 @@ document.addEventListener("alpine:init", () => {
       this.save();
     },
     save() {
-      localStorage.setItem("cartItems", JSON.stringify(this.items));
+      localStorage.setItem("cart", JSON.stringify(this.items));
     },
     get details() {
       return this.items
