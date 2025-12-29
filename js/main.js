@@ -59,33 +59,33 @@ document.addEventListener("alpine:init", () => {
   Alpine.store("i18n", {
     lang: localStorage.getItem("language") || "id",
     messages: {},
-    async init() {
-      await this.load(this.lang);
-      window.addEventListener('storage', (event) => {
-        if (event.key === 'language' && event.newValue) {
-            this.setLang(event.newValue);
-        }
-      });
+    init() {
+      this.load(this.lang);
     },
     async load(lang) {
-      if (!lang) return;
+      if (!['en', 'id'].includes(lang)) {
+        lang = 'id';
+      }
       try {
-        const response = await fetch(`./locales/${lang}.json?v=${new Date().getTime()}`);
-        if (!response.ok) throw new Error(`Could not load ${lang}.json`);
+        const response = await fetch(`locales/${lang}.json`);
+        if (!response.ok) {
+          throw new Error('Translation file not found.');
+        }
         this.messages = await response.json();
         this.lang = lang;
         document.documentElement.lang = lang;
+        localStorage.setItem("language", lang);
       } catch (error) {
+        console.error('Failed to load translations:', error);
+        // Fallback to an empty object, t() will return keys
         this.messages = {};
+      } finally {
+        document.documentElement.setAttribute('data-i18n-loaded', 'true');
       }
     },
-    setLang(lang) {
-      this.lang = lang;
-      localStorage.setItem("language", lang);
-      this.load(lang);
-    },
     t(key) {
-      return key.split('.').reduce((obj, i) => (obj ? obj[i] : null), this.messages) || key;
+      // Navigate through nested keys, e.g., 'home.sidebar.title'
+      return key.split('.').reduce((o, i) => (o ? o[i] : undefined), this.messages) || key;
     }
   });
 
@@ -407,6 +407,8 @@ document.addEventListener("alpine:init", () => {
     }
   }));
 
+  // Start Alpine AFTER all stores and components are defined
+  Alpine.start();
 });
 
 // Global notification

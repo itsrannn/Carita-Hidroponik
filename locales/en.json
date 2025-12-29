@@ -1,38 +1,56 @@
 {
-  "header.my_profile": "My Profile",
-  "header.order_history": "Order History",
-  "home.promo_title": "30% OFF ALL SEEDS!",
-  "home.promo_subtitle": "Celebrate the end-of-year harvest with the best quality seeds.",
-  "home.promo_button": "View Seeds",
-  "home.nutrient_title": "A-B MIX NUTRITION BACK IN STOCK!",
-  "home.nutrient_subtitle": "A complete formula for optimal plant growth. Don't run out again.",
-  "home.nutrient_button": "Order Now",
-  "home.starter_kit_title": "START HYDROPONICS WITH EASE",
-  "home.starter_kit_subtitle": "A complete package for beginners, including a practical guide and a mini installation.",
-  "home.starter_kit_button": "Get Your Kit",
-  "home.search_placeholder": "Search for seeds, nutrients, tools...",
-  "home.search_aria_label": "Search for products",
-  "home.sidebar.title": "Product Categories",
-  "home.sidebar.all_products": "All Products",
-  "home.sidebar.seeds": "Seeds",
-  "home.sidebar.nutrition": "Nutrition & Fertilizers",
-  "home.sidebar.media": "Growing Media",
-  "home.sidebar.equipment": "Equipment",
-  "home.sidebar.promos": "Promos & Bundles",
-  "home.sidebar.help": "Need help?",
-  "home.sidebar.contact_us": "Contact us",
-  "home.promotions.title": "Promotions & Discounts",
-  "home.promotions.subtitle": "Get the best deals on selected products.",
-  "home.featured_products.title": "Featured Products",
-  "home.featured_products.subtitle": "The best choices for your hydroponic garden and gardening hobby.",
-  "home.sort_by": "Sort by",
-  "home.sort.default": "Default",
-  "home.sort.price_asc": "Price ↑",
-  "home.sort.price_desc": "Price ↓",
-  "home.loading": "Loading products...",
-  "home.no_products": "No products found. Try a different keyword or category.",
-  "home.news.title": "🌱 Latest News & Tutorials",
-  "home.about.title": "About Carita Hidroponik",
-  "home.about.subtitle": "Carita Hidroponik provides quality seeds, nutrients, and hydroponic equipment for beginners and professionals.",
-  "cart.item_added": "Product added to cart!"
+  "header": {
+    "my_profile": "My Profile",
+    "order_history": "Order History"
+  },
+  "home": {
+    "promo_title": "12.12 Big Sale!",
+    "promo_subtitle": "Don't miss out on our biggest sale of the year. Get up to 50% off on selected items.",
+    "promo_button": "Shop Now",
+    "nutrient_title": "New A-B Mix Formula",
+    "nutrient_subtitle": "Get the best nutrients for your hydroponic plants. Stronger roots, healthier leaves.",
+    "nutrient_button": "See Nutrients",
+    "starter_kit_title": "Hydroponic Starter Kit",
+    "starter_kit_subtitle": "Everything you need to start your hydroponic journey. Perfect for beginners.",
+    "starter_kit_button": "View Kits",
+    "search_placeholder": "Search for products...",
+    "search_aria_label": "Search products",
+    "sidebar": {
+      "title": "Categories",
+      "all_products": "All Products",
+      "seeds": "Seeds",
+      "nutrition": "Nutrition",
+      "media": "Growing Media",
+      "equipment": "Equipment",
+      "promos": "Promos",
+      "help": "Need help?",
+      "contact_us": "Contact Us"
+    },
+    "promotions": {
+      "title": "Special Promotions",
+      "subtitle": "Grab these deals before they're gone!"
+    },
+    "featured_products": {
+      "title": "Featured Products",
+      "subtitle": "Discover our best-selling items"
+    },
+    "sort_by": "Sort by:",
+    "sort": {
+      "default": "Default",
+      "price_asc": "Price: Low to High",
+      "price_desc": "Price: High to Low"
+    },
+    "loading": "Loading products, please wait...",
+    "no_products": "No products found matching your criteria.",
+    "news": {
+      "title": "Latest News & Updates"
+    },
+    "about": {
+      "title": "About Carita Hidroponik",
+      "subtitle": "We are your one-stop shop for all hydroponic needs, providing quality products and expert advice to help you grow successfully."
+    }
+  },
+  "cart": {
+    "item_added": "Item added to cart!"
+  }
 }
