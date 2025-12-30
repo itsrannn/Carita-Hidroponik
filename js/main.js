@@ -57,39 +57,65 @@ window.translateStatus = (status) => {
 document.addEventListener("alpine:init", () => {
   // --- Centralized Stores ---
   Alpine.store("i18n", {
+    // --- State ---
     lang: localStorage.getItem("language") || "id",
+    fallbackLang: 'id',
+    supportedLangs: ['id', 'en'],
+    displayNames: {
+      id: 'Bahasa Indonesia',
+      en: 'English'
+    },
     messages: {},
+    // --- Methods ---
     init() {
       this.load(this.lang);
     },
-    async load(lang) {
-      if (!['en', 'id'].includes(lang)) {
-        lang = 'id';
+    setLang(lang) {
+      if (!this.supportedLangs.includes(lang)) {
+        console.warn(`Language '${lang}' is not supported.`);
+        return;
       }
+      this.lang = lang;
+      localStorage.setItem("language", lang);
+      // Reload translations for the new language
+      this.load(lang);
+    },
+    async load(lang) {
       try {
         const response = await fetch(`locales/${lang}.json`);
-        if (!response.ok) {
-          throw new Error('Translation file not found.');
-        }
-        this.messages = await response.json();
-        this.lang = lang;
+        if (!response.ok) throw new Error(`Could not load ${lang}.json`);
+        this.messages[lang] = await response.json();
         document.documentElement.lang = lang;
-        localStorage.setItem("language", lang);
       } catch (error) {
         console.error('Failed to load translations:', error);
-        // Fallback to an empty object, t() will return keys
-        this.messages = {};
+        // Ensure there's always an empty object to prevent errors
+        if (!this.messages[lang]) this.messages[lang] = {};
       } finally {
+        // Ensure fallback is loaded if it hasn't been already
+        if (!this.messages[this.fallbackLang]) {
+          await this.load(this.fallbackLang);
+        }
         document.documentElement.setAttribute('data-i18n-loaded', 'true');
       }
     },
     t(key) {
-      const translation = key.split('.').reduce((o, i) => (o ? o[i] : undefined), this.messages);
-      if (translation === undefined) {
-        console.warn(`Translation not found for key: ${key}`);
-        return key;
+      const keys = key.split('.');
+      const getTranslation = (messages) => keys.reduce((o, i) => (o ? o[i] : undefined), messages);
+
+      // Try current language
+      let translation = getTranslation(this.messages[this.lang]);
+      if (translation !== undefined) return translation;
+
+      // Try fallback language
+      translation = getTranslation(this.messages[this.fallbackLang]);
+      if (translation !== undefined) {
+        console.warn(`Translation for key '${key}' not found in '${this.lang}', using fallback.`);
+        return translation;
       }
-      return translation;
+
+      // Return the key itself as the last resort
+      console.error(`Translation not found for key: ${key}`);
+      return key;
     }
   });
 
@@ -193,6 +219,9 @@ document.addEventListener("alpine:init", () => {
     renderProductCard(item) {
       const { finalPrice, percentOff, originalPrice } = window.calculateDiscount(item);
       const isPromo = percentOff > 0;
+      const lang = this.$store.i18n.lang;
+      const fallbackLang = this.$store.i18n.fallbackLang;
+      const itemName = item.name[lang] || item.name[fallbackLang];
 
       const ribbonHtml = isPromo ? `
         <div class="discount-ribbon"><span>${percentOff}% OFF</span></div>
@@ -210,10 +239,10 @@ document.addEventListener("alpine:init", () => {
           <article class="product-card">
             ${ribbonHtml}
             <figure class="product-media">
-              <img src="${item.image_url ? item.image_url : 'img/coming soon.jpg'}" alt="${item.name}" />
+              <img src="${item.image_url ? item.image_url : 'img/coming soon.jpg'}" alt="${itemName}" />
             </figure>
             <div class="product-body">
-              <h3 class="product-title">${item.name}</h3>
+              <h3 class="product-title">${itemName}</h3>
               <div class="product-meta">
                 ${priceHtml}
                 <button class="btn-sm add-cart" @click.prevent.stop="$store.cart.add(${item.id})">
@@ -411,6 +440,84 @@ document.addEventListener("alpine:init", () => {
       }
     }
   }));
+
+  Alpine.data('productDetail', () => ({
+        product: null,
+        relatedProducts: [],
+        ready: false, // Add a ready flag
+        init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('id');
+
+            // Using Alpine.effect to react to changes in the store
+            Alpine.effect(() => {
+                const isLoading = this.$store.products.isLoading;
+                if (!isLoading) {
+                    this.product = this.$store.products.getProductById(productId);
+                    if (this.product) {
+                        const lang = this.$store.i18n.lang;
+                        const fallbackLang = this.$store.i18n.fallbackLang;
+                        const productName = this.product.name[lang] || this.product.name[fallbackLang];
+                        document.title = "Carita Hidroponik | " + productName;
+                        this.fetchRelatedProducts();
+                    }
+                    // Signal that the component is ready
+                    this.ready = true;
+                }
+            });
+        },
+        fetchRelatedProducts() {
+            if (!this.product) return;
+            this.relatedProducts = this.$store.products.all.filter(p =>
+                p.category === this.product.category && String(p.id) !== String(this.product.id)
+            );
+            this.$nextTick(() => this.initSwiper());
+        },
+        initSwiper() {
+            if (this.relatedProducts.length === 0) return;
+            new Swiper(".related-product-slider", {
+                loop: this.relatedProducts.length > 4, // Loop only if there are enough items
+                spaceBetween: 15,
+                navigation: {
+                    nextEl: ".swiper-button-next",
+                    prevEl: ".swiper-button-prev",
+                },
+                pagination: {
+                    el: ".swiper-pagination",
+                    clickable: true,
+                },
+                breakpoints: {
+                    320: { slidesPerView: 2, spaceBetween: 10 },
+                    768: { slidesPerView: 5, spaceBetween: 20 },
+                },
+            });
+            this.$nextTick(() => feather.replace());
+        },
+        // Getter to safely access translated name
+        get productName() {
+            if (!this.product) return '';
+            const lang = this.$store.i18n.lang;
+            const fallbackLang = this.$store.i18n.fallbackLang;
+            return this.product.name[lang] || this.product.name[fallbackLang];
+        },
+        // Getter to safely access translated description
+        get productDescription() {
+            if (!this.product) return '';
+            const lang = this.$store.i18n.lang;
+            const fallbackLang = this.$store.i18n.fallbackLang;
+            return this.product.description[lang] || this.product.description[fallbackLang];
+        },
+        // Getter for characteristics with the same pattern
+        get productCharacteristics() {
+            if (!this.product) return '';
+            const lang = this.$store.i18n.lang;
+            const fallbackLang = this.$store.i18n.fallbackLang;
+            return this.product.char[lang] || this.product.char[fallbackLang];
+        }
+    }));
+
+    // Signal that Alpine is ready
+    document.documentElement.setAttribute('data-alpine-ready', 'true');
 });
 
 // Global notification

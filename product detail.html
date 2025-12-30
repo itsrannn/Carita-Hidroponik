@@ -25,7 +25,7 @@
   ">
     <div id="header-include"></div>
 
-    <main class="container" x-data="productDetail()" x-cloak>
+    <main class="container" x-data="productDetail" x-init="init()" x-cloak>
       <p x-show="$store.products.isLoading" class="loading-text">Loading product...</p>
 
       <div x-show="!$store.products.isLoading && !product">
@@ -36,14 +36,14 @@
         </p>
       </div>
 
-      <div x-show="!$store.products.isLoading && product">
+      <div x-show="!$store.products.isLoading && product" class="product-detail-container" :data-ready="ready">
         <section class="product-detail-banner">
           <nav class="breadcrumb">
             <a href="index.html">Home</a>
             <span class="breadcrumb-separator">/</span>
             <a href="index.html#Product">Products</a>
             <span class="breadcrumb-separator">/</span>
-            <span x-text="product.name"></span>
+            <span x-text="productName"></span>
           </nav>
         </section>
 
@@ -52,12 +52,12 @@
           <div class="product-detail-img">
             <img
               :src="product.image_url ? product.image_url : 'img/general/default.jpg'"
-              :alt="product.name"
+              :alt="productName"
             />
           </div>
           <div class="product-detail-info">
             <h2 x-text="product.category.toUpperCase()" class="badge-category"></h2>
-            <h1 x-text="product.name" class="product-detail-title"></h1>
+            <h1 x-text="productName" class="product-detail-title"></h1>
 
             <div class="price-container-detail" x-data="{ priceInfo: calculateDiscount(product) }">
               <template x-if="priceInfo.percentOff > 0">
@@ -72,7 +72,7 @@
               </template>
             </div>
 
-            <p x-html="product.char" class="product-detail-desc-short"></p>
+            <p x-html="productCharacteristics" class="product-detail-desc-short"></p>
             <button
               @click="$store.cart.add(product.id)"
               class="btn-sm add-cart"
@@ -85,7 +85,7 @@
         <!-- SECTION DESCRIPTION -->
         <section class="product-detail-description">
           <h2>Product Description</h2>
-          <p x-text="product.description"></p>
+          <p x-text="productDescription"></p>
         </section>
 
         <!-- SECTION RELATED PRODUCTS -->
@@ -128,59 +128,5 @@
     <!-- General Scripts -->
     <script src="js/include.js" defer></script>
     <script src="js/script.js" defer></script>
-
-    <script>
-      function productDetail() {
-        return {
-          product: null,
-          relatedProducts: [],
-          init() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const productId = urlParams.get('id');
-
-            this.$watch('$store.products.isLoading', (isLoading) => {
-              if (!isLoading) {
-                this.product = this.$store.products.getProductById(productId);
-                if (this.product) {
-                  document.title = "Carita Hidroponik | " + this.product.name;
-                  this.fetchRelatedProducts();
-                }
-              }
-            });
-          },
-          fetchRelatedProducts() {
-            if (!this.product) return;
-            this.relatedProducts = this.$store.products.all.filter(p =>
-              p.category === this.product.category && String(p.id) !== String(this.product.id)
-            );
-            this.$nextTick(() => this.initSwiper());
-          },
-          formatRupiah(value) {
-            if (!value) return "Rp 0";
-            return "Rp " + value.toLocaleString("id-ID");
-          },
-          initSwiper() {
-            if (this.relatedProducts.length === 0) return;
-            new Swiper(".related-product-slider", {
-              loop: true,
-              spaceBetween: 15,
-              navigation: {
-                nextEl: ".swiper-button-next",
-                prevEl: ".swiper-button-prev",
-              },
-              pagination: {
-                el: ".swiper-pagination",
-                clickable: true,
-              },
-              breakpoints: {
-                320: { slidesPerView: 2, spaceBetween: 10 },
-                768: { slidesPerView: 5, spaceBetween: 20 },
-              },
-            });
-            this.$nextTick(() => feather.replace());
-          },
-        }
-      }
-    </script>
   </body>
 </html>
