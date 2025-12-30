@@ -49,7 +49,7 @@
     border-radius: 50%;
   }
   .lang-dropdown .dropdown-content {
-    min-width: 140px; /* Slightly smaller width */
+    min-width: 160px; /* Wider for full name */
   }
   .lang-dropdown .dropdown-content a {
     display: flex;
@@ -117,15 +117,17 @@
       <!-- Language Dropdown -->
       <div x-data="{ open: false }" class="lang-dropdown">
         <button @click="open = !open" class="icon-btn" aria-label="Select Language">
-          <span x-text="$store.i18n.lang === 'id' ? '🇮🇩' : '🇬🇧'"></span>
+          <template x-if="$store.i18n.lang">
+            <span x-text="$store.i18n.supportedLangs.find(l => l.code === $store.i18n.lang)?.flag"></span>
+          </template>
         </button>
         <div x-show="open" @click.outside="open = false" class="dropdown-content" x-transition>
-          <template x-for="lang in $store.i18n.supportedLangs" :key="lang">
+          <template x-for="lang in $store.i18n.supportedLangs" :key="lang.code">
             <a href="#"
-               @click.prevent="$store.i18n.setLang(lang); open = false"
-               :class="{ 'active': $store.i18n.lang === lang }">
-              <span x-text="lang === 'id' ? '🇮🇩' : '🇬🇧'"></span>
-              <span x-text="$store.i18n.displayNames[lang]"></span>
+               @click.prevent="$store.i18n.setLang(lang.code); open = false"
+               :class="{ 'active': $store.i18n.lang === lang.code }">
+              <span x-text="lang.flag"></span>
+              <span x-text="lang.displayName"></span>
             </a>
           </template>
         </div>
