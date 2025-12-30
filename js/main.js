@@ -60,18 +60,17 @@ document.addEventListener("alpine:init", () => {
     // --- State ---
     lang: localStorage.getItem("language") || "id",
     fallbackLang: 'id',
-    supportedLangs: ['id', 'en'],
-    displayNames: {
-      id: 'Bahasa Indonesia',
-      en: 'English'
-    },
+    supportedLangs: [
+      { code: 'id', displayName: 'Bahasa Indonesia', flag: '🇮🇩' },
+      { code: 'en', displayName: 'English', flag: '🇬🇧' }
+    ],
     messages: {},
     // --- Methods ---
     init() {
       this.load(this.lang);
     },
     setLang(lang) {
-      if (!this.supportedLangs.includes(lang)) {
+      if (!this.supportedLangs.some(l => l.code === lang)) {
         console.warn(`Language '${lang}' is not supported.`);
         return;
       }
@@ -109,12 +108,11 @@ document.addEventListener("alpine:init", () => {
       // Try fallback language
       translation = getTranslation(this.messages[this.fallbackLang]);
       if (translation !== undefined) {
-        console.warn(`Translation for key '${key}' not found in '${this.lang}', using fallback.`);
         return translation;
       }
 
       // Return the key itself as the last resort
-      console.error(`Translation not found for key: ${key}`);
+      console.warn(`Translation not found for key: ${key}`);
       return key;
     }
   });
@@ -337,10 +335,13 @@ document.addEventListener("alpine:init", () => {
     get filteredProducts() {
       if (!this.searchQuery.products) return this.products;
       const q = this.searchQuery.products.toLowerCase();
-      return this.products.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q)
-      );
+      const lang = Alpine.store('i18n').lang;
+      const fallbackLang = Alpine.store('i18n').fallbackLang;
+
+      return this.products.filter(p => {
+        const productName = (p.name[lang] || p.name[fallbackLang] || '').toLowerCase();
+        return productName.includes(q) || p.category.toLowerCase().includes(q);
+      });
     },
 
     get filteredNews() {
