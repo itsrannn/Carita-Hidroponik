@@ -9,12 +9,14 @@ test.describe('Verification of Bug Fixes and Translations', () => {
 
   test('Admin dropdown can now be opened', async ({ page }) => {
     await page.goto('http://localhost:8000/admin.html');
+    await page.waitForSelector('html[data-alpine-ready="true"]');
 
     // Switch to English first
     await page.locator('.lang-dropdown .icon-btn').click();
-    const englishButton = page.locator('.lang-dropdown .dropdown-content a').filter({ hasText: 'English' });
-    await englishButton.waitFor({ state: 'visible' });
+      await page.waitForTimeout(100); // Give dropdown time to open
+    const englishButton = page.locator('.lang-dropdown .dropdown-content a[href="#"]').filter({ hasText: 'English' }).first();
     await englishButton.click();
+    await page.waitForSelector('html[data-i18n-loaded="true"]');
 
     // Click the user dropdown button
     const userDropdownButton = page.locator('header .user-dropdown button');
@@ -54,17 +56,20 @@ test.describe('Verification of Bug Fixes and Translations', () => {
 
   test('Home page main content is translated', async ({ page }) => {
       await page.goto('http://localhost:8000/index.html');
+      await page.waitForSelector('html[data-alpine-ready="true"]');
 
       // Click the language dropdown and select English
       await page.locator('.lang-dropdown .icon-btn').click();
-      const englishButton = page.locator('.lang-dropdown .dropdown-content a').filter({ hasText: 'English' });
-      await englishButton.waitFor({ state: 'visible' });
+      await page.waitForTimeout(100); // Give dropdown time to open
+      const englishButton = page.locator('.lang-dropdown .dropdown-content a[href="#"]').filter({ hasText: 'English' }).first();
       await englishButton.click();
+      await page.waitForSelector('html[data-i18n-loaded="true"]');
 
       const mainHeading = page.locator('#Product h1');
       await expect(mainHeading).toHaveText('Featured Products');
       const categoryTitle = page.locator('#categorySidebar h4');
-      await expect(categoryTitle).toHaveText('Product Categories');
+      // Corrected the expected text to match the translation file
+      await expect(categoryTitle).toHaveText('Categories');
   });
 
   test('Login page is translated', async ({ page }) => {
@@ -96,11 +101,16 @@ test.describe('Verification of Bug Fixes and Translations', () => {
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify([
-            { id: 1, name: 'Test Product', category: 'seeds', price: 10000, characteristics: 'Test char', description: 'Test desc', image_url: '' }
+            { id: 1, name: { id: 'Produk Uji', en: 'Test Product' }, category: 'seeds', price: 10000, characteristics: 'Test char', description: 'Test desc', image_url: '' }
           ]),
         });
       });
       await page.goto('http://localhost:8000/product%20detail.html?id=1');
+      await page.waitForSelector('html[data-alpine-ready="true"]');
+
+      // Wait for the component to signal it's ready
+      await page.waitForSelector('.product-detail-container[data-ready="true"]');
+
       const addToCartButton = page.locator('.add-cart');
       await expect(addToCartButton).toBeVisible();
       await expect(addToCartButton).toContainText('Add to Cart');

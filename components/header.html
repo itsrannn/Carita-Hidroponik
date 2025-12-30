@@ -120,12 +120,14 @@
           <span x-text="$store.i18n.lang === 'id' ? '🇮🇩' : '🇬🇧'"></span>
         </button>
         <div x-show="open" @click.outside="open = false" class="dropdown-content" x-transition>
-          <a href="#" @click.prevent="$store.i18n.load('en'); open = false" :class="{ 'active': $store.i18n.lang === 'en' }">
-            <span>🇬🇧</span> English
-          </a>
-          <a href="#" @click.prevent="$store.i18n.load('id'); open = false" :class="{ 'active': $store.i18n.lang === 'id' }">
-            <span>🇮🇩</span> Indonesia
-          </a>
+          <template x-for="lang in $store.i18n.supportedLangs" :key="lang">
+            <a href="#"
+               @click.prevent="$store.i18n.setLang(lang); open = false"
+               :class="{ 'active': $store.i18n.lang === lang }">
+              <span x-text="lang === 'id' ? '🇮🇩' : '🇬🇧'"></span>
+              <span x-text="$store.i18n.displayNames[lang]"></span>
+            </a>
+          </template>
         </div>
       </div>
     </div>
