@@ -58,16 +58,36 @@ document.addEventListener("alpine:init", () => {
   // --- Centralized Stores ---
   Alpine.store("i18n", {
     // --- State ---
-    lang: localStorage.getItem("language") || "id",
+    lang: 'id',
     fallbackLang: 'id',
     supportedLangs: [
-      { code: 'id', displayName: 'Bahasa Indonesia', flag: '🇮🇩' },
-      { code: 'en', displayName: 'English', flag: '🇬🇧' }
+      { code: 'id', displayName: 'Bahasa Indonesia', name: 'ID' },
+      { code: 'en', displayName: 'English', name: 'EN' }
     ],
     messages: {},
     // --- Methods ---
+    normalizeLang(lang) {
+      if (typeof lang !== 'string') return 'id';
+      const lowerLang = lang.toLowerCase();
+      if (lowerLang.startsWith('en')) return 'en';
+      if (lowerLang.startsWith('id')) return 'id';
+      return 'id'; // Fallback to Indonesian
+    },
     init() {
-      this.load(this.lang);
+      const savedLang = localStorage.getItem("language");
+      const browserLang = navigator.language;
+
+      let initialLang;
+
+      if (savedLang) {
+        initialLang = this.normalizeLang(savedLang);
+      } else if (browserLang) {
+        initialLang = this.normalizeLang(browserLang);
+      } else {
+        initialLang = this.fallbackLang;
+      }
+
+      this.setLang(initialLang);
     },
     setLang(lang) {
       if (!this.supportedLangs.some(l => l.code === lang)) {

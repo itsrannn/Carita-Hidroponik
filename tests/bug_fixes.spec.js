@@ -13,8 +13,7 @@ test.describe('Verification of Bug Fixes and Translations', () => {
 
     // Switch to English first
     await page.locator('.lang-dropdown .icon-btn').click();
-      await page.waitForTimeout(100); // Give dropdown time to open
-    const englishButton = page.locator('.lang-dropdown .dropdown-content a[href="#"]').filter({ hasText: 'English' }).first();
+    const englishButton = page.locator('.lang-dropdown .dropdown-content a .lang-display-name', { hasText: 'English' });
     await englishButton.click();
     await page.waitForSelector('html[data-i18n-loaded="true"]');
 
@@ -60,8 +59,7 @@ test.describe('Verification of Bug Fixes and Translations', () => {
 
       // Click the language dropdown and select English
       await page.locator('.lang-dropdown .icon-btn').click();
-      await page.waitForTimeout(100); // Give dropdown time to open
-      const englishButton = page.locator('.lang-dropdown .dropdown-content a[href="#"]').filter({ hasText: 'English' }).first();
+      const englishButton = page.locator('.lang-dropdown .dropdown-content a .lang-display-name', { hasText: 'English' });
       await englishButton.click();
       await page.waitForSelector('html[data-i18n-loaded="true"]');
 
