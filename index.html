@@ -61,8 +61,9 @@
 
     <section id="Home" class="hero-section">
       <div class="container" x-data="products" x-init="init()">
-        <div id="hero-slider" class="hero-slider">
-          <div class="slide-item active">
+        <!-- REFACTORED HERO SLIDER -->
+        <div id="hero-slider" class="hero-slider" x-data="heroSlider()">
+          <div class="slide-item" :class="{ 'active': currentIndex === 0 }">
             <img src="img/Flyer 1.jpg" alt="12.12 Sale Promo" class="hero-img" />
             <div class="hero-content">
               <h1 class="hero-title" x-text="$store.i18n.t('home.promo_title')"></h1>
@@ -70,8 +71,7 @@
               <a href="#Product" class="btn btn-accent btn-lg" x-text="$store.i18n.t('home.promo_button')"></a>
             </div>
           </div>
-
-          <div class="slide-item">
+          <div class="slide-item" :class="{ 'active': currentIndex === 1 }">
             <img src="img/Flyer 2.jpg" alt="New A-B Mix Nutrition" class="hero-img" />
             <div class="hero-content">
               <h1 class="hero-title" x-text="$store.i18n.t('home.nutrient_title')"></h1>
@@ -79,8 +79,7 @@
               <a href="#Product" class="btn btn-accent btn-lg" x-text="$store.i18n.t('home.nutrient_button')"></a>
             </div>
           </div>
-
-          <div class="slide-item">
+          <div class="slide-item" :class="{ 'active': currentIndex === 2 }">
             <img src="img/Flyer 3.jpg" alt="Starter Kit for Beginners" class="hero-img" />
             <div class="hero-content">
               <h1 class="hero-title" x-text="$store.i18n.t('home.starter_kit_title')"></h1>
@@ -89,15 +88,20 @@
             </div>
           </div>
 
-          <button class="slider-arrow prev" aria-label="Previous Slide">
+          <button @click="prevSlide()" class="slider-arrow prev" aria-label="Previous Slide">
             <i data-feather="chevron-left"></i>
           </button>
-          <button class="slider-arrow next" aria-label="Next Slide">
+          <button @click="nextSlide()" class="slider-arrow next" aria-label="Next Slide">
             <i data-feather="chevron-right"></i>
           </button>
 
-          <div class="slider-dots"></div>
+          <div class="slider-dots">
+            <template x-for="(_, index) in slidesCount" :key="index">
+              <button @click="goToSlide(index)" class="slider-dot" :class="{ 'active': currentIndex === index }" :aria-label="`Go to slide ${index + 1}`"></button>
+            </template>
+          </div>
         </div>
+        <!-- END REFACTORED HERO SLIDER -->
 
         <div class="container" style="padding: 2rem 0;">
           <form class="search-bar" @submit.prevent="handleSearch(searchTerm)" style="margin: auto; max-width: 600px;">
@@ -215,10 +219,33 @@
       </div>
     </section>
 
-    <section class="news-section container">
+    <!-- REFACTORED NEWS SECTION -->
+    <section class="news-section container" x-data="newsSection()" x-init="fetchNews()">
       <h2 class="section-title" x-text="$store.i18n.t('home.news.title')"></h2>
-      <div class="news-grid" id="index-news-container"></div>
+      <div class="news-grid">
+        <template x-if="isLoading">
+          <p class="loading-text" style="text-align: center; padding: 2rem;">Memuat berita...</p>
+        </template>
+        <template x-if="!isLoading && newsItems.length === 0">
+          <p style="text-align: center;">Belum ada berita yang diterbitkan.</p>
+        </template>
+        <template x-for="newsItem in newsItems" :key="newsItem.id">
+          <a :href="`news detail.html?id=${newsItem.id}`" class="news-card-link">
+            <article class="news-card">
+              <div class="news-card-image-wrapper">
+                <img :src="newsItem.image_url || 'img/coming soon.jpg'" :alt="newsItem.title" />
+              </div>
+              <div class="news-card-content">
+                <p class="news-card-meta" x-text="formatDate(newsItem.created_at)"></p>
+                <h3 x-text="newsItem.title"></h3>
+                <p class="news-card-excerpt" x-text="newsItem.excerpt"></p>
+              </div>
+            </article>
+          </a>
+        </template>
+      </div>
     </section>
+    <!-- END REFACTORED NEWS SECTION -->
 
     <section class="preview">
       <h2 x-text="$store.i18n.t('home.about.title')"></h2>
@@ -229,11 +256,79 @@
 
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js" defer></script>
-
     <script src="js/supabase-client.js"></script>
     <script src="js/main.js"></script>
-    <script src="js/include.js" defer></script>
-    <script src="js/script.js" defer></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js" defer></script>
+    <!-- SCRIPT js/script.js & include.js DEPRECATED BY INLINE COMPONENTS -->
+
+    <script>
+      function heroSlider() {
+        return {
+          currentIndex: 0,
+          slidesCount: 3, // Hardcoded for the 3 slides
+          slideInterval: null,
+          init() {
+            this.startInterval();
+            // Need to re-run feather.replace() for icons inside Alpine components
+            this.$nextTick(() => feather.replace());
+          },
+          destroy() {
+            clearInterval(this.slideInterval);
+          },
+          startInterval() {
+            this.slideInterval = setInterval(() => this.nextSlide(false), 5000);
+          },
+          resetInterval() {
+            clearInterval(this.slideInterval);
+            this.startInterval();
+          },
+          goToSlide(index) {
+            this.currentIndex = index;
+            this.resetInterval();
+          },
+          nextSlide() {
+            this.currentIndex = (this.currentIndex + 1) % this.slidesCount;
+            this.resetInterval();
+          },
+          prevSlide() {
+            this.currentIndex = (this.currentIndex - 1 + this.slidesCount) % this.slidesCount;
+            this.resetInterval();
+          }
+        }
+      }
+
+      function newsSection() {
+        return {
+          newsItems: [],
+          isLoading: true,
+          async fetchNews() {
+            this.isLoading = true;
+            try {
+              if (!window.supabase) {
+                console.error("Supabase client not loaded.");
+                return;
+              }
+              const { data, error } = await window.supabase
+                .from('news')
+                .select('id, created_at, title, excerpt, image_url')
+                .order('created_at', { ascending: false })
+                .limit(3);
+              if (error) throw error;
+              this.newsItems = data || [];
+            } catch (error) {
+              console.error("Gagal memuat berita:", error);
+            } finally {
+              this.isLoading = false;
+            }
+          },
+          formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString("id-ID", {
+              year: "numeric", month: "long", day: "numeric",
+            });
+          }
+        }
+      }
+    </script>
   </body>
 </html>
