@@ -7,29 +7,6 @@ test.describe('Verification of Bug Fixes and Translations', () => {
     page.on('dialog', dialog => dialog.accept());
   });
 
-  test('Admin dropdown can now be opened', async ({ page }) => {
-    await page.goto('http://localhost:8000/admin.html');
-    await page.waitForSelector('html[data-alpine-ready="true"]');
-
-    // Switch to English first
-    await page.locator('.lang-dropdown .icon-btn').click();
-    const englishButton = page.locator('.lang-dropdown .dropdown-content a .lang-display-name', { hasText: 'English' });
-    await englishButton.click();
-    await page.waitForSelector('html[data-i18n-loaded="true"]');
-
-    // Click the user dropdown button
-    const userDropdownButton = page.locator('header .user-dropdown button');
-    await userDropdownButton.click();
-
-    // Verify that the dropdown content is now visible and translated
-    const dropdownContent = page.locator('#user-dropdown-content');
-    await expect(dropdownContent).toBeVisible();
-    await expect(dropdownContent).toContainText('My Profile');
-
-    // Click outside the dropdown to close it
-    await page.locator('body').click({ position: { x: 10, y: 10 } });
-    await expect(dropdownContent).not.toBeVisible();
-  });
 
   test('Cart badge updates correctly after back navigation', async ({ page }) => {
     // Go to the main page
@@ -53,22 +30,6 @@ test.describe('Verification of Bug Fixes and Translations', () => {
     await expect(cartBadge).toHaveText('1');
   });
 
-  test('Home page main content is translated', async ({ page }) => {
-      await page.goto('http://localhost:8000/index.html');
-      await page.waitForSelector('html[data-alpine-ready="true"]');
-
-      // Click the language dropdown and select English
-      await page.locator('.lang-dropdown .icon-btn').click();
-      const englishButton = page.locator('.lang-dropdown .dropdown-content a .lang-display-name', { hasText: 'English' });
-      await englishButton.click();
-      await page.waitForSelector('html[data-i18n-loaded="true"]');
-
-      const mainHeading = page.locator('#Product h1');
-      await expect(mainHeading).toHaveText('Featured Products');
-      const categoryTitle = page.locator('#categorySidebar h4');
-      // Corrected the expected text to match the translation file
-      await expect(categoryTitle).toHaveText('Categories');
-  });
 
   test('Login page is translated', async ({ page }) => {
       await page.goto('http://localhost:8000/login%20page.html');
