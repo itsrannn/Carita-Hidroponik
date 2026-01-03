@@ -105,9 +105,9 @@
                                 <template x-if="!isLoading.products && filteredProducts.length === 0"><tr><td colspan="5" style="text-align: center;">No matching products found.</td></tr></template>
                                 <template x-for="product in filteredProducts" :key="product.id">
                                     <tr>
-                                        <td data-label="Image"><img :src="product.image_url" :alt="product.name" class="item-image"></td>
+                                        <td data-label="Image"><img :src="product.image_url" :alt="product.name.en" class="item-image"></td>
                                         <td data-label="Product" class="item-name">
-                                            <span x-text="product.name"></span>
+                                            <span x-text="product.name.en"></span>
                                             <template x-if="(product.discount_percent && product.discount_percent > 0) || (product.discount_price && product.discount_price > 0)">
                                                 <span class="discount-badge"
                                                       x-text="`DISCOUNT -${
@@ -149,9 +149,9 @@
                                 <template x-if="!isLoading.news && filteredNews.length === 0"><tr><td colspan="4" style="text-align: center;">No matching news found.</td></tr></template>
                                 <template x-for="item in filteredNews" :key="item.id">
                                     <tr>
-                                        <td data-label="Image"><img :src="item.image_url" :alt="item.title" class="item-image"></td>
-                                        <td data-label="Title" class="item-name" x-text="item.title"></td>
-                                        <td data-label="Excerpt" x-text="item.excerpt"></td>
+                                        <td data-label="Image"><img :src="item.image_url" :alt="item.title.en" class="item-image"></td>
+                                        <td data-label="Title" class="item-name" x-text="item.title.en"></td>
+                                        <td data-label="Excerpt" x-text="item.excerpt.en"></td>
                                         <td data-label="Actions">
                                             <div class="action-buttons">
                                                 <a :href="`admin-editor.html?type=news&action=edit&id=${item.id}`" class="btn-edit">Edit</a>
