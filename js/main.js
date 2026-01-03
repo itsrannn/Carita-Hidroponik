@@ -185,7 +185,7 @@ document.addEventListener("alpine:init", () => {
     renderProductCard(item) {
       const { finalPrice, percentOff, originalPrice } = window.calculateDiscount(item);
       const isPromo = percentOff > 0;
-      const itemName = item.name.en;
+      const itemName = (item.name && typeof item.name.en === 'string') ? item.name.en : 'Unnamed Product';
 
       const ribbonHtml = isPromo ? `
         <div class="discount-ribbon"><span>${percentOff}% OFF</span></div>
@@ -224,10 +224,11 @@ document.addEventListener("alpine:init", () => {
 
       if (this.searchTerm.trim()) {
         const query = this.searchTerm.toLowerCase();
-        items = items.filter(item =>
-          item.name.toLowerCase().includes(query) ||
-          (item.description && item.description.toLowerCase().includes(query))
-        );
+        items = items.filter(item => {
+          const nameMatch = item.name && typeof item.name.en === 'string' && item.name.en.toLowerCase().includes(query);
+          const descriptionMatch = item.description && typeof item.description.en === 'string' && item.description.en.toLowerCase().includes(query);
+          return nameMatch || descriptionMatch;
+        });
       }
 
       if (this.selectedCategory === 'promo') {
