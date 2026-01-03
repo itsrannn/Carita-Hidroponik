@@ -149,9 +149,11 @@ document.addEventListener("alpine:init", () => {
           if (!product) return null;
 
           const { finalPrice, percentOff } = window.calculateDiscount(product);
+          const safeName = (product.name && product.name.en) ? product.name.en : "Unnamed Product";
 
           return {
             ...product,
+            name: safeName,
             quantity: item.quantity,
             img: product.image_url,
             price: product.price,
