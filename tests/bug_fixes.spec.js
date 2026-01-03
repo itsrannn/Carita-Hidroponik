@@ -7,7 +7,6 @@ test.describe('Verification of Bug Fixes and Translations', () => {
     page.on('dialog', dialog => dialog.accept());
   });
 
-
   test('Cart badge updates correctly after back navigation', async ({ page }) => {
     // Go to the main page
     await page.goto('http://localhost:8000/index.html');
@@ -29,7 +28,6 @@ test.describe('Verification of Bug Fixes and Translations', () => {
     // Verify the cart badge STILL shows '1' thanks to the bfcache fix
     await expect(cartBadge).toHaveText('1');
   });
-
 
   test('Login page is translated', async ({ page }) => {
       await page.goto('http://localhost:8000/login%20page.html');
