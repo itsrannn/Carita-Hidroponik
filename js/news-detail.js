@@ -35,17 +35,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (error) throw error;
 
         if (data) {
-            document.title = `${data.title} | Carita Hidroponik`;
-            newsTitleEl.textContent = data.title;
+            document.title = `${data.title.en} | Carita Hidroponik`;
+            newsTitleEl.textContent = data.title.en;
             newsDateEl.textContent = new Date(data.created_at).toLocaleDateString("en-US", {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
             });
 
-            newsHeroEl.innerHTML = `<img src="${data.image_url || 'img/coming soon.jpg'}" alt="${data.title}" />`;
+            newsHeroEl.innerHTML = `<img src="${data.image_url || 'img/coming soon.jpg'}" alt="${data.title.en}" />`;
 
-            newsBodyEl.innerHTML = data.content;
+            newsBodyEl.innerHTML = data.content.en;
 
         } else {
             showError(`News with ID "${newsId}" not found.`);
