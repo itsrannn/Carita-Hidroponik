@@ -7,15 +7,15 @@ test('news cards should be visible and have images', async ({ page }) => {
       {
         id: 1,
         created_at: new Date().toISOString(),
-        title: 'Mock News Title 1',
-        excerpt: 'This is a mock news excerpt.',
+        title: { en: 'Mock News Title 1' },
+        excerpt: { en: 'This is a mock news excerpt.' },
         image_url: 'https://placehold.co/600x400/c7eacb/333?text=Mock+1'
       },
       {
         id: 2,
         created_at: new Date().toISOString(),
-        title: 'Mock News Title 2',
-        excerpt: 'This is another mock news excerpt.',
+        title: { en: 'Mock News Title 2' },
+        excerpt: { en: 'This is another mock news excerpt.' },
         image_url: 'https://placehold.co/600x400/f8d7da/333?text=Mock+2'
       }
     ];
