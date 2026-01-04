@@ -5,7 +5,7 @@ test.describe('Verifikasi Margin Visual', () => {
     'index.html',
     'contact.html',
     'admin.html',
-    'my account.html', // Corrected filename
+    'my-account.html', // Corrected filename
     'order-history.html'
   ];
 
