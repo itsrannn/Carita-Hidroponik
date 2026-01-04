@@ -32,17 +32,17 @@ test.describe('Verification of Bug Fixes and Translations', () => {
 
 
   test('Login page is translated', async ({ page }) => {
-      await page.goto('http://localhost:8000/login%20page.html');
+      await page.goto('http://localhost:8000/login-page.html');
       const loginButton = page.locator('#login-form .btn');
       await expect(loginButton).toHaveText('Login');
       const registerLink = page.locator('#login-form .register-link a');
       await expect(registerLink).toHaveText('Register');
   });
 
-  test('My Account page redirects to homepage (as expected)', async ({ page }) => {
-      await page.goto('http://localhost:8000/my%20account.html');
-      // The page should redirect to the homepage if not authenticated
-      await expect(page).toHaveTitle(/Carita Hidroponik/);
+  test('My Account page redirects to login page', async ({ page }) => {
+      await page.goto('http://localhost:8000/my-account.html');
+      // The page should redirect to the login page if not authenticated
+      await expect(page).toHaveTitle(/Login Page/);
   });
 
   test('Cart page is translated', async ({ page }) => {
