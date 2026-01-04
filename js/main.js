@@ -942,17 +942,10 @@ document.addEventListener("alpine:init", () => {
             }
         },
 
-        async handleLogout() {
-            this.loading = true;
-            try {
-                const { error } = await window.supabase.auth.signOut();
-                if (error) throw error;
-                window.location.href = 'index.html';
-            } catch (error) {
-                alert('Error logging out: ' + error.message);
-            } finally {
-                this.loading = false;
-            }
+        handleLogout() {
+            // No need to await signOut. Redirect immediately to avoid race conditions.
+            window.supabase.auth.signOut();
+            window.location.href = 'index.html';
         }
     }));
 });
