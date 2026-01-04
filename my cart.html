@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>My Cart | Carita Hidroponik</title>
-
+    <link rel="icon" type="image/x-icon" href="img/Logo.jpg" />
     <!-- ========== STYLE ========== -->
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/my cart.css" />
@@ -114,7 +114,7 @@
       </section>
 
       <!-- ========== NOTIFICATION MODAL ========== -->
-      <div x-show="isProfileModalOpen" class="modal-overlay" style="display: none">
+      <div x-show="isProfileModalOpen" :class="{'show': isProfileModalOpen}" class="modal-overlay cart-modal-overlay">
         <div class="modal-content" @click.outside="isProfileModalOpen = false">
           <h3 class="modal-title">Profile Incomplete</h3>
           <p class="modal-body">
@@ -139,8 +139,8 @@
 
       <div
         x-show="isLoginModalOpen"
-        class="modal-overlay"
-        style="display: none"
+        :class="{'show': isLoginModalOpen}"
+        class="modal-overlay cart-modal-overlay"
       >
         <div class="modal-content" @click.outside="isLoginModalOpen = false">
           <h3 class="modal-title">You Are Not Logged In</h3>
@@ -164,8 +164,8 @@
 
       <div
         x-show="isConfirmModalOpen"
-        class="modal-overlay"
-        style="display: none"
+        :class="{'show': isConfirmModalOpen}"
+        class="modal-overlay cart-modal-overlay"
       >
         <div class="modal-content" @click.outside="isConfirmModalOpen = false">
           <h3 class="modal-title">Confirm Your Order</h3>
