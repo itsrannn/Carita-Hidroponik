@@ -70,8 +70,8 @@
           <i data-feather="user"></i>
         </button>
         <div x-show="isProfileDropdownOpen" x-transition class="dropdown-content">
-          <a href="my account.html">My Profile</a>
-          <a href="order-history.html">Order History</a>
+          <a href="my account.html" @click.prevent="handleHeaderNavigation('profile')">My Profile</a>
+          <a href="order-history.html" @click.prevent="handleHeaderNavigation('orderHistory')">Order History</a>
           <!-- Logout link can be added here if needed -->
         </div>
       </div>
@@ -104,6 +104,23 @@
         if (sidebar) {
           sidebar.classList.toggle("mobile-active");
           document.body.classList.toggle("sidebar-open");
+        }
+      },
+
+      handleHeaderNavigation(view) {
+        const currentPath = window.location.pathname.toLowerCase();
+        const isOnAccountPage = currentPath.endsWith('my%20account.html') || currentPath.endsWith('order-history.html');
+
+        // Find the Alpine component instance on the page
+        const accountPageEl = document.querySelector('[x-data="accountPage"]');
+
+        if (isOnAccountPage && accountPageEl && accountPageEl.__x) {
+          // If on the account page, just switch the view
+          accountPageEl.__x.ctx.scope.setView(view);
+          this.isProfileDropdownOpen = false;
+        } else {
+          // If on another page, navigate to the correct URL
+          window.location.href = view === 'profile' ? 'my account.html' : 'order-history.html';
         }
       }
     }
