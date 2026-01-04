@@ -641,9 +641,9 @@ document.addEventListener("alpine:init", () => {
 
         // --- Initialization ---
         async init() {
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await window.supabase.auth.getSession();
             if (!session) {
-                window.location.href = 'login page.html';
+                window.location.href = 'index.html';
                 return;
             }
             this.user = session.user;
@@ -945,9 +945,9 @@ document.addEventListener("alpine:init", () => {
         async handleLogout() {
             this.loading = true;
             try {
-                const { error } = await supabase.auth.signOut();
+                const { error } = await window.supabase.auth.signOut();
                 if (error) throw error;
-                window.location.href = 'login page.html';
+                window.location.href = 'index.html';
             } catch (error) {
                 alert('Error logging out: ' + error.message);
             } finally {

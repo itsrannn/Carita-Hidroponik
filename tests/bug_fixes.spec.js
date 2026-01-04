@@ -39,10 +39,10 @@ test.describe('Verification of Bug Fixes and Translations', () => {
       await expect(registerLink).toHaveText('Register');
   });
 
-  test('My Account page redirects to login (as expected)', async ({ page }) => {
+  test('My Account page redirects to homepage (as expected)', async ({ page }) => {
       await page.goto('http://localhost:8000/my%20account.html');
-      // The page should redirect to the login page if not authenticated
-      await expect(page).toHaveTitle(/Login Page/);
+      // The page should redirect to the homepage if not authenticated
+      await expect(page).toHaveTitle(/Carita Hidroponik/);
   });
 
   test('Cart page is translated', async ({ page }) => {
