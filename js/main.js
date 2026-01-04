@@ -24,6 +24,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
   loadComponent("header-include", "components/header.html");
   loadComponent("footer-include", "components/footer.html");
+
+  // Force re-initialization of the cart from localStorage when a page is shown from bfcache
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted && window.Alpine && Alpine.store('cart')) {
+      Alpine.store('cart').init();
+    }
+  });
 });
 
 
