@@ -643,7 +643,8 @@ document.addEventListener("alpine:init", () => {
         async init() {
             const { data: { session } } = await window.supabase.auth.getSession();
             if (!session) {
-                window.location.href = 'login-page.html';
+                const redirectUrl = encodeURIComponent(window.location.href);
+                window.location.href = `login-page.html?redirect=${redirectUrl}`;
                 return;
             }
             this.user = session.user;
