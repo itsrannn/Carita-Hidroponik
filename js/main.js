@@ -597,6 +597,9 @@ document.addEventListener("alpine:init", () => {
     Alpine.data('checkoutPage', checkoutPage);
 
     Alpine.data('accountPage', () => ({
+        // --- Core View State ---
+        activeView: 'profile', // 'profile' or 'orderHistory'
+
         // --- User and Profile Data ---
         user: null,
         profile: {
@@ -612,6 +615,11 @@ document.addEventListener("alpine:init", () => {
             longitude: null,
         },
         loading: false,
+
+        // --- Order History Data ---
+        orders: [],
+        isOrderLoading: true,
+        orderSubscription: null,
 
         // --- UI State ---
         editProfileMode: false,
@@ -639,8 +647,19 @@ document.addEventListener("alpine:init", () => {
                 return;
             }
             this.user = session.user;
+
+            // Set initial view based on URL
+            this.handlePathChange(window.location.pathname);
+
+            // Fetch all necessary data
             await this.fetchProvinces();
             await this.getProfile();
+            await this.fetchOrders();
+
+            // Listen for browser back/forward navigation
+            window.addEventListener('popstate', () => {
+                this.handlePathChange(window.location.pathname);
+            });
 
             this.$watch('editAddressMode', (value) => {
                 if (value) {
@@ -649,6 +668,26 @@ document.addEventListener("alpine:init", () => {
                     });
                 }
             });
+        },
+
+        // --- View and URL Management ---
+        setView(view) {
+            this.activeView = view;
+            const newPath = view === 'profile' ? '/my%20account.html' : '/order-history.html';
+            const fullUrl = window.location.origin + newPath;
+
+            // Update URL without reloading the page if it's different
+            if (window.location.pathname.replace(/ /g, '%20') !== newPath) {
+                history.pushState({ view }, '', fullUrl);
+            }
+        },
+
+        handlePathChange(path) {
+            if (path.endsWith('/order-history.html')) {
+                this.activeView = 'orderHistory';
+            } else {
+                this.activeView = 'profile';
+            }
         },
 
         // --- Map Functionality ---
@@ -744,6 +783,52 @@ document.addEventListener("alpine:init", () => {
 
         updateProfileVillage() {
             // Placeholder for future logic
+        },
+
+        // --- Order History Functionality ---
+        async fetchOrders() {
+            this.isOrderLoading = true;
+            try {
+                const { data, error } = await supabase
+                    .from('orders')
+                    .select('*')
+                    .eq('user_id', this.user.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                this.orders = data;
+                this.subscribeToOrderChanges();
+            } catch (error) {
+                window.showNotification('Failed to load order history.', true);
+            } finally {
+                this.isOrderLoading = false;
+            }
+        },
+
+        subscribeToOrderChanges() {
+            // Unsubscribe from any existing channel to prevent duplicates
+            if (this.orderSubscription) {
+                supabase.removeChannel(this.orderSubscription);
+            }
+
+            this.orderSubscription = supabase
+                .channel(`public:orders:user_id=eq.${this.user.id}`)
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'orders',
+                    filter: `user_id=eq.${this.user.id}`
+                },
+                (payload) => {
+                    // Refetch all orders to ensure data consistency
+                    this.fetchOrders();
+                }
+            ).subscribe();
+        },
+
+        getStatusClass(status) {
+            if (!status) return 'status-default';
+            return `status-${status.toLowerCase().replace(/\s+/g, '-')}`;
         },
 
         // --- Profile and Address Management ---
