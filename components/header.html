@@ -64,17 +64,10 @@
       </a>
     </div>
     <div class="top-actions">
-      <!-- User Dropdown -->
-      <div class="user-dropdown" @click.outside="isProfileDropdownOpen = false">
-        <button @click="isProfileDropdownOpen = !isProfileDropdownOpen" class="icon-btn" aria-label="Account">
-          <i data-feather="user"></i>
-        </button>
-        <div x-show="isProfileDropdownOpen" x-transition class="dropdown-content">
-          <a href="my-account.html" @click.prevent="handleHeaderNavigation('profile')">My Profile</a>
-          <a href="order-history.html" @click.prevent="handleHeaderNavigation('orderHistory')">Order History</a>
-          <!-- Logout link can be added here if needed -->
-        </div>
-      </div>
+      <!-- User Icon -->
+      <a href="my-account.html" class="icon-btn" aria-label="Account">
+        <i data-feather="user"></i>
+      </a>
 
       <!-- Cart Button -->
       <a href="my cart.html" class="icon-btn" aria-label="Cart">
@@ -96,7 +89,6 @@
 <script>
   function headerComponent() {
     return {
-      isProfileDropdownOpen: false,
       isOnIndexPage: window.location.pathname.endsWith('index.html') || window.location.pathname === '/',
 
       toggleMobileMenu() {
@@ -104,28 +96,6 @@
         if (sidebar) {
           sidebar.classList.toggle("mobile-active");
           document.body.classList.toggle("sidebar-open");
-        }
-      },
-
-      async handleHeaderNavigation(view) {
-        const { data: { session } } = await window.supabase.auth.getSession();
-        const isAuthenticated = !!session;
-
-        if (!isAuthenticated) {
-          window.location.href = 'login-page.html';
-          return;
-        }
-
-        const targetUrl = view === 'profile' ? 'my-account.html' : 'order-history.html';
-        const currentPath = window.location.pathname.toLowerCase();
-        const isOnAccountPage = currentPath.endsWith('my-account.html') || currentPath.endsWith('order-history.html');
-        const accountPageEl = document.querySelector('[x-data="accountPage"]');
-
-        if (isOnAccountPage && accountPageEl && accountPageEl.__x) {
-          accountPageEl.__x.ctx.scope.setView(view);
-          this.isProfileDropdownOpen = false;
-        } else {
-          window.location.href = targetUrl;
         }
       }
     }

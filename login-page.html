@@ -165,7 +165,14 @@
           if (error) {
             alert(`Error: ${error.message}`);
           } else if (data.user) {
-            await handleRedirect(data.user);
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectUrl = urlParams.get('redirect');
+
+            if (redirectUrl) {
+              window.location.href = redirectUrl;
+            } else {
+              await handleRedirect(data.user);
+            }
           }
         });
 
