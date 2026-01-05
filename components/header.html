@@ -65,7 +65,7 @@
     </div>
     <div class="top-actions">
       <!-- User Icon -->
-      <a href="my-account.html" class="icon-btn" aria-label="Account">
+      <a :href="profileLink" class="icon-btn" aria-label="Account">
         <i data-feather="user"></i>
       </a>
 
@@ -89,7 +89,16 @@
 <script>
   function headerComponent() {
     return {
+      profileLink: 'login-page.html', // Default link
       isOnIndexPage: window.location.pathname.endsWith('index.html') || window.location.pathname === '/',
+
+      init() {
+        // Check for the Supabase session key in sessionStorage
+        const supabaseSessionKey = Object.keys(sessionStorage).find(key => key.startsWith('sb-'));
+        if (supabaseSessionKey) {
+          this.profileLink = 'my-account.html';
+        }
+      },
 
       toggleMobileMenu() {
         const sidebar = document.getElementById("categorySidebar");
