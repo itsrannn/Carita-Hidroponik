@@ -10,4 +10,20 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 // and then overwrite the global `supabase` variable with our
 // initialized client instance. This is a common pattern.
 const { createClient } = supabase;
-window.supabase = createClient(supabaseUrl, supabaseKey);
+
+// Custom storage adapter to force Supabase to use sessionStorage
+const sessionStorageAdapter = {
+  getItem: (key) => window.sessionStorage.getItem(key),
+  setItem: (key, value) => window.sessionStorage.setItem(key, value),
+  removeItem: (key) => window.sessionStorage.removeItem(key),
+};
+
+window.supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    storage: sessionStorageAdapter,
+    // Disable auto-refreshing of the token to prevent sessions from
+    // persisting indefinitely in the background.
+    autoRefreshToken: false,
+    persistSession: true, // Keep this true to use the storage adapter
+  },
+});
