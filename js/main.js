@@ -580,7 +580,7 @@ document.addEventListener("alpine:init", () => {
           this.$store.cart.clear(); // Use the store's method
           window.showNotification(`Your order with code ${orderCode} has been placed successfully!`);
 
-          setTimeout(() => { window.location.href = 'my-account.html?view=orders'; }, 1500);
+          setTimeout(() => { window.location.href = 'order-history.html'; }, 1500);
         },
 
         generateOrderCode() {
@@ -595,16 +595,361 @@ document.addEventListener("alpine:init", () => {
     }
 
     Alpine.data('checkoutPage', checkoutPage);
-});
 
-// Global logout function
-window.handleLogout = () => {
-    // No need to await signOut. Redirect immediately to avoid race conditions.
-    if (window.supabase) {
-        window.supabase.auth.signOut();
-    }
-    window.location.href = 'index.html';
-};
+    Alpine.data('accountPage', () => ({
+        // --- Core View State ---
+        activeView: 'profile', // 'profile' or 'orderHistory'
+
+        // --- User and Profile Data ---
+        user: null,
+        profile: {
+            full_name: '',
+            phone_number: '',
+            address: '',
+            postal_code: '',
+            province: '',
+            regency: '',
+            district: '',
+            village: '',
+            latitude: null,
+            longitude: null,
+        },
+        loading: false,
+
+        // --- Order History Data ---
+        orders: [],
+        isOrderLoading: true,
+        orderSubscription: null,
+
+        // --- UI State ---
+        editProfileMode: false,
+        editAddressMode: false,
+
+        // --- Map State ---
+        map: null,
+        marker: null,
+
+        // --- Regional Data ---
+        provinces: [],
+        regencies: [],
+        districts: [],
+        villages: [],
+        selectedProvince: '',
+        selectedRegency: '',
+        selectedDistrict: '',
+        selectedVillage: '',
+
+        // --- Initialization ---
+        async init() {
+            const { data: { session } } = await window.supabase.auth.getSession();
+            if (!session) {
+                const redirectUrl = encodeURIComponent(window.location.href);
+                window.location.href = `login-page.html?redirect=${redirectUrl}`;
+                return;
+            }
+            this.user = session.user;
+
+            // Set initial view based on URL
+            this.handlePathChange(window.location.pathname);
+
+            // Fetch all necessary data
+            await this.fetchProvinces();
+            await this.getProfile();
+            await this.fetchOrders();
+
+            // Listen for browser back/forward navigation
+            window.addEventListener('popstate', () => {
+                this.handlePathChange(window.location.pathname);
+            });
+
+            this.$watch('editAddressMode', (value) => {
+                if (value) {
+                    this.$nextTick(() => {
+                        this.initMap();
+                    });
+                }
+            });
+        },
+
+        // --- View and URL Management ---
+        setView(view) {
+            this.activeView = view;
+            const newPath = view === 'profile' ? '/my%20account.html' : '/order-history.html';
+            const fullUrl = window.location.origin + newPath;
+
+            // Update URL without reloading the page if it's different
+            if (window.location.pathname.replace(/ /g, '%20') !== newPath) {
+                history.pushState({ view }, '', fullUrl);
+            }
+        },
+
+        handlePathChange(path) {
+            if (path.endsWith('/order-history.html')) {
+                this.activeView = 'orderHistory';
+            } else {
+                this.activeView = 'profile';
+            }
+        },
+
+        // --- Map Functionality ---
+        initMap() {
+            const defaultLat = -2.5489;
+            const defaultLng = 118.0149;
+
+            const lat = this.profile.latitude || defaultLat;
+            const lng = this.profile.longitude || defaultLng;
+
+            if (this.map) {
+                this.map.remove();
+            }
+
+            this.map = L.map('map').setView([lat, lng], 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(this.map);
+
+            this.marker = L.marker([lat, lng], {
+                draggable: true
+            }).addTo(this.map);
+
+            this.marker.on('dragend', (event) => {
+                const position = this.marker.getLatLng();
+                this.profile.latitude = position.lat;
+                this.profile.longitude = position.lng;
+            });
+
+            this.map.on('click', (event) => {
+                const position = event.latlng;
+                this.marker.setLatLng(position);
+                this.profile.latitude = position.lat;
+                this.profile.longitude = position.lng;
+            });
+        },
+
+        // --- Regional Data Fetching ---
+        async fetchProvinces() {
+            try {
+                const response = await fetch('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json');
+                this.provinces = await response.json();
+            } catch (error) {
+                console.error("Failed to load provinces:", error);
+            }
+        },
+
+        async fetchRegencies() {
+            if (!this.selectedProvince) {
+                this.regencies = [];
+                this.districts = [];
+                this.villages = [];
+                return;
+            }
+            try {
+                const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${this.selectedProvince}.json`);
+                this.regencies = await response.json();
+                this.districts = [];
+                this.villages = [];
+            } catch (error) {
+                console.error("Failed to load regencies:", error);
+            }
+        },
+
+        async fetchDistricts() {
+            if (!this.selectedRegency) {
+                this.districts = [];
+                this.villages = [];
+                return;
+            }
+            try {
+                const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/${this.selectedRegency}.json`);
+                this.districts = await response.json();
+                this.villages = [];
+            } catch (error) {
+                console.error("Failed to load districts:", error);
+            }
+        },
+
+        async fetchVillages() {
+            if (!this.selectedDistrict) {
+                this.villages = [];
+                return;
+            }
+            try {
+                const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/villages/${this.selectedDistrict}.json`);
+                this.villages = await response.json();
+            } catch (error) {
+                console.error("Failed to load villages:", error);
+            }
+        },
+
+        updateProfileVillage() {
+            // Placeholder for future logic
+        },
+
+        // --- Order History Functionality ---
+        async fetchOrders() {
+            this.isOrderLoading = true;
+            try {
+                const { data, error } = await supabase
+                    .from('orders')
+                    .select('*')
+                    .eq('user_id', this.user.id)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+                this.orders = data;
+                this.subscribeToOrderChanges();
+            } catch (error) {
+                window.showNotification('Failed to load order history.', true);
+            } finally {
+                this.isOrderLoading = false;
+            }
+        },
+
+        subscribeToOrderChanges() {
+            // Unsubscribe from any existing channel to prevent duplicates
+            if (this.orderSubscription) {
+                supabase.removeChannel(this.orderSubscription);
+            }
+
+            this.orderSubscription = supabase
+                .channel(`public:orders:user_id=eq.${this.user.id}`)
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'orders',
+                    filter: `user_id=eq.${this.user.id}`
+                },
+                (payload) => {
+                    // Refetch all orders to ensure data consistency
+                    this.fetchOrders();
+                }
+            ).subscribe();
+        },
+
+        getStatusClass(status) {
+            if (!status) return 'status-default';
+            return `status-${status.toLowerCase().replace(/\s+/g, '-')}`;
+        },
+
+        // --- Profile and Address Management ---
+        async getProfile() {
+            this.loading = true;
+            try {
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select(`full_name, phone_number, address, postal_code, province, regency, district, village, latitude, longitude`)
+                    .eq('id', this.user.id)
+                    .single();
+
+                if (error) throw error;
+
+                if (data) {
+                    this.profile = { ...this.profile, ...data };
+
+                    if (this.profile.province && this.provinces.length > 0) {
+                        const province = this.provinces.find(p => p.name === this.profile.province);
+                        if (province) {
+                            this.selectedProvince = province.id;
+                            await this.fetchRegencies();
+
+                            if (this.profile.regency && this.regencies.length > 0) {
+                                const regency = this.regencies.find(r => r.name === this.profile.regency);
+                                if (regency) {
+                                    this.selectedRegency = regency.id;
+                                    await this.fetchDistricts();
+
+                                    if (this.profile.district && this.districts.length > 0) {
+                                        const district = this.districts.find(d => d.name === this.profile.district);
+                                        if (district) {
+                                            this.selectedDistrict = district.id;
+                                            await this.fetchVillages();
+
+                                            if (this.profile.village && this.villages.length > 0) {
+                                                const village = this.villages.find(v => v.name === this.profile.village);
+                                                if (village) {
+                                                    this.selectedVillage = village.id;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                alert('Failed to load profile: ' + error.message);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async updateProfile() {
+            this.loading = true;
+            try {
+                const { data, error } = await supabase.from('profiles').update({
+                    full_name: this.profile.full_name,
+                    phone_number: this.profile.phone_number,
+                    updated_at: new Date()
+                }).eq('id', this.user.id).select().single();
+
+                if (error) throw error;
+
+                if (data) {
+                    this.profile = { ...this.profile, ...data };
+                    alert('Profile updated successfully!');
+                    this.editProfileMode = false;
+                }
+            } catch (error) {
+                alert('Error updating profile: ' + error.message);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async updateAddress() {
+            this.loading = true;
+
+            const provinceName = this.provinces.find(p => p.id === this.selectedProvince)?.name || '';
+            const regencyName = this.regencies.find(r => r.id === this.selectedRegency)?.name || '';
+            const districtName = this.districts.find(d => d.id === this.selectedDistrict)?.name || '';
+            const villageName = this.villages.find(v => v.id === this.selectedVillage)?.name || '';
+
+            try {
+                const { data, error } = await supabase.from('profiles').update({
+                    address: this.profile.address,
+                    postal_code: this.profile.postal_code,
+                    province: provinceName,
+                    regency: regencyName,
+                    district: districtName,
+                    village: villageName,
+                    latitude: this.profile.latitude,
+                    longitude: this.profile.longitude,
+                    updated_at: new Date()
+                }).eq('id', this.user.id).select().single();
+
+                if (error) throw error;
+
+                if (data) {
+                    this.profile = { ...this.profile, ...data };
+                    alert('Address updated successfully!');
+                    this.editAddressMode = false;
+                }
+            } catch (error) {
+                alert('Error updating address: ' + error.message);
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        handleLogout() {
+            // No need to await signOut. Redirect immediately to avoid race conditions.
+            window.supabase.auth.signOut();
+            window.location.href = 'index.html';
+        }
+    }));
+});
 
 // Global notification
 window.showNotification = (message, isError = false) => {
