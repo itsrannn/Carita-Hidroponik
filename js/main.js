@@ -580,7 +580,11 @@ document.addEventListener("alpine:init", () => {
           this.$store.cart.clear(); // Use the store's method
           window.showNotification(`Your order with code ${orderCode} has been placed successfully!`);
 
-          setTimeout(() => { window.location.href = 'order-history.html'; }, 1500);
+          setTimeout(() => {
+            if (typeof showOrderHistorySection === 'function') {
+              showOrderHistorySection();
+            }
+          }, 1500);
         },
 
         generateOrderCode() {
@@ -674,17 +678,17 @@ document.addEventListener("alpine:init", () => {
         // --- View and URL Management ---
         setView(view) {
             this.activeView = view;
-            const newPath = view === 'profile' ? '/my%20account.html' : '/order-history.html';
+            const newPath = view === 'profile' ? '/my-account.html' : '/my-account.html#orders';
             const fullUrl = window.location.origin + newPath;
 
             // Update URL without reloading the page if it's different
-            if (window.location.pathname.replace(/ /g, '%20') !== newPath) {
+            if (window.location.href !== fullUrl) {
                 history.pushState({ view }, '', fullUrl);
             }
         },
 
-        handlePathChange(path) {
-            if (path.endsWith('/order-history.html')) {
+        handlePathChange() {
+            if (window.location.hash === '#orders') {
                 this.activeView = 'orderHistory';
             } else {
                 this.activeView = 'profile';
