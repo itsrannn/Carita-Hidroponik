@@ -662,8 +662,7 @@ document.addEventListener("alpine:init", () => {
         async init() {
             const { data: { session } } = await window.supabase.auth.getSession();
             if (!session) {
-                const redirectUrl = encodeURIComponent(window.location.href);
-                window.location.href = `login-page.html?redirect=${redirectUrl}`;
+                window.location.replace("login-page.html");
                 return;
             }
             this.user = session.user;
@@ -675,7 +674,7 @@ document.addEventListener("alpine:init", () => {
             supabase.auth.onAuthStateChange((event, session) => {
                 if (event === 'SIGNED_OUT') {
                     this.resetState();
-                    window.location.href = 'login-page.html';
+                    window.location.replace('login-page.html');
                 } else if (event === 'SIGNED_IN') {
                     // Potentially handle user change if needed in the future
                     this.user = session.user;
@@ -975,16 +974,9 @@ document.addEventListener("alpine:init", () => {
 
         async handleLogout() {
             this.loading = true;
-            try {
-                const { error } = await window.supabase.auth.signOut();
-                if (error) throw error;
-                this.resetState();
-                window.location.href = 'login-page.html';
-            } catch (error) {
-                alert('Error logging out: ' + error.message);
-            } finally {
-                this.loading = false;
-            }
+            await window.supabase.auth.signOut();
+            this.resetState();
+            window.location.replace('login-page.html');
         }
     }));
 });
