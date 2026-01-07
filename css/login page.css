@@ -92,7 +92,7 @@
   transition: color 0.2s ease;
 }
 
-.password-toggle-icon {
+.input-box .password-toggle-icon {
   /* Override default icon styles */
   left: auto;
   right: 0.9rem;
