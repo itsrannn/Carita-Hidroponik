@@ -600,24 +600,26 @@ document.addEventListener("alpine:init", () => {
 
     Alpine.data('checkoutPage', checkoutPage);
 
+    const initialProfileState = {
+        full_name: '',
+        phone_number: '',
+        address: '',
+        postal_code: '',
+        province: '',
+        regency: '',
+        district: '',
+        village: '',
+        latitude: null,
+        longitude: null,
+    };
+
     Alpine.data('accountPage', () => ({
         // --- Core View State ---
         activeView: 'profile', // 'profile' or 'orderHistory'
 
         // --- User and Profile Data ---
         user: null,
-        profile: {
-            full_name: '',
-            phone_number: '',
-            address: '',
-            postal_code: '',
-            province: '',
-            regency: '',
-            district: '',
-            village: '',
-            latitude: null,
-            longitude: null,
-        },
+        profile: { ...initialProfileState },
         loading: false,
 
         // --- Order History Data ---
@@ -643,6 +645,19 @@ document.addEventListener("alpine:init", () => {
         selectedDistrict: '',
         selectedVillage: '',
 
+        resetState() {
+            this.user = null;
+            this.profile = { ...initialProfileState };
+            this.orders = [];
+            this.activeView = 'profile';
+            this.editProfileMode = false;
+            this.editAddressMode = false;
+            if (this.orderSubscription) {
+                supabase.removeChannel(this.orderSubscription);
+                this.orderSubscription = null;
+            }
+        },
+
         // --- Initialization ---
         async init() {
             const { data: { session } } = await window.supabase.auth.getSession();
@@ -655,6 +670,17 @@ document.addEventListener("alpine:init", () => {
 
             // Set initial view based on URL
             this.handlePathChange(window.location.pathname);
+
+            // Setup real-time auth listener
+            supabase.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_OUT') {
+                    this.resetState();
+                    window.location.href = 'login-page.html';
+                } else if (event === 'SIGNED_IN') {
+                    // Potentially handle user change if needed in the future
+                    this.user = session.user;
+                }
+            });
 
             // Fetch all necessary data
             await this.fetchProvinces();
@@ -947,10 +973,18 @@ document.addEventListener("alpine:init", () => {
             }
         },
 
-        handleLogout() {
-            // No need to await signOut. Redirect immediately to avoid race conditions.
-            window.supabase.auth.signOut();
-            window.location.href = 'index.html';
+        async handleLogout() {
+            this.loading = true;
+            try {
+                const { error } = await window.supabase.auth.signOut();
+                if (error) throw error;
+                this.resetState();
+                window.location.href = 'login-page.html';
+            } catch (error) {
+                alert('Error logging out: ' + error.message);
+            } finally {
+                this.loading = false;
+            }
         }
     }));
 });
