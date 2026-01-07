@@ -59,7 +59,7 @@
 
 .input-box input {
   width: 100%;
-  padding: 0.9rem 1rem 0.9rem 2.8rem; /* ruang kiri buat icon */
+  padding: 0.9rem 2.8rem; /* ruang kiri & kanan buat icon */
   border: 1.5px solid #ccc;
   border-radius: 10px;
   font-size: 1rem;
@@ -90,6 +90,15 @@
   stroke-width: 2px;
   pointer-events: none;
   transition: color 0.2s ease;
+}
+
+.password-toggle-icon {
+  /* Override default icon styles */
+  left: auto;
+  right: 0.9rem;
+  cursor: pointer;
+  pointer-events: auto; /* Make the icon clickable */
+  z-index: 10; /* Ensure icon is on top of the input field */
 }
 
 .input-box input:focus + i,
@@ -131,6 +140,11 @@
 .login .btn:hover {
   background: var(--accent);
   transform: translateY(-2px);
+}
+
+.btn-wrapper {
+  text-align: center;
+  margin-top: 1rem;
 }
 
 .register-link {
