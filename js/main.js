@@ -871,36 +871,44 @@ document.addEventListener("alpine:init", () => {
                     .eq('id', this.user.id)
                     .single();
 
-                if (error) throw error;
+                if (error && error.code !== 'PGRST116') {
+                    // PGRST116 means no rows found, which is a valid case for a new user.
+                    // We only throw if it's a different, unexpected error.
+                    throw error;
+                }
 
                 if (data) {
                     this.profile = { ...this.profile, ...data };
 
+                    // --- Start of Sequential Address Hydration ---
                     if (this.profile.province && this.provinces.length > 0) {
                         const province = this.provinces.find(p => p.name === this.profile.province);
-                        if (province) {
-                            this.selectedProvince = province.id;
-                            await this.fetchRegencies();
+                        if (!province) return;
 
-                            if (this.profile.regency && this.regencies.length > 0) {
-                                const regency = this.regencies.find(r => r.name === this.profile.regency);
-                                if (regency) {
-                                    this.selectedRegency = regency.id;
-                                    await this.fetchDistricts();
+                        this.selectedProvince = province.id;
+                        await this.fetchRegencies();
+                        await this.$nextTick(); // Wait for DOM update
 
-                                    if (this.profile.district && this.districts.length > 0) {
-                                        const district = this.districts.find(d => d.name === this.profile.district);
-                                        if (district) {
-                                            this.selectedDistrict = district.id;
-                                            await this.fetchVillages();
+                        if (this.profile.regency && this.regencies.length > 0) {
+                            const regency = this.regencies.find(r => r.name === this.profile.regency);
+                            if (!regency) return;
 
-                                            if (this.profile.village && this.villages.length > 0) {
-                                                const village = this.villages.find(v => v.name === this.profile.village);
-                                                if (village) {
-                                                    this.selectedVillage = village.id;
-                                                }
-                                            }
-                                        }
+                            this.selectedRegency = regency.id;
+                            await this.fetchDistricts();
+                            await this.$nextTick(); // Wait for DOM update
+
+                            if (this.profile.district && this.districts.length > 0) {
+                                const district = this.districts.find(d => d.name === this.profile.district);
+                                if (!district) return;
+
+                                this.selectedDistrict = district.id;
+                                await this.fetchVillages();
+                                await this.$nextTick(); // Wait for DOM update
+
+                                if (this.profile.village && this.villages.length > 0) {
+                                    const village = this.villages.find(v => v.name === this.profile.village);
+                                    if (village) {
+                                        this.selectedVillage = village.id;
                                     }
                                 }
                             }
@@ -908,7 +916,7 @@ document.addEventListener("alpine:init", () => {
                     }
                 }
             } catch (error) {
-                alert('Failed to load profile: ' + error.message);
+                window.showNotification('Failed to load profile: ' + error.message, true);
             } finally {
                 this.loading = false;
             }
@@ -927,11 +935,11 @@ document.addEventListener("alpine:init", () => {
 
                 if (data) {
                     this.profile = { ...this.profile, ...data };
-                    alert('Profile updated successfully!');
+                    window.showNotification('Profile updated successfully!');
                     this.editProfileMode = false;
                 }
             } catch (error) {
-                alert('Error updating profile: ' + error.message);
+                window.showNotification('Error updating profile: ' + error.message, true);
             } finally {
                 this.loading = false;
             }
@@ -962,11 +970,11 @@ document.addEventListener("alpine:init", () => {
 
                 if (data) {
                     this.profile = { ...this.profile, ...data };
-                    alert('Address updated successfully!');
+                    window.showNotification('Address updated successfully!');
                     this.editAddressMode = false;
                 }
             } catch (error) {
-                alert('Error updating address: ' + error.message);
+                window.showNotification('Error updating address: ' + error.message, true);
             } finally {
                 this.loading = false;
             }
