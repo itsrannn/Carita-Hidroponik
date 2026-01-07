@@ -153,15 +153,19 @@
                 </div>
                 <div class="section-body">
                   <!-- Loading State -->
-                  <p x-show="isOrderLoading">Loading order history...</p>
-
-                  <!-- Empty State -->
-                  <div x-show="!isOrderLoading && orders.length === 0">
-                    <p>You have no order history.</p>
+                  <div x-show="isOrderLoading" x-transition>
+                    <p>Loading order history...</p>
                   </div>
 
-                  <!-- Orders List -->
-                  <div id="order-list-container" x-show="!isOrderLoading && orders.length > 0">
+                  <!-- Content: Empty State or Orders List -->
+                  <div x-show="!isOrderLoading" x-transition>
+                    <!-- Empty State -->
+                    <div x-show="orders.length === 0">
+                      <p>You have no order history.</p>
+                    </div>
+
+                    <!-- Orders List -->
+                    <div id="order-list-container" x-show="orders.length > 0">
                     <template x-for="order in orders" :key="order.id">
                       <div class="order-card">
                         <div class="order-header">
@@ -173,7 +177,7 @@
                         </div>
                         <div class="order-body">
                           <strong>Order Summary:</strong>
-                          <template x-for="item in (order.order_details || [])" :key="item.product_id">
+                          <template x-for="(item, index) in (order.order_details || [])" :key="order.id + '-' + index">
                             <div class="item">
                               <div class="item-info">
                                 <div class="item-name" x-text="item.name"></div>
