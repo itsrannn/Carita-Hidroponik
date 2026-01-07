@@ -42,12 +42,15 @@
                   required
                 />
                 <i data-feather="lock"></i>
+                <i class="password-toggle-icon" data-feather="eye"></i>
               </div>
               <div class="remember-forgot">
                 <label><input type="checkbox" />Remember me</label>
                 <a href="#">Forgot Password?</a>
               </div>
-              <button type="submit" class="btn">Login</button>
+              <div class="btn-wrapper">
+                <button type="submit" class="btn">Login</button>
+              </div>
               <div class="register-link">
                 <p>
                   Don't have an account?
@@ -85,13 +88,16 @@
                   required
                 />
                 <i data-feather="lock"></i>
+                <i class="password-toggle-icon" data-feather="eye"></i>
               </div>
 
               <div class="remember-forgot">
                 <label><input type="checkbox" /> Remember me</label>
               </div>
 
-              <button type="submit" class="btn">Register</button>
+              <div class="btn-wrapper">
+                <button type="submit" class="btn">Register</button>
+              </div>
 
               <div class="register-link">
                 <p>
@@ -205,6 +211,31 @@
     </script>
     <script>
       document.addEventListener("DOMContentLoaded", () => feather.replace());
+    </script>
+
+    <script>
+      // === Password Toggle Functionality ===
+      document.addEventListener('DOMContentLoaded', () => {
+        const togglePasswordIcons = document.querySelectorAll('.password-toggle-icon');
+
+        togglePasswordIcons.forEach(icon => {
+          icon.addEventListener('click', () => {
+            const inputBox = icon.closest('.input-box');
+            const passwordInput = inputBox.querySelector('input[type="password"], input[type="text"]');
+
+            if (passwordInput) {
+              // Toggle input type
+              const currentType = passwordInput.getAttribute('type');
+              passwordInput.setAttribute('type', currentType === 'password' ? 'text' : 'password');
+
+              // Toggle icon
+              const currentIcon = icon.getAttribute('data-feather');
+              icon.setAttribute('data-feather', currentIcon === 'eye' ? 'eye-off' : 'eye');
+              feather.replace(); // Re-render Feather icons
+            }
+          });
+        });
+      });
     </script>
   </body>
 </html>
