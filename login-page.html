@@ -215,26 +215,31 @@
 
     <script>
       // === Password Toggle Functionality ===
-      document.addEventListener('DOMContentLoaded', () => {
-        const togglePasswordIcons = document.querySelectorAll('.password-toggle-icon');
+      // Use event delegation to ensure the click handler works even after the icon is replaced by Feather Icons.
+      document.addEventListener('click', function (e) {
+        const icon = e.target.closest('.password-toggle-icon');
+        if (!icon) return;
 
-        togglePasswordIcons.forEach(icon => {
-          icon.addEventListener('click', () => {
-            const inputBox = icon.closest('.input-box');
-            const passwordInput = inputBox.querySelector('input[type="password"], input[type="text"]');
+        const inputBox = icon.closest('.input-box');
+        if (!inputBox) return;
 
-            if (passwordInput) {
-              // Toggle input type
-              const currentType = passwordInput.getAttribute('type');
-              passwordInput.setAttribute('type', currentType === 'password' ? 'text' : 'password');
+        const passwordInput = inputBox.querySelector('input[type="password"], input[type="text"]');
+        if (!passwordInput) return;
 
-              // Toggle icon
-              const currentIcon = icon.getAttribute('data-feather');
-              icon.setAttribute('data-feather', currentIcon === 'eye' ? 'eye-off' : 'eye');
-              feather.replace(); // Re-render Feather icons
-            }
-          });
-        });
+        // Toggle input type
+        const isPassword = passwordInput.type === 'password';
+        passwordInput.type = isPassword ? 'text' : 'password';
+
+        // Create a new <i> element to replace the old <svg> icon
+        const newIcon = document.createElement('i');
+        newIcon.className = 'password-toggle-icon';
+        newIcon.setAttribute('data-feather', isPassword ? 'eye-off' : 'eye');
+
+        // Replace the old icon with the new one
+        icon.replaceWith(newIcon);
+
+        // Tell Feather Icons to process the new icon
+        feather.replace();
       });
     </script>
   </body>
