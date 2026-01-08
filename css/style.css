@@ -898,7 +898,7 @@ body {
   max-height: 300px;
 }
 
-.slide-item {
+.hero-slider .slide-item {
   position: absolute;
   top: 0;
   left: 0;
@@ -909,7 +909,7 @@ body {
   transition: opacity 0.8s ease-in-out;
 }
 
-.slide-item.active {
+.hero-slider .slide-item.active {
   opacity: 1;
   visibility: visible;
 }
