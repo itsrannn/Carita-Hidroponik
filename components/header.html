@@ -129,7 +129,7 @@
           <img :src="$store.i18n.lang === 'en' ? 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/gb.svg' : 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/id.svg'" class="flag-icon" :alt="$store.i18n.supportedLangs[$store.i18n.lang]">
         </button>
 
-        <div id="language-switcher-options" x-show="open" class="dropdown-content" style="display: none;">
+        <div id="language-switcher-options" x-show="open" class="dropdown-content">
           <template x-for="lang in Object.keys($store.i18n.supportedLangs).filter(l => l !== $store.i18n.lang)" :key="lang">
             <a href="#" @click.prevent="$store.i18n.setLang(lang); open = false;" :data-lang="lang" :aria-label="'Switch language to ' + $store.i18n.supportedLangs[lang]">
               <img :src="lang === 'en' ? 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/gb.svg' : 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/id.svg'" class="flag-icon" :alt="$store.i18n.supportedLangs[lang]">
