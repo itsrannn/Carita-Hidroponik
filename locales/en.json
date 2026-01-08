@@ -1,0 +1,94 @@
+{
+  "nav": {
+    "categories": "Categories",
+    "products": "All Products",
+    "seeds": "Seeds",
+    "nutrition": "Nutrition",
+    "media": "Media",
+    "equipment": "Equipment",
+    "promos": "Promos"
+  },
+  "hero": {
+    "title1": "12.12 Big Sale!",
+    "subtitle1": "Get up to 50% off on selected items.",
+    "button1": "Shop Now",
+    "title2": "New A-B Mix Nutrition",
+    "subtitle2": "The perfect formula for your hydroponic plants.",
+    "button2": "Learn More",
+    "title3": "Starter Kit for Beginners",
+    "subtitle3": "Everything you need to start your hydroponic journey.",
+    "button3": "Get Yours",
+    "prevSlide": "Previous Slide",
+    "nextSlide": "Next Slide",
+    "goToSlide": "Go to slide"
+  },
+  "search": {
+    "placeholder": "Search for products..."
+  },
+  "sidebar": {
+    "help": "Need help?",
+    "contact": "Contact Us"
+  },
+  "promos": {
+    "title": "Promotions",
+    "subtitle": "Don't miss out on our special deals"
+  },
+  "products": {
+    "title": "Explore Our Products",
+    "subtitle": "Check out our best-selling products",
+    "noneFound": "No products found matching your criteria."
+  },
+  "sort": {
+    "by": "Sort by",
+    "default": "Default",
+    "priceAsc": "Price: Low to High",
+    "priceDesc": "Price: High to Low"
+  },
+  "pagination": {
+    "prev": "Previous page",
+    "next": "Next page"
+  },
+  "news": {
+    "latest": "Latest News",
+    "loading": "Loading news...",
+    "noneFound": "No news has been published yet."
+  },
+  "about": {
+    "title": "About Us",
+    "subtitle": "Learn more about our mission to provide the best hydroponic products."
+  },
+  "contact": {
+    "title": "Contact Us",
+    "intro": "We'd love to hear from you! If you have any questions, suggestions, or need assistance, please don't hesitate to reach out using the form below or through our contact information.",
+    "form": {
+      "name": "Full Name",
+      "email": "Email",
+      "message": "Message",
+      "send": "Send Message"
+    },
+    "info": {
+      "title": "Contact Information",
+      "email": "Email",
+      "whatsapp": "WhatsApp",
+      "address": "Address"
+    }
+  },
+  "login": {
+    "loginTitle": "Login",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Password",
+    "rememberMe": "Remember me",
+    "forgotPassword": "Forgot Password?",
+    "loginButton": "Login",
+    "noAccount": "Don't have an account?",
+    "registerLink": "Register",
+    "registerTitle": "Register",
+    "namePlaceholder": "Name",
+    "alreadyAccount": "Already have an account?",
+    "loginLink": "Login",
+    "verification": {
+      "title": "Registration Successful!",
+      "message": "We have sent a verification link to your email. Please check your inbox to complete the registration."
+    }
+  }
+}

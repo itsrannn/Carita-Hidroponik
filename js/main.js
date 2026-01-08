@@ -92,6 +92,50 @@ window.translateStatus = (status) => {
 
 document.addEventListener("alpine:init", () => {
   // --- Centralized Stores ---
+  Alpine.store('i18n', {
+    lang: localStorage.getItem('lang') || 'en',
+    supportedLangs: {
+        'en': 'English',
+        'id': 'Bahasa Indonesia'
+    },
+    translations: {},
+
+    async init() {
+        await this.load();
+        document.documentElement.lang = this.lang;
+    },
+
+    async load() {
+        try {
+            // Use a cache-busting query parameter for development
+            const response = await fetch(`locales/${this.lang}.json?v=${new Date().getTime()}`);
+            if (!response.ok) throw new Error('Translations file not found');
+            this.translations = await response.json();
+        } catch (error) {
+            console.error(`Failed to load translations for ${this.lang}:`, error);
+            this.translations = {}; // Fallback to empty object on error
+        }
+    },
+
+    setLang(newLang) {
+        if (!this.supportedLangs.hasOwnProperty(newLang)) {
+            console.warn(`Unsupported language: ${newLang}`);
+            return;
+        }
+        this.lang = newLang;
+        localStorage.setItem('lang', newLang);
+        document.documentElement.lang = this.lang;
+        this.load(); // Reload translations for the new language
+    },
+
+    t(key, fallback = null) {
+        // Traverses nested object keys, e.g., 'header.title'
+        const value = key.split('.').reduce((acc, cur) => acc && acc[cur], this.translations);
+        // Return the found value, a fallback, or the key itself for debugging
+        return value !== undefined && value !== null ? value : (fallback !== null ? fallback : key);
+    }
+  });
+
   Alpine.store("products", {
     all: [],
     isLoading: true,
@@ -156,7 +200,8 @@ document.addEventListener("alpine:init", () => {
           if (!product) return null;
 
           const { finalPrice, percentOff } = window.calculateDiscount(product);
-          const safeName = (product.name && product.name.en) ? product.name.en : "Unnamed Product";
+          const lang = Alpine.store('i18n').lang;
+          const safeName = (product.name && product.name[lang]) ? product.name[lang] : ((product.name && product.name['id']) ? product.name['id'] : "Unnamed Product");
 
           return {
             ...product,
@@ -194,7 +239,9 @@ document.addEventListener("alpine:init", () => {
     renderProductCard(item) {
       const { finalPrice, percentOff, originalPrice } = window.calculateDiscount(item);
       const isPromo = percentOff > 0;
-      const itemName = (item.name && typeof item.name.en === 'string') ? item.name.en : 'Unnamed Product';
+      const lang = this.$store.i18n.lang;
+      const itemName = (item.name && item.name[lang]) ? item.name[lang] : ((item.name && item.name['id']) ? item.name['id'] : 'Unnamed Product');
+
 
       const ribbonHtml = isPromo ? `
         <div class="discount-ribbon"><span>${percentOff}% OFF</span></div>
@@ -230,13 +277,16 @@ document.addEventListener("alpine:init", () => {
 
     processedItems() {
       let items = this.$store.products.all;
+      const lang = this.$store.i18n.lang;
 
       if (this.searchTerm.trim()) {
         const query = this.searchTerm.toLowerCase();
         items = items.filter(item => {
-          const nameMatch = item.name && typeof item.name.en === 'string' && item.name.en.toLowerCase().includes(query);
-          const descriptionMatch = item.description && typeof item.description.en === 'string' && item.description.en.toLowerCase().includes(query);
-          return nameMatch || descriptionMatch;
+            const name = (item.name && item.name[lang]) ? item.name[lang] : ((item.name && item.name['id']) ? item.name['id'] : '');
+            const description = (item.description && item.description[lang]) ? item.description[lang] : ((item.description && item.description['id']) ? item.description['id'] : '');
+            const nameMatch = name.toLowerCase().includes(query);
+            const descriptionMatch = description.toLowerCase().includes(query);
+            return nameMatch || descriptionMatch;
         });
       }
 
@@ -309,13 +359,14 @@ document.addEventListener("alpine:init", () => {
     bulkDiscountPercent: null,
 
     get filteredProducts() {
-      if (!this.searchQuery.products) return this.products;
-      const q = this.searchQuery.products.toLowerCase();
+        if (!this.searchQuery.products) return this.products;
+        const q = this.searchQuery.products.toLowerCase();
+        const lang = this.$store.i18n.lang;
 
-      return this.products.filter(p => {
-        const productName = (p.name.en || '').toLowerCase();
-        return productName.includes(q) || p.category.toLowerCase().includes(q);
-      });
+        return this.products.filter(p => {
+            const productName = (p.name && p.name[lang]) ? p.name[lang].toLowerCase() : ((p.name && p.name['id']) ? p.name['id'].toLowerCase() : '');
+            return productName.includes(q) || p.category.toLowerCase().includes(q);
+        });
     },
 
     get filteredNews() {
@@ -424,17 +475,17 @@ document.addEventListener("alpine:init", () => {
             const urlParams = new URLSearchParams(window.location.search);
             const productId = urlParams.get('id');
 
-            // Using Alpine.effect to react to changes in the store
             Alpine.effect(() => {
                 const isLoading = this.$store.products.isLoading;
+                const lang = this.$store.i18n.lang; // React to language changes
+
                 if (!isLoading) {
                     this.product = this.$store.products.getProductById(productId);
                     if (this.product) {
-                        const productName = this.product.name.en;
+                        const productName = (this.product.name && this.product.name[lang]) ? this.product.name[lang] : ((this.product.name && this.product.name['id']) ? this.product.name['id'] : '');
                         document.title = "Carita Hidroponik | " + productName;
                         this.fetchRelatedProducts();
                     }
-                    // Signal that the component is ready
                     this.ready = true;
                 }
             });
@@ -469,17 +520,20 @@ document.addEventListener("alpine:init", () => {
         // Getter to safely access translated name
         get productName() {
             if (!this.product) return '';
-            return this.product.name.en;
+            const lang = this.$store.i18n.lang;
+            return (this.product.name && this.product.name[lang]) ? this.product.name[lang] : ((this.product.name && this.product.name['id']) ? this.product.name['id'] : '');
         },
         // Getter to safely access translated description
         get productDescription() {
             if (!this.product) return '';
-            return this.product.description.en;
+            const lang = this.$store.i18n.lang;
+            return (this.product.description && this.product.description[lang]) ? this.product.description[lang] : ((this.product.description && this.product.description['id']) ? this.product.description['id'] : '');
         },
         // Getter for characteristics with the same pattern
         get productCharacteristics() {
             if (!this.product) return '';
-            return this.product.char.en;
+            const lang = this.$store.i18n.lang;
+            return (this.product.char && this.product.char[lang]) ? this.product.char[lang] : ((this.product.char && this.product.char['id']) ? this.product.char['id'] : '');
         }
     }));
 
@@ -599,6 +653,9 @@ document.addEventListener("alpine:init", () => {
     }
 
     Alpine.data('checkoutPage', checkoutPage);
+
+    // Initialize the i18n store as soon as Alpine is ready
+    Alpine.store('i18n').init();
 
     const initialProfileState = {
         full_name: '',

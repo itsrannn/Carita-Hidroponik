@@ -1,0 +1,94 @@
+{
+  "nav": {
+    "categories": "Kategori",
+    "products": "Semua Produk",
+    "seeds": "Benih",
+    "nutrition": "Nutrisi",
+    "media": "Media",
+    "equipment": "Peralatan",
+    "promos": "Promo"
+  },
+  "hero": {
+    "title1": "Diskon Besar 12.12!",
+    "subtitle1": "Dapatkan diskon hingga 50% untuk item tertentu.",
+    "button1": "Belanja Sekarang",
+    "title2": "Nutrisi A-B Mix Baru",
+    "subtitle2": "Formula sempurna untuk tanaman hidroponik Anda.",
+    "button2": "Pelajari Lebih Lanjut",
+    "title3": "Paket Pemula",
+    "subtitle3": "Semua yang Anda butuhkan untuk memulai perjalanan hidroponik Anda.",
+    "button3": "Dapatkan Milik Anda",
+    "prevSlide": "Slide Sebelumnya",
+    "nextSlide": "Slide Berikutnya",
+    "goToSlide": "Pergi ke slide"
+  },
+  "search": {
+    "placeholder": "Cari produk..."
+  },
+  "sidebar": {
+    "help": "Butuh bantuan?",
+    "contact": "Hubungi Kami"
+  },
+  "promos": {
+    "title": "Promosi",
+    "subtitle": "Jangan lewatkan penawaran spesial kami"
+  },
+  "products": {
+    "title": "Jelajahi Produk Kami",
+    "subtitle": "Lihat produk terlaris kami",
+    "noneFound": "Tidak ada produk yang ditemukan sesuai kriteria Anda."
+  },
+  "sort": {
+    "by": "Urutkan berdasarkan",
+    "default": "Default",
+    "priceAsc": "Harga: Rendah ke Tinggi",
+    "priceDesc": "Harga: Tinggi ke Rendah"
+  },
+  "pagination": {
+    "prev": "Halaman sebelumnya",
+    "next": "Halaman berikutnya"
+  },
+  "news": {
+    "latest": "Berita Terbaru",
+    "loading": "Memuat berita...",
+    "noneFound": "Belum ada berita yang diterbitkan."
+  },
+  "about": {
+    "title": "Tentang Kami",
+    "subtitle": "Pelajari lebih lanjut tentang misi kami untuk menyediakan produk hidroponik terbaik."
+  },
+  "contact": {
+    "title": "Hubungi Kami",
+    "intro": "Kami senang mendengar dari Anda! Jika Anda memiliki pertanyaan, saran, atau memerlukan bantuan, jangan ragu untuk menghubungi kami melalui formulir di bawah ini atau melalui informasi kontak kami.",
+    "form": {
+      "name": "Nama Lengkap",
+      "email": "Email",
+      "message": "Pesan",
+      "send": "Kirim Pesan"
+    },
+    "info": {
+      "title": "Informasi Kontak",
+      "email": "Email",
+      "whatsapp": "WhatsApp",
+      "address": "Alamat"
+    }
+  },
+  "login": {
+    "loginTitle": "Masuk",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Kata Sandi",
+    "rememberMe": "Ingat saya",
+    "forgotPassword": "Lupa Kata Sandi?",
+    "loginButton": "Masuk",
+    "noAccount": "Belum punya akun?",
+    "registerLink": "Daftar",
+    "registerTitle": "Daftar",
+    "namePlaceholder": "Nama",
+    "alreadyAccount": "Sudah punya akun?",
+    "loginLink": "Masuk",
+    "verification": {
+      "title": "Pendaftaran Berhasil!",
+      "message": "Kami telah mengirimkan tautan verifikasi ke email Anda. Silakan periksa kotak masuk Anda untuk menyelesaikan pendaftaran."
+    }
+  }
+}

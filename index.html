@@ -65,38 +65,38 @@
           <div class="slide-item" :class="{ 'active': currentIndex === 0 }">
             <img src="img/Flyer 1.jpg" alt="12.12 Sale Promo" class="hero-img" />
             <div class="hero-content">
-              <h1 class="hero-title">12.12 Big Sale!</h1>
-              <p class="hero-subtitle">Get up to 50% off on selected items.</p>
-              <a href="#Product" class="btn btn-accent btn-lg">Shop Now</a>
+              <h1 class="hero-title" x-text="$store.i18n.t('hero.title1')">12.12 Big Sale!</h1>
+              <p class="hero-subtitle" x-text="$store.i18n.t('hero.subtitle1')">Get up to 50% off on selected items.</p>
+              <a href="#Product" class="btn btn-accent btn-lg" x-text="$store.i18n.t('hero.button1')">Shop Now</a>
             </div>
           </div>
           <div class="slide-item" :class="{ 'active': currentIndex === 1 }">
             <img src="img/Flyer 2.jpg" alt="New A-B Mix Nutrition" class="hero-img" />
             <div class="hero-content">
-              <h1 class="hero-title">New A-B Mix Nutrition</h1>
-              <p class="hero-subtitle">The perfect formula for your hydroponic plants.</p>
-              <a href="#Product" class="btn btn-accent btn-lg">Learn More</a>
+              <h1 class="hero-title" x-text="$store.i18n.t('hero.title2')">New A-B Mix Nutrition</h1>
+              <p class="hero-subtitle" x-text="$store.i18n.t('hero.subtitle2')">The perfect formula for your hydroponic plants.</p>
+              <a href="#Product" class="btn btn-accent btn-lg" x-text="$store.i18n.t('hero.button2')">Learn More</a>
             </div>
           </div>
           <div class="slide-item" :class="{ 'active': currentIndex === 2 }">
             <img src="img/Flyer 3.jpg" alt="Starter Kit for Beginners" class="hero-img" />
             <div class="hero-content">
-              <h1 class="hero-title">Starter Kit for Beginners</h1>
-              <p class="hero-subtitle">Everything you need to start your hydroponic journey.</p>
-              <a href="#Product" class="btn btn-accent btn-lg">Get Yours</a>
+              <h1 class="hero-title" x-text="$store.i18n.t('hero.title3')">Starter Kit for Beginners</h1>
+              <p class="hero-subtitle" x-text="$store.i18n.t('hero.subtitle3')">Everything you need to start your hydroponic journey.</p>
+              <a href="#Product" class="btn btn-accent btn-lg" x-text="$store.i18n.t('hero.button3')">Get Yours</a>
             </div>
           </div>
 
-          <button @click="prevSlide()" class="slider-arrow prev" aria-label="Previous Slide">
+          <button @click="prevSlide()" class="slider-arrow prev" :aria-label="$store.i18n.t('hero.prevSlide')">
             <i data-feather="chevron-left"></i>
           </button>
-          <button @click="nextSlide()" class="slider-arrow next" aria-label="Next Slide">
+          <button @click="nextSlide()" class="slider-arrow next" :aria-label="$store.i18n.t('hero.nextSlide')">
             <i data-feather="chevron-right"></i>
           </button>
 
           <div class="slider-dots">
             <template x-for="(_, index) in slidesCount" :key="index">
-              <button @click="goToSlide(index)" class="slider-dot" :class="{ 'active': currentIndex === index }" :aria-label="`Go to slide ${index + 1}`"></button>
+              <button @click="goToSlide(index)" class="slider-dot" :class="{ 'active': currentIndex === index }" :aria-label="$store.i18n.t('hero.goToSlide', 'Go to slide') + ` ${index + 1}`"></button>
             </template>
           </div>
         </div>
@@ -104,7 +104,7 @@
 
         <div class="container" style="padding: 2rem 0;">
           <form class="search-bar" @submit.prevent="handleSearch(searchTerm)" style="margin: auto; max-width: 600px;">
-            <input type="search" x-model="searchTerm" placeholder="Search for products...">
+            <input type="search" x-model="searchTerm" :placeholder="$store.i18n.t('search.placeholder')">
             <button type="submit" class="search-button search-button-borderless">
               <i data-feather="search"></i>
             </button>
@@ -114,23 +114,23 @@
         <div class="layout container">
           <aside class="sidebar" id="categorySidebar">
             <div class="sidebar-header">
-              <h4>Categories</h4>
+              <h4 x-text="$store.i18n.t('nav.categories')">Categories</h4>
               <button id="sidebar-collapse" class="collapse-btn" aria-expanded="true" aria-controls="categoryList">−</button>
             </div>
 
             <nav id="categoryList" class="category-list">
               <ul>
-                <li><a href="#" @click.prevent="selectedCategory = 'all'" :class="{ 'active': selectedCategory === 'all' }">All Products</a></li>
-                <li><a href="#" @click.prevent="selectedCategory = 'benih'" :class="{ 'active': selectedCategory === 'benih' }">Seeds</a></li>
-                <li><a href="#" @click.prevent="selectedCategory = 'nutrisi'" :class="{ 'active': selectedCategory === 'nutrisi' }">Nutrition</a></li>
-                <li><a href="#" @click.prevent="selectedCategory = 'media'" :class="{ 'active': selectedCategory === 'media' }">Media</a></li>
-                <li><a href="#" @click.prevent="selectedCategory = 'peralatan'" :class="{ 'active': selectedCategory === 'peralatan' }">Equipment</a></li>
-                <li><a href="#" @click.prevent="selectedCategory = 'promo'" :class="{ 'active': selectedCategory === 'promo' }">Promos</a></li>
+                <li><a href="#" @click.prevent="selectedCategory = 'all'" :class="{ 'active': selectedCategory === 'all' }" x-text="$store.i18n.t('nav.products')">All Products</a></li>
+                <li><a href="#" @click.prevent="selectedCategory = 'benih'" :class="{ 'active': selectedCategory === 'benih' }" x-text="$store.i18n.t('nav.seeds')">Seeds</a></li>
+                <li><a href="#" @click.prevent="selectedCategory = 'nutrisi'" :class="{ 'active': selectedCategory === 'nutrisi' }" x-text="$store.i18n.t('nav.nutrition')">Nutrition</a></li>
+                <li><a href="#" @click.prevent="selectedCategory = 'media'" :class="{ 'active': selectedCategory === 'media' }" x-text="$store.i18n.t('nav.media')">Media</a></li>
+                <li><a href="#" @click.prevent="selectedCategory = 'peralatan'" :class="{ 'active': selectedCategory === 'peralatan' }" x-text="$store.i18n.t('nav.equipment')">Equipment</a></li>
+                <li><a href="#" @click.prevent="selectedCategory = 'promo'" :class="{ 'active': selectedCategory === 'promo' }" x-text="$store.i18n.t('nav.promos')">Promos</a></li>
               </ul>
             </nav>
 
             <div class="sidebar-footer">
-              <p class="small muted"><span>Need help?</span> <a href="contact.html">Contact Us</a></p>
+              <p class="small muted"><span x-text="$store.i18n.t('sidebar.help')">Need help?</span> <a href="contact.html" x-text="$store.i18n.t('sidebar.contact')">Contact Us</a></p>
             </div>
           </aside>
 
@@ -139,8 +139,8 @@
               <section id="promo" class="promo-section">
                 <div class="page-header">
                   <div class="header-left">
-                    <h1>Promotions</h1>
-                    <p class="muted">Don't miss out on our special deals</p>
+                    <h1 x-text="$store.i18n.t('promos.title')">Promotions</h1>
+                    <p class="muted" x-text="$store.i18n.t('promos.subtitle')">Don't miss out on our special deals</p>
                   </div>
                 </div>
 
@@ -154,16 +154,16 @@
 
             <section id="Product" class="page-header">
               <div class="header-left">
-                <h1>Featured Products</h1>
-                <p class="muted">Check out our best-selling products</p>
+                <h1 x-text="$store.i18n.t('products.title')">Featured Products</h1>
+                <p class="muted" x-text="$store.i18n.t('products.subtitle')">Check out our best-selling products</p>
               </div>
               <div class="header-actions">
                 <label class="sort">
-                  <span class="muted">Sort by</span>
+                  <span class="muted" x-text="$store.i18n.t('sort.by')">Sort by</span>
                   <select id="sortSelect" x-model="sortOption">
-                    <option value="default">Default</option>
-                    <option value="price-asc">Price: Low to High</option>
-                    <option value="price-desc">Price: High to Low</option>
+                    <option value="default" x-text="$store.i18n.t('sort.default')">Default</option>
+                    <option value="price-asc" x-text="$store.i18n.t('sort.priceAsc')">Price: Low to High</option>
+                    <option value="price-desc" x-text="$store.i18n.t('sort.priceDesc')">Price: High to Low</option>
                   </select>
                 </label>
               </div>
@@ -192,13 +192,13 @@
 
                 <template x-if="processedItems().length === 0">
                   <div class="no-products-message" style="text-align: center; padding: 2rem; width: 100%;">
-                    <p>No products found.</p>
+                    <p x-text="$store.i18n.t('products.noneFound')">No products found.</p>
                   </div>
                 </template>
               </section>
 
               <nav class="pagination" x-show="processedItems().length > 0">
-                <a href="#" @click.prevent="goToPage(currentPage - 1)" x-show="currentPage > 1" aria-label="Previous Page">&laquo;</a>
+                <a href="#" @click.prevent="goToPage(currentPage - 1)" x-show="currentPage > 1" :aria-label="$store.i18n.t('pagination.prev')">&laquo;</a>
 
                 <template x-for="page in totalPages()" :key="page">
                   <a
@@ -210,7 +210,7 @@
                   ></a>
                 </template>
 
-                <a href="#" @click.prevent="goToPage(currentPage + 1)" x-show="currentPage < totalPages()" aria-label="Next Page">&raquo;</a>
+                <a href="#" @click.prevent="goToPage(currentPage + 1)" x-show="currentPage < totalPages()" :aria-label="$store.i18n.t('pagination.next')">&raquo;</a>
               </nav>
             </div>
           </main>
@@ -220,24 +220,24 @@
 
     <!-- REFACTORED NEWS SECTION -->
     <section class="news-section container" x-data="newsSection()" x-init="fetchNews()">
-      <h2 class="section-title">Latest News</h2>
+      <h2 class="section-title" x-text="$store.i18n.t('news.latest')">Latest News</h2>
       <div class="news-grid">
         <template x-if="isLoading">
-          <p class="loading-text" style="text-align: center; padding: 2rem;">Memuat berita...</p>
+          <p class="loading-text" style="text-align: center; padding: 2rem;" x-text="$store.i18n.t('news.loading')">Memuat berita...</p>
         </template>
         <template x-if="!isLoading && newsItems.length === 0">
-          <p style="text-align: center;">Belum ada berita yang diterbitkan.</p>
+          <p style="text-align: center;" x-text="$store.i18n.t('news.noneFound')">Belum ada berita yang diterbitkan.</p>
         </template>
         <template x-for="newsItem in newsItems" :key="newsItem.id">
           <a :href="`news detail.html?id=${newsItem.id}`" class="news-card-link">
             <article class="news-card">
               <div class="news-card-image-wrapper">
-                <img :src="newsItem.image_url || 'img/coming soon.jpg'" :alt="newsItem.title" />
+                <img :src="newsItem.image_url || 'img/coming soon.jpg'" :alt="newsItem.title[$store.i18n.lang] || newsItem.title['id']" />
               </div>
               <div class="news-card-content">
                 <p class="news-card-meta" x-text="formatDate(newsItem.created_at)"></p>
-                <h3 x-text="newsItem.title.en"></h3>
-                <p class="news-card-excerpt" x-text="newsItem.excerpt.en"></p>
+                <h3 x-text="newsItem.title[$store.i18n.lang] || newsItem.title['id']"></h3>
+                <p class="news-card-excerpt" x-text="newsItem.excerpt[$store.i18n.lang] || newsItem.excerpt['id']"></p>
               </div>
             </article>
           </a>
@@ -247,8 +247,8 @@
     <!-- END REFACTORED NEWS SECTION -->
 
     <section class="preview">
-      <h2>About Us</h2>
-      <p>Learn more about our mission to provide the best hydroponic products.</p>
+      <h2 x-text="$store.i18n.t('about.title')">About Us</h2>
+      <p x-text="$store.i18n.t('about.subtitle')">Learn more about our mission to provide the best hydroponic products.</p>
     </section>
 
     <div id="footer-include"></div>
