@@ -51,12 +51,25 @@
     align-items: center;
   }
 
-  .lang-switcher img {
-    width: 21px;
-    height: 21px;
-    border-radius: 9999px;
-    object-fit: cover;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  .lang-switcher .dropdown-content {
+    min-width: 0; /* Override default */
+    width: auto;
+    white-space: nowrap;
+    padding: 6px;
+    border-radius: 6px;
+    background-color: #fff;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+  }
+
+  .lang-switcher .dropdown-content a {
+    display: inline-block;
+    padding: 6px;
+    border-radius: 4px;
+    line-height: 1;
+  }
+
+  .lang-switcher .dropdown-content a:hover {
+    background-color: #f1f1f1;
   }
 
   .lang-switcher .dropdown-content button {
@@ -100,26 +113,26 @@
     </div>
     <div class="top-actions">
       <!-- User Icon -->
-      <a :href="profileLink" class="icon-btn" aria-label="Account">
+      <a :href="profileLink" class="header-icon" aria-label="Account">
         <i data-feather="user"></i>
       </a>
 
       <!-- Cart Button -->
-      <a href="my cart.html" class="icon-btn" aria-label="Cart">
+      <a href="my cart.html" class="header-icon icon-btn" aria-label="Cart">
         <i data-feather="shopping-cart"></i>
         <span id="cart-count" class="badge" x-show="$store.cart.quantity > 0" x-text="$store.cart.quantity"></span>
       </a>
 
       <!-- Language Switcher -->
       <div id="language-switcher" x-data="{ open: false }" @click.away="open = false" class="lang-switcher">
-        <button @click="open = !open" :aria-label="'Current language: ' + $store.i18n.supportedLangs[$store.i18n.lang]">
-          <img :src="$store.i18n.lang === 'en' ? 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/gb.svg' : 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/id.svg'" :alt="$store.i18n.supportedLangs[$store.i18n.lang]">
+        <button @click="open = !open" class="header-icon" :aria-label="'Current language: ' + $store.i18n.supportedLangs[$store.i18n.lang]">
+          <img :src="$store.i18n.lang === 'en' ? 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/gb.svg' : 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/id.svg'" class="flag-icon" :alt="$store.i18n.supportedLangs[$store.i18n.lang]">
         </button>
 
         <div id="language-switcher-options" x-show="open" class="dropdown-content" style="display: none;">
           <template x-for="lang in Object.keys($store.i18n.supportedLangs).filter(l => l !== $store.i18n.lang)" :key="lang">
             <a href="#" @click.prevent="$store.i18n.setLang(lang); open = false;" :data-lang="lang" :aria-label="'Switch language to ' + $store.i18n.supportedLangs[lang]">
-              <img :src="lang === 'en' ? 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/gb.svg' : 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/id.svg'" :alt="$store.i18n.supportedLangs[lang]">
+              <img :src="lang === 'en' ? 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/gb.svg' : 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/id.svg'" class="flag-icon" :alt="$store.i18n.supportedLangs[lang]">
             </a>
           </template>
         </div>
