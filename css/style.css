@@ -65,30 +65,52 @@ body {
 
 .top-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 14px;
   align-items: center;
 }
 
-.icon-btn {
-  background: transparent;
-  border: 0;
+/* A new universal class for header icon containers */
+.header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background-color: transparent;
   color: #fff;
   cursor: pointer;
-  font-size: 1.05rem;
-  padding: 0.45rem;
-  border-radius: 6px;
-  transition: 0.2s;
+  transition: background-color 0.2s ease;
   position: relative;
 }
 
-.icon-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+.header-icon:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.header-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.header-icon .flag-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  object-fit: cover;
+}
+
+/* Stripping sizing/padding from original .icon-btn to avoid conflicts */
+.icon-btn {
+  padding: 0;
 }
 
 .icon-btn .badge {
   position: absolute;
-  top: -5px;
-  right: -5px;
+  top: 4px;
+  right: 4px;
   background: #fff;
   color: var(--green);
   font-weight: 700;
