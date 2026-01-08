@@ -19,7 +19,7 @@
     <script src="js/supabase-client.js"></script>
   </head>
 
-  <body>
+  <body x-data @alpine:init="$store.i18n.init()">
     <div id="header-include"></div>
 
     <section class="login">
@@ -28,9 +28,9 @@
           <div class="login-form active" id="login-form">
             <form>
               <input type="hidden" name="login" value="1" />
-              <h1>Login</h1>
+              <h1 x-text="$store.i18n.t('login.loginTitle')">Login</h1>
               <div class="input-box">
-                <input type="email" name="email" placeholder="Email" required />
+                <input type="email" name="email" :placeholder="$store.i18n.t('login.emailPlaceholder')" required />
                 <i data-feather="mail"></i>
               </div>
 
@@ -38,45 +38,45 @@
                 <input
                   type="password"
                   name="password"
-                  placeholder="Password"
+                  :placeholder="$store.i18n.t('login.passwordPlaceholder')"
                   required
                 />
                 <i data-feather="lock"></i>
                 <i class="password-toggle-icon" data-feather="eye"></i>
               </div>
               <div class="remember-forgot">
-                <label><input type="checkbox" />Remember me</label>
-                <a href="#">Forgot Password?</a>
+                <label><input type="checkbox" /><span x-text="$store.i18n.t('login.rememberMe')">Remember me</span></label>
+                <a href="#" x-text="$store.i18n.t('login.forgotPassword')">Forgot Password?</a>
               </div>
               <div class="btn-wrapper">
-                <button type="submit" class="btn">Login</button>
+                <button type="submit" class="btn" x-text="$store.i18n.t('login.loginButton')">Login</button>
               </div>
               <div class="register-link">
                 <p>
-                  Don't have an account?
-                  <a href="#" onclick="showForm('register-form')">Register</a>
+                  <span x-text="$store.i18n.t('login.noAccount')">Don't have an account?</span>
+                  <a href="#" onclick="showForm('register-form')" x-text="$store.i18n.t('login.registerLink')">Register</a>
                 </p>
               </div>
             </form>
           </div>
           <div id="verification-message" style="text-align: center; color: var(--text-color); display: none;">
-            <h2>Registration Successful!</h2>
-            <p>We have sent a verification link to your email. Please check your inbox to complete the registration.</p>
+            <h2 x-text="$store.i18n.t('login.verification.title')">Registration Successful!</h2>
+            <p x-text="$store.i18n.t('login.verification.message')">We have sent a verification link to your email. Please check your inbox to complete the registration.</p>
           </div>
         </section>
         <section>
           <div class="login-form" id="register-form">
             <form>
               <input type="hidden" name="register" value="1" />
-              <h1>Register</h1>
+              <h1 x-text="$store.i18n.t('login.registerTitle')">Register</h1>
 
               <div class="input-box">
-                <input type="text" name="name" placeholder="Name" required />
+                <input type="text" name="name" :placeholder="$store.i18n.t('login.namePlaceholder')" required />
                 <i data-feather="user"></i>
               </div>
 
               <div class="input-box">
-                <input type="email" name="email" placeholder="Email" required />
+                <input type="email" name="email" :placeholder="$store.i18n.t('login.emailPlaceholder')" required />
                 <i data-feather="mail"></i>
               </div>
 
@@ -84,7 +84,7 @@
                 <input
                   type="password"
                   name="password"
-                  placeholder="Password"
+                  :placeholder="$store.i18n.t('login.passwordPlaceholder')"
                   required
                 />
                 <i data-feather="lock"></i>
@@ -92,17 +92,17 @@
               </div>
 
               <div class="remember-forgot">
-                <label><input type="checkbox" /> Remember me</label>
+                <label><input type="checkbox" /> <span x-text="$store.i18n.t('login.rememberMe')">Remember me</span></label>
               </div>
 
               <div class="btn-wrapper">
-                <button type="submit" class="btn">Register</button>
+                <button type="submit" class="btn" x-text="$store.i18n.t('login.registerLink')">Register</button>
               </div>
 
               <div class="register-link">
                 <p>
-                  Already have an account?
-                  <a href="#" onclick="showForm('login-form')">Login</a>
+                  <span x-text="$store.i18n.t('login.alreadyAccount')">Already have an account?</span>
+                  <a href="#" onclick="showForm('login-form')" x-text="$store.i18n.t('login.loginLink')">Login</a>
                 </p>
               </div>
             </form>

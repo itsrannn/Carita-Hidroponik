@@ -14,13 +14,13 @@
     />
   </head>
 
-  <body>
+  <body x-data @alpine:init="$store.i18n.init()">
     <div id="header-include"></div>
 
     <main class="main-content">
       <div class="container">
-        <h1 class="page-title" style="text-align: center; margin-bottom: 1rem;">Contact Us</h1>
-        <p>
+        <h1 class="page-title" style="text-align: center; margin-bottom: 1rem;" x-text="$store.i18n.t('contact.title')">Contact Us</h1>
+        <p x-text="$store.i18n.t('contact.intro')">
           We'd love to hear from you! If you have any questions, suggestions,
           or need assistance, please don't hesitate to reach out using the
           form below or through our contact information.
@@ -28,33 +28,33 @@
 
         <div class="contact-grid">
           <form class="contact-form">
-            <label for="name">Full Name</label>
+            <label for="name" x-text="$store.i18n.t('contact.form.name')">Full Name</label>
             <input type="text" id="name" name="name" required />
 
-            <label for="email">Email</label>
+            <label for="email" x-text="$store.i18n.t('contact.form.email')">Email</label>
             <input type="email" id="email" name="email" required />
 
-            <label for="message">Message</label>
+            <label for="message" x-text="$store.i18n.t('contact.form.message')">Message</label>
             <textarea id="message" name="message" rows="5" required></textarea>
 
-            <button type="submit" class="btn-primary">Send Message</button>
+            <button type="submit" class="btn-primary" x-text="$store.i18n.t('contact.form.send')">Send Message</button>
           </form>
 
           <div class="contact-info">
-            <h2>Contact Information</h2>
+            <h2 x-text="$store.i18n.t('contact.info.title')">Contact Information</h2>
             <p>
-              Email:
+              <span x-text="$store.i18n.t('contact.info.email')">Email</span>:
               <a href="mailto:info@caritahidroponik.com"
                 >info@caritahidroponik.com</a
               >
             </p>
             <p>
-              WhatsApp:
+              <span x-text="$store.i18n.t('contact.info.whatsapp')">WhatsApp</span>:
               <a href="https://wa.me/628213969880" target="_blank"
                 >+62 821-3969-8804</a
               >
             </p>
-            <p>Address: Jl. Example No.123, Jakarta, Indonesia</p>
+            <p><span x-text="$store.i18n.t('contact.info.address')">Address</span>: Jl. Example No.123, Jakarta, Indonesia</p>
             <div class="social-icons">
               <a href="#" aria-label="Instagram"
                 ><i data-feather="instagram"></i
