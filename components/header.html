@@ -1,4 +1,4 @@
-<!-- Menambahkan sedikit style untuk dropdown sederhana -->
+<!-- ================= LANGUAGE SWITCHER DROPDOWN FIX ================= -->
 <style>
   .user-dropdown {
     position: relative;
@@ -6,40 +6,19 @@
   }
 
   .dropdown-content {
-    /* display: none; /* Dihapus, dikontrol oleh x-show */
     position: absolute;
     right: 0;
-    background-color: #f9f9f9;
-    min-width: 160px;
-    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    background-color: #fff;
+    box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
     z-index: 100;
-    border-radius: 4px;
-    overflow: hidden; /* Agar border-radius terlihat */
+    border-radius: 6px;
+    overflow: visible;
   }
 
-  .dropdown-content a {
-    color: black;
-    padding: 12px 16px;
-    text-decoration: none;
-    display: block;
-    font-size: 0.9em; /* Ukuran font lebih kecil */
-  }
-
-  .dropdown-content a:hover {
-    background-color: #f1f1f1;
-  }
-
-  /* --- Language Switcher Styles --- */
+  /* === Language Switcher === */
   .lang-switcher {
     position: relative;
     display: inline-block;
-  }
-
-  .lang-switcher .dropdown-content {
-    min-width: 0; /* Override default */
-    padding: 5px;
-    border-radius: 4px;
-    background-color: #fff;
   }
 
   .lang-switcher button {
@@ -52,19 +31,25 @@
   }
 
   .lang-switcher .dropdown-content {
-    min-width: 0; /* Override default */
-    width: auto;
-    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
     padding: 6px;
-    border-radius: 6px;
+    min-width: 48px;        /* ✅ FIX: prevent collapse */
+    min-height: 40px;       /* ✅ FIX: ensure visibility */
+
     background-color: #fff;
-    box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
-    min-height: 40px;
+    border-radius: 6px;
+    white-space: nowrap;
   }
 
   .lang-switcher .dropdown-content a {
-    display: inline-block;
-    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 4px;
     border-radius: 4px;
     line-height: 1;
   }
@@ -73,37 +58,16 @@
     background-color: #f1f1f1;
   }
 
-  .lang-switcher .dropdown-content button {
+  .flag-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 9999px;
     display: block;
-    width: 100%;
   }
 </style>
 
-<style>
-  /* --- Global Notification Style --- */
-  #notification {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: var(--accent);
-    color: white;
-    padding: 1rem 2rem;
-    border-radius: 8px;
-    z-index: 2000;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease, bottom 0.3s ease;
-  }
-  #notification.show {
-    opacity: 1;
-    visibility: visible;
-    bottom: 40px;
-  }
-</style>
-
+<!-- ================= HEADER ================= -->
 <header x-data="headerComponent()" class="topbar">
-  <!-- Global Notification Element -->
   <div id="notification"></div>
 
   <div class="container topbar-inner">
@@ -112,40 +76,70 @@
         <img src="img/Logo Putih.png" alt="Carita Hidroponik" class="brand-logo" />
       </a>
     </div>
+
     <div class="top-actions">
       <!-- User Icon -->
       <a :href="profileLink" class="header-icon" aria-label="Account">
         <i data-feather="user"></i>
       </a>
 
-      <!-- Cart Button -->
+      <!-- Cart Icon -->
       <a href="my cart.html" class="header-icon icon-btn" aria-label="Cart">
         <i data-feather="shopping-cart"></i>
-        <span id="cart-count" class="badge" x-show="$store.cart.quantity > 0" x-text="$store.cart.quantity"></span>
+        <span id="cart-count"
+              class="badge"
+              x-show="$store.cart.quantity > 0"
+              x-text="$store.cart.quantity"></span>
       </a>
 
       <!-- Language Switcher -->
-      <div id="language-switcher" x-data="{ open: false }" @click.away="open = false" class="lang-switcher">
-        <button @click="open = !open" class="header-icon" :aria-label="'Current language: ' + $store.i18n.supportedLangs[$store.i18n.lang]">
-          <img :src="$store.i18n.lang === 'en' ? 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/gb.svg' : 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/id.svg'" class="flag-icon" :alt="$store.i18n.supportedLangs[$store.i18n.lang]">
+      <div id="language-switcher"
+           x-data="{ open: false }"
+           @click.away="open = false"
+           class="lang-switcher">
+
+        <button @click="open = !open"
+                class="header-icon"
+                :aria-label="'Current language: ' + $store.i18n.supportedLangs[$store.i18n.lang]">
+
+          <img
+            :src="$store.i18n.lang === 'en'
+              ? 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/gb.svg'
+              : 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/id.svg'"
+            class="flag-icon"
+            :alt="$store.i18n.supportedLangs[$store.i18n.lang]">
         </button>
 
-        <div id="language-switcher-options" x-show="open" class="dropdown-content">
-          <template x-for="lang in Object.keys($store.i18n.supportedLangs).filter(l => l !== $store.i18n.lang)" :key="lang">
-            <a href="#" @click.prevent="$store.i18n.setLang(lang); open = false;" :data-lang="lang" :aria-label="'Switch language to ' + $store.i18n.supportedLangs[lang]">
-              <img :src="lang === 'en' ? 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/gb.svg' : 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/id.svg'" class="flag-icon" :alt="$store.i18n.supportedLangs[lang]">
+        <div x-show="open" x-transition class="dropdown-content">
+          <template
+            x-for="lang in Object.keys($store.i18n.supportedLangs).filter(l => l !== $store.i18n.lang)"
+            :key="lang">
+
+            <a href="#"
+               @click.prevent="$store.i18n.setLang(lang); open = false"
+               :aria-label="'Switch language to ' + $store.i18n.supportedLangs[lang]">
+
+              <img
+                :src="lang === 'en'
+                  ? 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/gb.svg'
+                  : 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/id.svg'"
+                class="flag-icon"
+                :alt="$store.i18n.supportedLangs[lang]">
             </a>
+
           </template>
         </div>
       </div>
 
-      <!-- Hamburger Menu (Mobile Only, on Index Page) -->
+      <!-- Hamburger (Mobile) -->
       <template x-if="isOnIndexPage">
-        <button @click="toggleMobileMenu()" id="menu-toggle" class="icon-btn" aria-label="Buka Menu">
+        <button @click="toggleMobileMenu()"
+                id="menu-toggle"
+                class="icon-btn"
+                aria-label="Buka Menu">
           <i data-feather="menu"></i>
         </button>
       </template>
-
     </div>
   </div>
 </header>
@@ -153,12 +147,14 @@
 <script>
   function headerComponent() {
     return {
-      profileLink: 'login-page.html', // Default link
-      isOnIndexPage: window.location.pathname.endsWith('index.html') || window.location.pathname === '/',
+      profileLink: 'login-page.html',
+      isOnIndexPage:
+        window.location.pathname.endsWith('index.html') ||
+        window.location.pathname === '/',
 
       init() {
-        // Check for the Supabase session key in sessionStorage
-        const supabaseSessionKey = Object.keys(sessionStorage).find(key => key.startsWith('sb-'));
+        const supabaseSessionKey = Object.keys(sessionStorage)
+          .find(key => key.startsWith('sb-'));
         if (supabaseSessionKey) {
           this.profileLink = 'my-account.html';
         }
