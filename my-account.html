@@ -27,12 +27,12 @@
           <nav class="account-nav">
             <ul>
               <li>
-                <a href="#" onclick="showProfileSection()" :class="{'active': activeView === 'profile'}">
+                <a href="#" @click.prevent="activeView = 'profile'" :class="{'active': activeView === 'profile'}">
                   <i data-feather="user"></i> My Profile
                 </a>
               </li>
               <li>
-                <a href="#" onclick="showOrderHistorySection()" :class="{'active': activeView === 'orderHistory'}">
+                <a href="#" @click.prevent="activeView = 'orderHistory'" :class="{'active': activeView === 'orderHistory'}">
                   <i data-feather="shopping-bag"></i> Order History
                 </a>
               </li>
@@ -217,22 +217,6 @@
   <script src="js/main.js"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js?nounit=true" defer></script>
-
-  <script>
-    function showProfileSection() {
-      const accountPageElement = document.querySelector('[x-data="accountPage"]');
-      if (accountPageElement && accountPageElement.__x) {
-        accountPageElement.__x.ctx.scope.setView('profile');
-      }
-    }
-
-    function showOrderHistorySection() {
-      const accountPageElement = document.querySelector('[x-data="accountPage"]');
-      if (accountPageElement && accountPageElement.__x) {
-        accountPageElement.__x.ctx.scope.setView('orderHistory');
-      }
-    }
-  </script>
 </body>
 
 </html>
