@@ -158,14 +158,11 @@
                 <p class="muted" x-text="$store.i18n.t('products.subtitle')">Check out our best-selling products</p>
               </div>
               <div class="header-actions">
-                <label class="sort">
-                  <span class="muted" x-text="$store.i18n.t('sort.by')">Sort by</span>
-                  <select id="sortSelect" x-model="sortOption">
-                    <option value="default" x-text="$store.i18n.t('sort.default')">Default</option>
-                    <option value="price-asc" x-text="$store.i18n.t('sort.priceAsc')">Price: Low to High</option>
-                    <option value="price-desc" x-text="$store.i18n.t('sort.priceDesc')">Price: High to Low</option>
-                  </select>
-                </label>
+                <button @click="toggleSort()" class="sort-toggle-btn">
+                  <span x-text="$store.i18n.t('sort.priceLabel')"></span>
+                  <span x-show="sortOption === 'price-asc'">↑</span>
+                  <span x-show="sortOption === 'price-desc'">↓</span>
+                </button>
               </div>
             </section>
 

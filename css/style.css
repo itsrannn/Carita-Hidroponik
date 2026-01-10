@@ -288,52 +288,34 @@ body {
   text-align: left;
 }
 
-/* ===== SORT BY (Compact Version) ===== */
-.sort {
-  display: flex;
+/* ===== SORT BY (Toggle Button Version) ===== */
+.sort-toggle-btn {
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   background: #fff;
   border: 1px solid rgba(0, 0, 0, 0.08);
-  padding: 0.25rem 0.6rem; /* diperkecil */
+  padding: 0.5rem 0.8rem;
   border-radius: 8px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   transition: all 0.2s ease;
-  width: 160px;
+  white-space: nowrap;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--green);
+  cursor: pointer;
 }
 
-.sort:hover {
+.sort-toggle-btn:hover {
   border-color: var(--accent);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-}
-
-.sort .muted {
-  font-weight: 600;
-  color: var(--green);
-  font-size: 0.85rem; /* lebih kecil */
-  letter-spacing: 0.2px;
-}
-
-.sort select {
-  border: none;
-  outline: none;
-  background: transparent;
-  font-size: 0.85rem; /* kecil juga */
-  font-weight: 600;
-  color: #333;
-  cursor: pointer;
-  border-radius: 6px;
-  padding: 0.2rem 0.3rem;
-}
-
-.sort select:hover {
   color: var(--accent);
 }
 
-.sort select option {
-  font-weight: 500;
-  background: #fff;
-  color: #333;
+.sort-toggle-btn span {
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .products-grid {
