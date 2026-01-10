@@ -58,7 +58,7 @@
         .discount-options { border-left: 3px solid #15803d; padding-left: 1.5rem; margin-top: 1rem; }
     </style>
 </head>
-<body x-data="editorPage" x-init="init()">
+<body x-data="editorPage" x-init="init(); $store.i18n.init()">
 
     <div id="header-include"></div>
 
@@ -147,8 +147,8 @@
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
     <script src="js/supabase-client.js"></script>
-    <script src="js/main.js"></script>
     <script src="js/admin-auth.js"></script>
+    <script src="js/main.js"></script>
     <script>
       document.addEventListener('alpine:init', () => {
         Alpine.data('editorPage', () => ({

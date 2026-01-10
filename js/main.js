@@ -93,7 +93,7 @@ window.translateStatus = (status) => {
 document.addEventListener("alpine:init", () => {
   // --- Centralized Stores ---
   Alpine.store('i18n', {
-    lang: sessionStorage.getItem('lang') || 'en',
+    lang: localStorage.getItem('language') || 'id',
     supportedLangs: {
         'en': 'English',
         'id': 'Bahasa Indonesia'
@@ -123,7 +123,7 @@ document.addEventListener("alpine:init", () => {
             return;
         }
         this.lang = newLang;
-        sessionStorage.setItem('lang', newLang);
+        localStorage.setItem('language', newLang);
         document.documentElement.lang = this.lang;
         this.load(); // Reload translations for the new language
     },
@@ -653,9 +653,6 @@ document.addEventListener("alpine:init", () => {
     }
 
     Alpine.data('checkoutPage', checkoutPage);
-
-    // Initialize the i18n store as soon as Alpine is ready
-    Alpine.store('i18n').init();
 
     const initialProfileState = {
         full_name: '',

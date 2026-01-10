@@ -136,7 +136,7 @@
         }
     </style>
 </head>
-<body>
+<body x-data x-init="$store.i18n.init()">
 
     <div id="header-include"></div>
 
@@ -243,8 +243,8 @@
 
     <!-- App Logic -->
     <script src="js/supabase-client.js"></script>
-    <script src="js/main.js"></script>
     <script src="js/admin-auth.js"></script>
+    <script src="js/main.js"></script>
     <script src="js/admin-dashboard.js"></script>
 </body>
 </html>
