@@ -724,9 +724,6 @@ document.addEventListener("alpine:init", () => {
             }
             this.user = session.user;
 
-            // Set initial view based on URL
-            this.handlePathChange(window.location.pathname);
-
             // Setup real-time auth listener
             supabase.auth.onAuthStateChange((event, session) => {
                 if (event === 'SIGNED_OUT') {
@@ -743,11 +740,6 @@ document.addEventListener("alpine:init", () => {
             await this.getProfile();
             await this.fetchOrders();
 
-            // Listen for browser back/forward navigation
-            window.addEventListener('popstate', () => {
-                this.handlePathChange(window.location.pathname);
-            });
-
             this.$watch('editAddressMode', (value) => {
                 if (value) {
                     this.$nextTick(() => {
@@ -758,24 +750,6 @@ document.addEventListener("alpine:init", () => {
         },
 
         // --- View and URL Management ---
-        setView(view) {
-            this.activeView = view;
-            const newPath = view === 'profile' ? '/my-account.html' : '/my-account.html#orders';
-            const fullUrl = window.location.origin + newPath;
-
-            // Update URL without reloading the page if it's different
-            if (window.location.href !== fullUrl) {
-                history.pushState({ view }, '', fullUrl);
-            }
-        },
-
-        handlePathChange() {
-            if (window.location.hash === '#orders') {
-                this.activeView = 'orderHistory';
-            } else {
-                this.activeView = 'profile';
-            }
-        },
 
         // --- Map Functionality ---
         initMap() {
