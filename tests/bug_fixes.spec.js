@@ -74,7 +74,7 @@ test.describe('Verification of Bug Fixes and Translations', () => {
       await expect(addToCartButton).toBeVisible();
       await expect(addToCartButton).toContainText('Add to Cart');
       const descriptionTitle = page.locator('.product-detail-description h2');
-      await expect(descriptionTitle).toHaveText('Product Description');
+      await expect(descriptionTitle).toHaveText('Specifications');
   });
 
   test('News detail page is translated', async ({ page }) => {

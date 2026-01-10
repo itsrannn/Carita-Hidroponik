@@ -6,23 +6,23 @@
         alt="Carita Hidroponik"
         class="footer-logo"
       />
-      <p>
+      <p x-text="$store.i18n.t('footer.description')">
         Carita Hidroponik is a trusted provider of hydroponic seeds, nutrients, and equipment. We support farmers and hobbyists in achieving the best harvests.
       </p>
     </div>
 
     <div class="footer-col">
-      <h4>Menu</h4>
+      <h4 x-text="$store.i18n.t('footer.menu')">Menu</h4>
       <ul>
         <li><a href="index.html">Home</a></li>
-        <li><a href="index.html#Product">Products</a></li>
-          <li><a href="my-account.html">My Account</a></li>
-        <li><a href="contact.html">About Us</a></li>
+        <li><a href="index.html#Product" x-text="$store.i18n.t('nav.products')">Products</a></li>
+          <li><a href="my-account.html" x-text="$store.i18n.t('footer.myAccount')">My Account</a></li>
+        <li><a href="contact.html" x-text="$store.i18n.t('about.title')">About Us</a></li>
       </ul>
     </div>
 
     <div class="footer-col">
-      <h4>Contact Us</h4>
+      <h4 x-text="$store.i18n.t('footer.contactUs')">Contact Us</h4>
       <p>
         Email:
         <a href="mailto:info@caritahidroponik.com">info@caritahidroponik.com</a>
@@ -41,6 +41,6 @@
     </div>
   </div>
   <div class="footer-bottom">
-    <p>© 2025 Carita Hidroponik — All Rights Reserved.</p>
+    <p x-text="$store.i18n.t('footer.copyright')">© 2025 Carita Hidroponik — All Rights Reserved.</p>
   </div>
 </footer>

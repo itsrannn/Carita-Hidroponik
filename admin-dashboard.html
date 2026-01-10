@@ -143,46 +143,46 @@
     <main class="main-content">
         <div class="container">
             <div class="dashboard-header">
-                <h1 class="page-title">Analytics Dashboard</h1>
-                <p>Analyze sales trends and product performance.</p>
+                <h1 class="page-title" x-text="$store.i18n.t('admin.dashboard.title')">Analytics Dashboard</h1>
+                <p x-text="$store.i18n.t('admin.dashboard.description')">Analyze sales trends and product performance.</p>
                  <div style="margin-top: 1rem;">
-                    <a href="admin.html" class="btn">&larr; Back to Admin Center</a>
+                    <a href="admin.html" class="btn">&larr; <span x-text="$store.i18n.t('admin.dashboard.backLink')">Back to Admin Center</span></a>
                 </div>
             </div>
 
             <!-- KPI Cards -->
             <div id="kpi-grid" class="kpi-grid">
                 <div class="kpi-card">
-                    <div class="label">Total Revenue</div>
-                    <div class="value" id="total-revenue">Loading...</div>
+                    <div class="label" x-text="$store.i18n.t('admin.dashboard.kpi.totalRevenue')">Total Revenue</div>
+                    <div class="value" id="total-revenue" x-text="$store.i18n.t('admin.dashboard.kpi.loading')">Loading...</div>
                 </div>
                 <div class="kpi-card">
-                    <div class="label">Completed Orders</div>
-                    <div class="value" id="total-orders">Loading...</div>
+                    <div class="label" x-text="$store.i18n.t('admin.dashboard.kpi.completedOrders')">Completed Orders</div>
+                    <div class="value" id="total-orders" x-text="$store.i18n.t('admin.dashboard.kpi.loading')">Loading...</div>
                 </div>
                 <div class="kpi-card">
-                    <div class="label">Best Selling Product</div>
-                    <div class="value" id="best-selling-product">Loading...</div>
+                    <div class="label" x-text="$store.i18n.t('admin.dashboard.kpi.bestSelling')">Best Selling Product</div>
+                    <div class="value" id="best-selling-product" x-text="$store.i18n.t('admin.dashboard.kpi.loading')">Loading...</div>
                 </div>
             </div>
 
             <div class="charts-grid">
                 <!-- Sales Trend Chart -->
                 <div class="chart-container">
-                    <h3>Revenue Trend</h3>
+                    <h3 x-text="$store.i18n.t('admin.dashboard.revenueTrend.title')">Revenue Trend</h3>
                     <div class="chart-header-controls">
                         <div class="chart-title-nav">
                              <div class="nav-buttons">
                                 <button id="prev-period">&lt;</button>
                                 <button id="next-period">&gt;</button>
                             </div>
-                            <h4 id="chart-date-range">Loading...</h4>
+                            <h4 id="chart-date-range" x-text="$store.i18n.t('admin.dashboard.kpi.loading')">Loading...</h4>
                         </div>
                         <div class="filter-controls">
                             <select id="revenue-period-filter" class="filter-select" style="padding: 0.5rem; border-radius: 8px; border: 1px solid #ccc;">
-                                <option value="daily">Daily</option>
-                                <option value="weekly">Weekly</option>
-                                <option value="monthly">Monthly</option>
+                                <option value="daily" x-text="$store.i18n.t('admin.dashboard.revenueTrend.daily')">Daily</option>
+                                <option value="weekly" x-text="$store.i18n.t('admin.dashboard.revenueTrend.weekly')">Weekly</option>
+                                <option value="monthly" x-text="$store.i18n.t('admin.dashboard.revenueTrend.monthly')">Monthly</option>
                             </select>
                         </div>
                     </div>
@@ -192,15 +192,15 @@
                 <!-- Product Sales Chart -->
                 <div class="chart-container" id="product-sales-chart-container">
                     <div class="chart-header-controls">
-                        <h3>Sales by Product</h3>
+                        <h3 x-text="$store.i18n.t('admin.dashboard.productSales.title')">Sales by Product</h3>
                         <div class="filter-controls">
                             <select id="product-chart-type" class="filter-select" style="padding: 0.5rem; border-radius: 8px; border: 1px solid #ccc;">
-                                <option value="bar">Bar Chart</option>
-                                <option value="pie">Pie Chart</option>
+                                <option value="bar" x-text="$store.i18n.t('admin.dashboard.productSales.barChart')">Bar Chart</option>
+                                <option value="pie" x-text="$store.i18n.t('admin.dashboard.productSales.pieChart')">Pie Chart</option>
                             </select>
                             <select id="product-period-filter" class="filter-select" style="padding: 0.5rem; border-radius: 8px; border: 1px solid #ccc;">
-                                <option value="total">Total Sales</option>
-                                <option value="monthly">By Month</option>
+                                <option value="total" x-text="$store.i18n.t('admin.dashboard.productSales.totalSales')">Total Sales</option>
+                                <option value="monthly" x-text="$store.i18n.t('admin.dashboard.productSales.byMonth')">By Month</option>
                             </select>
                             <select id="product-month-filter" class="filter-select" style="display: none; padding: 0.5rem; border-radius: 8px; border: 1px solid #ccc;">
                                 <!-- Month options will be populated by JavaScript -->
@@ -215,22 +215,22 @@
 
             <!-- Recent Transactions Table -->
             <div class="chart-container">
-                <h3>Recent Transactions</h3>
+                <h3 x-text="$store.i18n.t('admin.dashboard.transactions.title')">Recent Transactions</h3>
                 <table class="modern-table">
                     <thead>
                         <tr>
-                            <th>Order ID</th>
-                            <th>Date</th>
-                            <th>Customer</th>
-                            <th>Total</th>
-                            <th>Status</th>
+                            <th x-text="$store.i18n.t('admin.dashboard.transactions.orderId')">Order ID</th>
+                            <th x-text="$store.i18n.t('admin.dashboard.transactions.date')">Date</th>
+                            <th x-text="$store.i18n.t('admin.dashboard.transactions.customer')">Customer</th>
+                            <th x-text="$store.i18n.t('admin.dashboard.transactions.total')">Total</th>
+                            <th x-text="$store.i18n.t('admin.dashboard.transactions.status')">Status</th>
                         </tr>
                     </thead>
                     <tbody id="recent-transactions-body">
                         <!-- Rows will be inserted by JS -->
                     </tbody>
                 </table>
-                 <p id="loading-transactions" style="display: none;">Loading transactions...</p>
+                 <p id="loading-transactions" style="display: none;" x-text="$store.i18n.t('admin.dashboard.transactions.loading')">Loading transactions...</p>
             </div>
         </div>
     </main>

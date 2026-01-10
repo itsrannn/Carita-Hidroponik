@@ -74,9 +74,10 @@ function applySortAndFilter() {
 
 function renderOrders(orders) {
     ordersGrid.innerHTML = '';
+    const t = Alpine.store('i18n').t;
 
     if (orders.length === 0) {
-        ordersGrid.innerHTML = '<p>No orders match your filter criteria.</p>';
+        ordersGrid.innerHTML = `<p>${t('admin.orders.empty') || 'No orders match your filter criteria.'}</p>`;
         return;
     }
 
@@ -85,7 +86,7 @@ function renderOrders(orders) {
         card.className = 'admin-order-card';
         card.id = `order-${order.id}`;
 
-        let itemsList = '<li>No items found</li>';
+        let itemsList = `<li>${t('admin.orders.card.noItems') || 'No items found'}</li>`;
         const orderItems = order.order_details || order.items;
         if (orderItems && orderItems.length > 0) {
             itemsList = orderItems.map(item => `<li>${item.name} (x${item.quantity})</li>`).join('');
@@ -106,14 +107,14 @@ function renderOrders(orders) {
         card.innerHTML = `
             <div class="admin-order-card">
                 <div class="order-header">
-                    <h3>Order #${order.order_code || order.id}</h3>
+                    <h3>${t('account.orders.orderId')} #${order.order_code || order.id}</h3>
                     <span class="status-badge status-${(order.status || '').toLowerCase().replace(/\s+/g, '-')}">${window.translateStatus(order.status)}</span>
                 </div>
                 <div class="order-body">
-                    <div class="info-group"><label>Date</label><p>${orderDate}</p></div>
-                    <div class="info-group"><label>Customer</label><p>${customerInfo}</p></div>
-                    <div class="info-group"><label>Shipping Address</label><p>${addressInfo}</p></div>
-                    <div class="info-group"><label>Items</label><ul>${itemsList}</ul></div>
+                    <div class="info-group"><label>${t('admin.dashboard.transactions.date')}</label><p>${orderDate}</p></div>
+                    <div class="info-group"><label>${t('admin.dashboard.transactions.customer')}</label><p>${customerInfo}</p></div>
+                    <div class="info-group"><label>${t('admin.orders.card.shippingAddress')}</label><p>${addressInfo}</p></div>
+                    <div class="info-group"><label>${t('admin.orders.card.orderSummary')}</label><ul>${itemsList}</ul></div>
                 </div>
                 <div class="order-footer action-buttons"></div>
             </div>
@@ -127,6 +128,8 @@ function renderOrders(orders) {
 
 function addActions(cell, order) {
     cell.innerHTML = '';
+    const t = Alpine.store('i18n').t;
+
     const statusTransitions = {
         'Menunggu Konfirmasi': ['Diproses', 'Ditolak'],
         'Diproses': ['Dalam Pengiriman'],
@@ -136,13 +139,15 @@ function addActions(cell, order) {
     if (availableActions) {
         availableActions.forEach(action => {
             const buttonClass = action === 'Ditolak' ? 'btn-admin-reject' : 'btn-admin-approve';
-            const actionBtn = createButton(window.translateStatus(action), () => updateOrderStatus(order, action), buttonClass);
+            const actionKey = `admin.orders.status.${action.toLowerCase().replace(/\s+/g, '-')}`;
+            const actionText = t(actionKey, window.translateStatus(action));
+            const actionBtn = createButton(actionText, () => updateOrderStatus(order, action), buttonClass);
             cell.appendChild(actionBtn);
         });
     } else if (order.status === 'Selesai' || order.status === 'Ditolak'){
         cell.textContent = window.translateStatus(order.status);
     } else {
-        cell.textContent = 'No actions available';
+        cell.textContent = t('admin.orders.card.noActions') || 'No actions available';
     }
 }
 

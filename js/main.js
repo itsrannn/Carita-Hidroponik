@@ -93,7 +93,7 @@ window.translateStatus = (status) => {
 document.addEventListener("alpine:init", () => {
   // --- Centralized Stores ---
   Alpine.store('i18n', {
-    lang: localStorage.getItem('lang') || 'en',
+    lang: sessionStorage.getItem('lang') || 'en',
     supportedLangs: {
         'en': 'English',
         'id': 'Bahasa Indonesia'
@@ -123,7 +123,7 @@ document.addEventListener("alpine:init", () => {
             return;
         }
         this.lang = newLang;
-        localStorage.setItem('lang', newLang);
+        sessionStorage.setItem('lang', newLang);
         document.documentElement.lang = this.lang;
         this.load(); // Reload translations for the new language
     },

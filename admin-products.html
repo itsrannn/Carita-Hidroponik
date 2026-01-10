@@ -64,51 +64,57 @@
         <div class="container">
             <div class="dashboard-header">
                 <div class="dashboard-header-text">
-                    <a href="admin.html" class="back-link">&larr; Back to Dashboard</a>
-                    <h1 class="page-title">Content Management</h1>
-                    <p>Manage the products and news displayed on your site.</p>
+                    <a href="admin.html" class="back-link">&larr; <span x-text="$store.i18n.t('admin.products.backLink')">Back to Dashboard</span></a>
+                    <h1 class="page-title" x-text="$store.i18n.t('admin.products.title')">Content Management</h1>
+                    <p x-text="$store.i18n.t('admin.products.description')">Manage the products and news displayed on your site.</p>
                 </div>
                 <a :href="`admin-editor.html?type=${activeTab}&action=add`" class="btn-add">
-                    <span x-show="activeTab === 'products'">+ Add Product</span>
-                    <span x-show="activeTab === 'news'">+ Add News</span>
+                    <span x-show="activeTab === 'products'" x-text="$store.i18n.t('admin.products.addProduct')">+ Add Product</span>
+                    <span x-show="activeTab === 'news'" x-text="$store.i18n.t('admin.products.addNews')">+ Add News</span>
                 </a>
             </div>
 
             <div class="content-card">
                 <div class="tabs">
-                    <button type="button" @click="activeTab = 'products'" :class="{ 'active': activeTab === 'products' }" class="tab-button">Product Management</button>
-                    <button type="button" @click="activeTab = 'news'" :class="{ 'active': activeTab === 'news' }" class="tab-button">News Management</button>
+                    <button type="button" @click="activeTab = 'products'" :class="{ 'active': activeTab === 'products' }" class="tab-button" x-text="$store.i18n.t('admin.products.tabs.products')">Product Management</button>
+                    <button type="button" @click="activeTab = 'news'" :class="{ 'active': activeTab === 'news' }" class="tab-button" x-text="$store.i18n.t('admin.products.tabs.news')">News Management</button>
                 </div>
 
                 <!-- Products Tab -->
                 <div x-show="activeTab === 'products'" class="tab-content">
 
                     <div class="bulk-discount-section">
-                        <h3>Bulk Discount Tool</h3>
-                        <p>Apply a percentage discount to all products that don't have a fixed discount price set.</p>
+                        <h3 x-text="$store.i18n.t('admin.products.bulk.title')">Bulk Discount Tool</h3>
+                        <p x-text="$store.i18n.t('admin.products.bulk.description')">Apply a percentage discount to all products that don't have a fixed discount price set.</p>
                         <div class="bulk-discount-controls">
-                            <input type="number" x-model.number="bulkDiscountPercent" placeholder="e.g., 15" min="1" max="90">
-                            <button @click="applyBulkDiscount()">Apply Discount</button>
+                            <input type="number" x-model.number="bulkDiscountPercent" :placeholder="$store.i18n.t('admin.products.bulk.placeholder')" min="1" max="90">
+                            <button @click="applyBulkDiscount()" x-text="$store.i18n.t('admin.products.bulk.applyButton')">Apply Discount</button>
                         </div>
                     </div>
 
                     <div class="table-header">
-                        <h2>Product List</h2>
-                        <input type="text" x-model="searchQuery.products" placeholder="Search products..." class="search-input">
+                        <h2 x-text="$store.i18n.t('admin.products.productList.title')">Product List</h2>
+                        <input type="text" x-model="searchQuery.products" :placeholder="$store.i18n.t('admin.products.productList.search')" class="search-input">
                     </div>
                     <div class="data-table-wrapper">
                         <table class="data-table">
                             <thead>
-                                <tr><th>Image</th><th>Product</th><th>Category</th><th>Price</th><th>Actions</th></tr>
+                                <tr>
+                                    <th x-text="$store.i18n.t('admin.products.productList.table.image')">Image</th>
+                                    <th x-text="$store.i18n.t('admin.products.productList.table.product')">Product</th>
+                                    <th x-text="$store.i18n.t('admin.products.productList.table.category')">Category</th>
+                                    <th x-text="$store.i18n.t('admin.products.productList.table.price')">Price</th>
+                                    <th x-text="$store.i18n.t('admin.products.productList.table.actions')">Actions</th>
+                                </tr>
                             </thead>
                             <tbody>
-                                <template x-if="isLoading.products"><tr><td colspan="5" style="text-align: center;">Loading products...</td></tr></template>
-                                <template x-if="!isLoading.products && filteredProducts.length === 0"><tr><td colspan="5" style="text-align: center;">No matching products found.</td></tr></template>
+                                <template x-if="isLoading.products"><tr><td colspan="5" style="text-align: center;" x-text="$store.i18n.t('admin.products.productList.loading')">Loading products...</td></tr></template>
+                                <template x-if="!isLoading.products && filteredProducts.length === 0"><tr><td colspan="5" style="text-align: center;" x-text="$store.i18n.t('admin.products.productList.empty')">No matching products found.</td></tr></template>
                                 <template x-for="product in filteredProducts" :key="product.id">
                                     <tr>
                                         <td data-label="Image"><img :src="product.image_url" :alt="product.name.en" class="item-image"></td>
                                         <td data-label="Product" class="item-name">
-                                            <span x-text="product.name.en"></span>
+                                            <span x-text="product.name[$store.i18n.lang] || product.name.en"></span>
                                             <template x-if="(product.discount_percent && product.discount_percent > 0) || (product.discount_price && product.discount_price > 0)">
                                                 <span class="discount-badge"
                                                       x-text="`DISCOUNT -${
@@ -123,8 +129,8 @@
                                         <td data-label="Price" x-text="window.formatRupiah(product.price)"></td>
                                         <td data-label="Actions">
                                             <div class="action-buttons">
-                                                <a :href="`admin-editor.html?type=product&action=edit&id=${product.id}`" class="btn-edit">Edit</a>
-                                                <button type="button" class="btn-delete" @click="deleteItem(product.id, product.image_url)">Delete</button>
+                                                <a :href="`admin-editor.html?type=product&action=edit&id=${product.id}`" class="btn-edit" x-text="$store.i18n.t('admin.products.productList.edit')">Edit</a>
+                                                <button type="button" class="btn-delete" @click="deleteItem(product.id, product.image_url)" x-text="$store.i18n.t('admin.products.productList.delete')">Delete</button>
                                             </div>
                                         </td>
                                     </tr>
@@ -137,26 +143,31 @@
                 <!-- News Tab -->
                 <div x-show="activeTab === 'news'" class="tab-content">
                      <div class="table-header">
-                        <h2>News List</h2>
-                        <input type="text" x-model="searchQuery.news" placeholder="Search news..." class="search-input">
+                        <h2 x-text="$store.i18n.t('admin.products.newsList.title')">News List</h2>
+                        <input type="text" x-model="searchQuery.news" :placeholder="$store.i18n.t('admin.products.newsList.search')" class="search-input">
                     </div>
                     <div class="data-table-wrapper">
                         <table class="data-table">
                             <thead>
-                                <tr><th>Image</th><th>Title</th><th>Excerpt</th><th>Actions</th></tr>
+                                <tr>
+                                    <th x-text="$store.i18n.t('admin.products.newsList.table.image')">Image</th>
+                                    <th x-text="$store.i18n.t('admin.products.newsList.table.title')">Title</th>
+                                    <th x-text="$store.i18n.t('admin.products.newsList.table.excerpt')">Excerpt</th>
+                                    <th x-text="$store.i18n.t('admin.products.newsList.table.actions')">Actions</th>
+                                </tr>
                             </thead>
                             <tbody>
-                                <template x-if="isLoading.news"><tr><td colspan="4" style="text-align: center;">Loading news...</td></tr></template>
-                                <template x-if="!isLoading.news && filteredNews.length === 0"><tr><td colspan="4" style="text-align: center;">No matching news found.</td></tr></template>
+                                <template x-if="isLoading.news"><tr><td colspan="4" style="text-align: center;" x-text="$store.i18n.t('admin.products.newsList.loading')">Loading news...</td></tr></template>
+                                <template x-if="!isLoading.news && filteredNews.length === 0"><tr><td colspan="4" style="text-align: center;" x-text="$store.i18n.t('admin.products.newsList.empty')">No matching news found.</td></tr></template>
                                 <template x-for="item in filteredNews" :key="item.id">
                                     <tr>
                                         <td data-label="Image"><img :src="item.image_url" :alt="item.title.en" class="item-image"></td>
-                                        <td data-label="Title" class="item-name" x-text="item.title.en"></td>
-                                        <td data-label="Excerpt" x-text="item.excerpt.en"></td>
+                                        <td data-label="Title" class="item-name" x-text="item.title[$store.i18n.lang] || item.title.en"></td>
+                                        <td data-label="Excerpt" x-text="item.excerpt[$store.i18n.lang] || item.excerpt.en"></td>
                                         <td data-label="Actions">
                                             <div class="action-buttons">
-                                                <a :href="`admin-editor.html?type=news&action=edit&id=${item.id}`" class="btn-edit">Edit</a>
-                                                <button type="button" class="btn-delete" @click="deleteItem(item.id, item.image_url)">Delete</button>
+                                                <a :href="`admin-editor.html?type=news&action=edit&id=${item.id}`" class="btn-edit" x-text="$store.i18n.t('admin.products.productList.edit')">Edit</a>
+                                                <button type="button" class="btn-delete" @click="deleteItem(item.id, item.image_url)" x-text="$store.i18n.t('admin.products.productList.delete')">Delete</button>
                                             </div>
                                         </td>
                                     </tr>

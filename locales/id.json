@@ -90,5 +90,238 @@
       "title": "Pendaftaran Berhasil!",
       "message": "Kami telah mengirimkan tautan verifikasi ke email Anda. Silakan periksa kotak masuk Anda untuk menyelesaikan pendaftaran."
     }
+  },
+  "footer": {
+    "description": "Carita Hidroponik adalah penyedia terpercaya benih, nutrisi, dan peralatan hidroponik. Kami mendukung petani dan hobiis dalam mencapai panen terbaik.",
+    "menu": "Menu",
+    "myAccount": "Akun Saya",
+    "contactUs": "Hubungi Kami",
+    "copyright": "© 2025 Carita Hidroponik — Hak Cipta Dilindungi."
+  },
+  "cart": {
+    "title": "Keranjang Belanja",
+    "header": {
+      "product": "Produk",
+      "quantity": "Kuantitas",
+      "total": "Total"
+    },
+    "emptyMessage": "Keranjang belanja Anda kosong.",
+    "continueShopping": "Lanjutkan Belanja",
+    "summary": {
+      "title": "Ringkasan Pesanan",
+      "couponPlaceholder": "Masukkan Kode Kupon",
+      "applyButton": "Terapkan",
+      "subtotal": "Subtotal",
+      "shipping": "Pengiriman",
+      "total": "Total",
+      "checkoutButton": "Lanjutkan ke Pembayaran"
+    },
+    "modal": {
+      "profileIncomplete": {
+        "title": "Profil Belum Lengkap",
+        "body": "Untuk melanjutkan ke pembayaran, Anda harus melengkapi informasi profil Anda terlebih dahulu.",
+        "laterButton": "Nanti",
+        "completeButton": "Lengkapi Profil"
+      },
+      "notLoggedIn": {
+        "title": "Anda Belum Masuk",
+        "body": "Silakan masuk atau buat akun untuk melanjutkan proses pembayaran.",
+        "closeButton": "Tutup",
+        "loginButton": "Masuk atau Daftar"
+      },
+      "confirmOrder": {
+        "title": "Konfirmasi Pesanan Anda",
+        "cancelButton": "Batal",
+        "confirmButton": "Konfirmasi & Pesan"
+      }
+    }
+  },
+  "account": {
+    "title": "Akun Saya",
+    "sidebar": {
+      "myProfile": "Profil Saya",
+      "orderHistory": "Riwayat Pesanan",
+      "logout": "Keluar"
+    },
+    "profile": {
+      "title": "Profil Saya",
+      "editButton": "Ubah Profil",
+      "cancelButton": "Batal",
+      "fullNameLabel": "Nama Lengkap",
+      "emailLabel": "Alamat Email",
+      "phoneLabel": "Nomor Telepon",
+      "saveButton": "Simpan Perubahan",
+      "savingButton": "Menyimpan..."
+    },
+    "address": {
+      "title": "Alamat Pengiriman",
+      "editButton": "Ubah Alamat",
+      "cancelButton": "Batal",
+      "provinceLabel": "Provinsi",
+      "provincePlaceholder": "Pilih Provinsi",
+      "regencyLabel": "Kota/Kabupaten",
+      "regencyPlaceholder": "Pilih Kota/Kabupaten",
+      "districtLabel": "Kecamatan",
+      "districtPlaceholder": "Pilih Kecamatan",
+      "villageLabel": "Kelurahan",
+      "villagePlaceholder": "Pilih Kelurahan",
+      "streetLabel": "Nama Jalan, Gedung, No. Rumah",
+      "postalCodeLabel": "Kode Pos",
+      "pinpointLabel": "Tandai Lokasi",
+      "saveButton": "Simpan Alamat",
+      "savingButton": "Menyimpan..."
+    },
+    "orders": {
+      "title": "Riwayat Pesanan",
+      "loading": "Memuat riwayat pesanan...",
+      "empty": "Anda tidak memiliki riwayat pesanan.",
+      "orderId": "ID Pesanan",
+      "total": "Total",
+      "quantity": "Kuantitas",
+      "summary": "Ringkasan Pesanan"
+    }
+  },
+  "admin": {
+    "hub": {
+      "title": "Pusat Admin",
+      "description": "Pilih salah satu menu di bawah ini untuk mengelola situs web.",
+      "orderCard": {
+        "title": "Manajemen Pesanan",
+        "description": "Lihat dan perbarui status pesanan pelanggan."
+      },
+      "contentCard": {
+        "title": "Manajemen Konten",
+        "description": "Tambah/ubah produk dan berita terbaru."
+      },
+      "analyticsCard": {
+        "title": "Dasbor Analitik",
+        "description": "Lihat tren penjualan dan kinerja."
+      }
+    },
+    "orders": {
+      "title": "Manajemen Pesanan",
+      "description": "Kelola dan perbarui status pesanan yang masuk.",
+      "backLink": "Kembali ke Pusat Admin",
+      "filter": {
+        "sortByTime": "Urutkan berdasarkan Waktu",
+        "newest": "Terbaru",
+        "oldest": "Terlama",
+        "filterByStatus": "Filter berdasarkan Status",
+        "allStatuses": "Semua Status",
+        "status": {
+          "awaiting": "Menunggu Konfirmasi",
+          "processing": "Diproses",
+          "shipped": "Dikirim",
+          "completed": "Selesai",
+          "rejected": "Ditolak"
+        }
+      },
+      "loading": "Memuat pesanan...",
+      "card": {
+        "customerInfo": "Informasi Pelanggan",
+        "customerName": "Nama Pelanggan",
+        "phone": "Telepon",
+        "address": "Alamat",
+        "shippingAddress": "Alamat Pengiriman",
+        "orderSummary": "Ringkasan Pesanan",
+        "totalAmount": "Jumlah Total",
+        "actions": "Aksi",
+        "updateStatus": "Perbarui Status"
+      },
+      "status": {
+        "menunggu-konfirmasi": "Menunggu Konfirmasi",
+        "diproses": "Proses",
+        "dalam-pengiriman": "Kirim",
+        "selesai": "Selesaikan",
+        "ditolak": "Tolak"
+      }
+    },
+    "dashboard": {
+      "title": "Dasbor Analitik",
+      "description": "Analisis tren penjualan dan kinerja produk.",
+      "backLink": "Kembali ke Pusat Admin",
+      "kpi": {
+        "totalRevenue": "Total Pendapatan",
+        "completedOrders": "Pesanan Selesai",
+        "bestSelling": "Produk Terlaris",
+        "loading": "Memuat..."
+      },
+      "revenueTrend": {
+        "title": "Tren Pendapatan",
+        "daily": "Harian",
+        "weekly": "Mingguan",
+        "monthly": "Bulanan"
+      },
+      "productSales": {
+        "title": "Penjualan per Produk",
+        "barChart": "Diagram Batang",
+        "pieChart": "Diagram Lingkaran",
+        "totalSales": "Total Penjualan",
+        "byMonth": "per Bulan"
+      },
+      "transactions": {
+        "title": "Transaksi Terkini",
+        "orderId": "ID Pesanan",
+        "date": "Tanggal",
+        "customer": "Pelanggan",
+        "total": "Total",
+        "status": "Status",
+        "loading": "Memuat transaksi..."
+      }
+    },
+    "products": {
+      "title": "Manajemen Konten",
+      "description": "Kelola produk dan berita yang ditampilkan di situs Anda.",
+      "backLink": "Kembali ke Dasbor",
+      "addProduct": "+ Tambah Produk",
+      "addNews": "+ Tambah Berita",
+      "tabs": {
+        "products": "Manajemen Produk",
+        "news": "Manajemen Berita"
+      },
+      "bulk": {
+        "title": "Alat Diskon Massal",
+        "description": "Terapkan diskon persentase ke semua produk yang tidak memiliki harga diskon tetap.",
+        "placeholder": "cth., 15",
+        "applyButton": "Terapkan Diskon"
+      },
+      "productList": {
+        "title": "Daftar Produk",
+        "search": "Cari produk...",
+        "table": {
+          "image": "Gambar",
+          "product": "Produk",
+          "category": "Kategori",
+          "price": "Harga",
+          "actions": "Aksi"
+        },
+        "loading": "Memuat produk...",
+        "empty": "Tidak ada produk yang cocok ditemukan.",
+        "edit": "Ubah",
+        "delete": "Hapus"
+      },
+      "newsList": {
+        "title": "Daftar Berita",
+        "search": "Cari berita...",
+        "table": {
+          "image": "Gambar",
+          "title": "Judul",
+          "excerpt": "Kutipan",
+          "actions": "Aksi"
+        },
+        "loading": "Memuat berita...",
+        "empty": "Tidak ada berita yang cocok ditemukan."
+      }
+    }
+  },
+  "productDetail": {
+    "relatedProducts": "Produk Terkait",
+    "specifications": "Spesifikasi",
+    "addToCart": "Tambah ke Keranjang"
+  },
+  "newsDetail": {
+    "by": "Oleh",
+    "on": "pada",
+    "relatedNews": "Berita Terkait"
   }
 }
