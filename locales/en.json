@@ -322,6 +322,8 @@
   },
   "newsDetail": {
     "by": "By",
+    "author": "Editorial Team",
+    "share": "Share This Article:",
     "on": "on",
     "relatedNews": "Related News"
   }
