@@ -228,9 +228,13 @@ document.addEventListener("alpine:init", () => {
   Alpine.data('products', () => ({
     searchTerm: '',
     selectedCategory: 'all',
-    sortOption: 'default',
+    sortOption: 'price-asc',
     currentPage: 1,
     itemsPerPage: 12,
+
+    toggleSort() {
+      this.sortOption = this.sortOption === 'price-asc' ? 'price-desc' : 'price-asc';
+    },
 
     promoItems() {
       return this.$store.products.all.filter(p => p.discount_price || p.discount_percent > 0).slice(0, 4);

@@ -42,7 +42,8 @@
     "by": "Sort by",
     "default": "Default",
     "priceAsc": "Price: Low to High",
-    "priceDesc": "Price: High to Low"
+    "priceDesc": "Price: High to Low",
+    "priceLabel": "Price"
   },
   "pagination": {
     "prev": "Previous page",

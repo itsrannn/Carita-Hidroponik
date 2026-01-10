@@ -42,7 +42,8 @@
     "by": "Urutkan berdasarkan",
     "default": "Default",
     "priceAsc": "Harga: Rendah ke Tinggi",
-    "priceDesc": "Harga: Tinggi ke Rendah"
+    "priceDesc": "Harga: Tinggi ke Rendah",
+    "priceLabel": "Harga"
   },
   "pagination": {
     "prev": "Halaman sebelumnya",
