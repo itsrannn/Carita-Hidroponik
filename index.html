@@ -226,7 +226,7 @@
           <p style="text-align: center;" x-text="$store.i18n.t('news.noneFound')">Belum ada berita yang diterbitkan.</p>
         </template>
         <template x-for="newsItem in newsItems" :key="newsItem.id">
-          <a :href="`news detail.html?id=${newsItem.id}`" class="news-card-link">
+          <a :href="`news-detail.html?id=${newsItem.id}`" class="news-card-link">
             <article class="news-card">
               <div class="news-card-image-wrapper">
                 <img :src="newsItem.image_url || 'img/coming soon.jpg'" :alt="newsItem.title[$store.i18n.lang] || newsItem.title['id']" />

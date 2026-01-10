@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <link rel="icon" type="image/x-icon" href="img/Logo.jpg" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/news detail.css" />
+    <link rel="stylesheet" href="css/mobile.css" media="(max-width: 768px)" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@300;400;600&family=Roboto:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body x-data @alpine:init="
+    $store.i18n.init();
+    $store.products.init();
+    $store.cart.init();
+  ">
+    <div id="header-include"></div>
+
+    <main class="main-content news-detail-page">
+      <div class="container">
+        <div class="news-layout" x-data="newsDetail()">
+          <!-- Left Column: Main Article -->
+          <article class="news-article-content">
+            <h1 x-text="newsTitle">Loading News...</h1>
+
+            <div class="news-meta">
+              <span>
+                <span x-text="$store.i18n.t('newsDetail.by')">By</span>
+                <strong x-text="$store.i18n.t('newsDetail.author')">Editorial Team</strong>
+              </span>
+              <span>|</span>
+              <span x-text="formattedDate"></span>
+            </div>
+
+            <div class="news-hero">
+              <template x-if="isLoading">
+                <img src="https://placehold.co/1200x600/f0f0f0/999?text=Loading..." alt="Loading Placeholder" />
+              </template>
+              <template x-if="!isLoading && newsItem">
+                <img :src="newsItem.image_url || 'img/coming soon.jpg'" :alt="newsTitle" />
+              </template>
+            </div>
+
+            <div class="news-body" x-html="newsContent">
+              <p>Loading article content.</p>
+            </div>
+
+            <div class="share-buttons">
+              <h4 x-text="$store.i18n.t('newsDetail.share')">Share This Article:</h4>
+              <a href="#" class="btn btn-icon-only"><i data-feather="facebook"></i></a>
+              <a href="#" class="btn btn-icon-only"><i data-feather="twitter"></i></a>
+              <a href="#" class="btn btn-icon-only"><i data-feather="mail"></i></a>
+            </div>
+          </article>
+
+          <!-- Right Column: Sidebar -->
+          <aside class="news-sidebar">
+            <div class="sidebar-widget">
+              <h4 x-text="$store.i18n.t('productDetail.relatedProducts')">Related Products</h4>
+              <div class="products-grid" style="--grid-cols: 2;">
+                <template x-if="$store.products.isLoading">
+                  <p x-text="$store.i18n.t('news.loading')"></p>
+                </template>
+                <template x-if="!$store.products.isLoading" x-for="item in relatedProducts" :key="item.id">
+                  <div x-html="$store.products.renderProductCard(item)"></div>
+                </template>
+              </div>
+            </div>
+
+            <div class="sidebar-widget">
+              <h4 x-text="$store.i18n.t('news.latest')">Latest News</h4>
+              <ul class="sidebar-news-list">
+                <template x-if="isLoading">
+                  <p x-text="$store.i18n.t('news.loading')"></p>
+                </template>
+                <template x-if="!isLoading" x-for="item in latestNews" :key="item.id">
+                  <li>
+                    <a :href="'news-detail.html?id=' + item.id">
+                      <span x-text="item.title[$store.i18n.lang] || item.title.id"></span>
+                      <small x-text="new Date(item.created_at).toLocaleDateString($store.i18n.lang, { year: 'numeric', month: 'short', day: 'numeric' })"></small>
+                    </a>
+                  </li>
+                </template>
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+
+    <div id="notification" class="notification"></div>
+
+    <div id="footer-include"></div>
+
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js" defer></script>
+    <script src="js/main.js"></script>
+    <script src="js/news-detail.js"></script>
+  </body>
+</html>

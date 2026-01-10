@@ -46,7 +46,7 @@ test.describe('Verification of Bug Fixes and Translations', () => {
   });
 
   test('Cart page is translated', async ({ page }) => {
-      await page.goto('http://localhost:8000/my%20cart.html');
+      await page.goto('http://localhost:8000/my-cart.html');
       const pageTitle = page.locator('.cart-section .section-title');
       await expect(pageTitle).toHaveText('Shopping Cart');
       const emptyCartMessage = page.locator('.cart-empty-message');
@@ -64,7 +64,7 @@ test.describe('Verification of Bug Fixes and Translations', () => {
           ]),
         });
       });
-      await page.goto('http://localhost:8000/product%20detail.html?id=1');
+      await page.goto('http://localhost:8000/product-detail.html?id=1');
       await page.waitForSelector('html[data-alpine-ready="true"]');
 
       // Wait for the component to signal it's ready
@@ -88,7 +88,7 @@ test.describe('Verification of Bug Fixes and Translations', () => {
           ),
         });
       });
-      await page.goto('http://localhost:8000/news%20detail.html?id=1');
+      await page.goto('http://localhost:8000/news-detail.html?id=1');
       const shareTitle = page.locator('.share-buttons h4');
       await expect(shareTitle).toHaveText('Share This Article:');
   });

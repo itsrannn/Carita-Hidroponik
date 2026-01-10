@@ -1,57 +1,118 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    feather.replace();
+document.addEventListener('alpine:init', () => {
+    Alpine.data('newsDetail', () => ({
+        newsItem: null,
+        relatedProducts: [],
+        latestNews: [],
+        isLoading: true,
+        newsId: null,
 
-    const newsTitleEl = document.getElementById('news-title');
-    const newsDateEl = document.getElementById('news-date');
-    const newsHeroEl = document.getElementById('news-hero-content');
-    const newsBodyEl = document.getElementById('news-body');
+        init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            this.newsId = urlParams.get('id');
 
-    const showError = (message) => {
-        if (newsTitleEl) newsTitleEl.textContent = 'Error';
-        if (newsBodyEl) newsBodyEl.innerHTML = `<p style="color: red;">${message}</p>`;
-        if (newsHeroEl) newsHeroEl.style.display = 'none';
-    };
+            if (!this.newsId) {
+                console.error('News ID is missing.');
+                this.isLoading = false;
+                return;
+            }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const newsId = urlParams.get('id');
+            // Use Alpine.effect to react to language changes from the i18n store
+            Alpine.effect(() => {
+                const lang = this.$store.i18n.lang; // Dependency
+                // This will re-run whenever the language changes.
+                if (this.newsItem) {
+                    this.updateDocumentTitle();
+                }
+            });
 
-    if (!newsId) {
-        showError('News ID not found in URL. Please ensure your URL is correct, e.g., news%20detail.html?id=1');
-        return;
-    }
+            this.fetchNewsData();
+            this.fetchLatestNews();
+        },
 
-    if (!window.supabase) {
-        showError('Supabase client is not accessible. Make sure supabase-client.js is loaded correctly.');
-        return;
-    }
+        async fetchNewsData() {
+            this.isLoading = true;
+            try {
+                const { data, error } = await window.supabase
+                    .from('news')
+                    .select('*')
+                    .eq('id', this.newsId)
+                    .single();
 
-    try {
-        const { data, error } = await window.supabase
-            .from('news')
-            .select('*')
-            .eq('id', newsId)
-            .single();
+                if (error) throw error;
 
-        if (error) throw error;
+                this.newsItem = data;
+                this.updateDocumentTitle();
+                this.fetchRelatedProducts(); // Fetch related products after getting the category
+            } catch (error) {
+                console.error('Error fetching news:', error);
+            } finally {
+                this.isLoading = false;
+            }
+        },
 
-        if (data) {
-            document.title = `${data.title.en} | Carita Hidroponik`;
-            newsTitleEl.textContent = data.title.en;
-            newsDateEl.textContent = new Date(data.created_at).toLocaleDateString("en-US", {
+        async fetchLatestNews() {
+            try {
+                const { data, error } = await supabase
+                    .from('news')
+                    .select('id, title, created_at')
+                    .neq('id', this.newsId) // Exclude the current article
+                    .order('created_at', { ascending: false })
+                    .limit(5);
+                if (error) throw error;
+                this.latestNews = data;
+            } catch (error) {
+                console.error("Failed to load latest news:", error);
+            }
+        },
+
+        fetchRelatedProducts() {
+            // This now relies on the global product store
+            if (!this.$store.products.all.length) {
+                // Wait for products to be loaded if they aren't already
+                this.$watch('$store.products.isLoading', (loading) => {
+                    if (!loading) {
+                        this.filterRelatedProducts();
+                    }
+                });
+            } else {
+                this.filterRelatedProducts();
+            }
+        },
+
+        filterRelatedProducts() {
+            if (!this.newsItem || !this.newsItem.category) {
+                this.relatedProducts = [];
+                return;
+            }
+            this.relatedProducts = this.$store.products.all
+                .filter(p => p.category === this.newsItem.category)
+                .slice(0, 4); // Limit to 4 related products
+        },
+
+        updateDocumentTitle() {
+            document.title = `${this.newsTitle} | Carita Hidroponik`;
+        },
+
+        get newsTitle() {
+            if (!this.newsItem) return this.$store.i18n.t('news.loading');
+            const lang = this.$store.i18n.lang;
+            return this.newsItem.title[lang] || this.newsItem.title.id;
+        },
+
+        get newsContent() {
+            if (!this.newsItem) return `<p>${this.$store.i18n.t('news.loading')}</p>`;
+            const lang = this.$store.i18n.lang;
+            return this.newsItem.content[lang] || this.newsItem.content.id;
+        },
+
+        get formattedDate() {
+            if (!this.newsItem) return '';
+            const lang = this.$store.i18n.lang;
+            return new Date(this.newsItem.created_at).toLocaleDateString(lang, {
                 year: 'numeric',
                 month: 'long',
                 day: 'numeric'
             });
-
-            newsHeroEl.innerHTML = `<img src="${data.image_url || 'img/coming soon.jpg'}" alt="${data.title.en}" />`;
-
-            newsBodyEl.innerHTML = data.content.en;
-
-        } else {
-            showError(`News with ID "${newsId}" not found.`);
         }
-
-    } catch (error) {
-        showError('Failed to load news detail. Please try again later.');
-    }
+    }));
 });
