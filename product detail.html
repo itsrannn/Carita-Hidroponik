@@ -77,20 +77,20 @@
               @click="$store.cart.add(product.id)"
               class="btn-sm add-cart"
             >
-              <i data-feather="shopping-bag"></i> Add to Cart
+              <i data-feather="shopping-bag"></i> <span x-text="$store.i18n.t('productDetail.addToCart')">Add to Cart</span>
             </button>
           </div>
         </section>
 
         <!-- SECTION DESCRIPTION -->
         <section class="product-detail-description">
-          <h2>Product Description</h2>
+          <h2 x-text="$store.i18n.t('productDetail.specifications')">Product Description</h2>
           <p x-text="productDescription"></p>
         </section>
 
         <!-- SECTION RELATED PRODUCTS -->
         <section class="related-products">
-          <h2>Related Products</h2>
+          <h2 x-text="$store.i18n.t('productDetail.relatedProducts')">Related Products</h2>
 
           <div x-show="relatedProducts.length > 0" class="swiper related-product-slider">
             <div class="swiper-wrapper">

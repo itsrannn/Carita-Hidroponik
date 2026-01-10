@@ -20,7 +20,7 @@
 
   <main class="main-content my-account">
     <div class="container">
-      <h1 class="page-title">My Account</h1>
+      <h1 class="page-title" x-text="$store.i18n.t('account.title')">My Account</h1>
       <div class="account-layout">
 
         <aside class="account-sidebar">
@@ -28,15 +28,15 @@
             <ul>
               <li>
                 <a href="#" @click.prevent="activeView = 'profile'" :class="{'active': activeView === 'profile'}">
-                  <i data-feather="user"></i> My Profile
+                  <i data-feather="user"></i> <span x-text="$store.i18n.t('account.sidebar.myProfile')">My Profile</span>
                 </a>
               </li>
               <li>
                 <a href="#" @click.prevent="activeView = 'orderHistory'" :class="{'active': activeView === 'orderHistory'}">
-                  <i data-feather="shopping-bag"></i> Order History
+                  <i data-feather="shopping-bag"></i> <span x-text="$store.i18n.t('account.sidebar.orderHistory')">Order History</span>
                 </a>
               </li>
-              <li><a href="#" @click.prevent="handleLogout()" data-testid="logout-button"><i data-feather="log-out"></i> Logout</a></li>
+              <li><a href="#" @click.prevent="handleLogout()" data-testid="logout-button"><i data-feather="log-out"></i> <span x-text="$store.i18n.t('account.sidebar.logout')">Logout</span></a></li>
             </ul>
           </nav>
         </aside>
@@ -48,27 +48,27 @@
               <!-- Profile Details Section -->
               <div class="account-section">
                 <div class="section-header">
-                  <h2>My Profile</h2>
-                  <button class="btn btn-sm btn-outline" @click="editProfileMode = !editProfileMode" x-text="editProfileMode ? 'Cancel' : 'Edit Profile'"></button>
+                  <h2 x-text="$store.i18n.t('account.profile.title')">My Profile</h2>
+                  <button class="btn btn-sm btn-outline" @click="editProfileMode = !editProfileMode" x-text="editProfileMode ? $store.i18n.t('account.profile.cancelButton') : $store.i18n.t('account.profile.editButton')"></button>
                 </div>
                 <div class="section-body">
                   <form class="account-form" @submit.prevent="updateProfile">
                     <div class="form-group">
-                      <label for="fullName">Full Name</label>
+                      <label for="fullName" x-text="$store.i18n.t('account.profile.fullNameLabel')">Full Name</label>
                       <input type="text" id="fullName" x-model="profile.full_name" :disabled="!editProfileMode" />
                     </div>
                     <div class="form-group">
-                      <label for="email">Email Address</label>
+                      <label for="email" x-text="$store.i18n.t('account.profile.emailLabel')">Email Address</label>
                       <input type="email" id="email" :value="user ? user.email : ''" disabled />
                     </div>
                     <div class="form-group">
-                      <label for="phone_number">Phone Number</label>
+                      <label for="phone_number" x-text="$store.i18n.t('account.profile.phoneLabel')">Phone Number</label>
                       <input type="tel" id="phone_number" x-model="profile.phone_number" :disabled="!editProfileMode" />
                     </div>
                     <div class="form-actions" x-show="editProfileMode">
                       <button type="submit" class="btn btn-primary" :disabled="loading">
-                        <span x-show="!loading">Save Changes</span>
-                        <span x-show="loading">Saving...</span>
+                        <span x-show="!loading" x-text="$store.i18n.t('account.profile.saveButton')">Save Changes</span>
+                        <span x-show="loading" x-text="$store.i18n.t('account.profile.savingButton')">Saving...</span>
                       </button>
                     </div>
                   </form>
@@ -78,65 +78,65 @@
               <!-- Address Section -->
               <div class="account-section">
                 <div class="section-header">
-                  <h2>Shipping Address</h2>
-                  <button class="btn btn-sm btn-outline" @click="editAddressMode = !editAddressMode" x-text="editAddressMode ? 'Cancel' : 'Edit Address'"></button>
+                  <h2 x-text="$store.i18n.t('account.address.title')">Shipping Address</h2>
+                  <button class="btn btn-sm btn-outline" @click="editAddressMode = !editAddressMode" x-text="editAddressMode ? $store.i18n.t('account.address.cancelButton') : $store.i18n.t('account.address.editButton')"></button>
                 </div>
                 <div class="section-body">
                   <form class="account-form" @submit.prevent="updateAddress">
                     <div class="form-group">
-                      <label for="province">Province</label>
+                      <label for="province" x-text="$store.i18n.t('account.address.provinceLabel')">Province</label>
                       <select id="province" x-model="selectedProvince" @change="fetchRegencies" :disabled="!editAddressMode">
-                        <option value="">Select Province</option>
+                        <option value="" x-text="$store.i18n.t('account.address.provincePlaceholder')">Select Province</option>
                         <template x-for="province in provinces" :key="province.id">
                           <option :value="province.id" x-text="province.name"></option>
                         </template>
                       </select>
                     </div>
                     <div class="form-group">
-                      <label for="regency">City/Regency</label>
+                      <label for="regency" x-text="$store.i18n.t('account.address.regencyLabel')">City/Regency</label>
                       <select id="regency" x-model="selectedRegency" @change="fetchDistricts" :disabled="!editAddressMode || !selectedProvince">
-                        <option value="">Select City/Regency</option>
+                        <option value="" x-text="$store.i18n.t('account.address.regencyPlaceholder')">Select City/Regency</option>
                         <template x-for="regency in regencies" :key="regency.id">
                           <option :value="regency.id" x-text="regency.name"></option>
                         </template>
                       </select>
                     </div>
                     <div class="form-group">
-                      <label for="district">District</label>
+                      <label for="district" x-text="$store.i18n.t('account.address.districtLabel')">District</label>
                       <select id="district" x-model="selectedDistrict" @change="fetchVillages" :disabled="!editAddressMode || !selectedRegency">
-                        <option value="">Select District</option>
+                        <option value="" x-text="$store.i18n.t('account.address.districtPlaceholder')">Select District</option>
                         <template x-for="district in districts" :key="district.id">
                           <option :value="district.id" x-text="district.name"></option>
                         </template>
                       </select>
                     </div>
                     <div class="form-group">
-                      <label for="village">Village</label>
+                      <label for="village" x-text="$store.i18n.t('account.address.villageLabel')">Village</label>
                       <select id="village" x-model="selectedVillage" @change="updateProfileVillage" :disabled="!editAddressMode || !selectedDistrict">
-                        <option value="">Select Village</option>
+                        <option value="" x-text="$store.i18n.t('account.address.villagePlaceholder')">Select Village</option>
                         <template x-for="village in villages" :key="village.id">
                           <option :value="village.id" x-text="village.name"></option>
                         </template>
                       </select>
                     </div>
                     <div class="form-group">
-                      <label for="address">Street Name, Building, House No.</label>
+                      <label for="address" x-text="$store.i18n.t('account.address.streetLabel')">Street Name, Building, House No.</label>
                       <input type="text" id="address" x-model="profile.address" :disabled="!editAddressMode" />
                     </div>
                     <div class="form-group">
-                      <label for="postalCode">Postal Code</label>
+                      <label for="postalCode" x-text="$store.i18n.t('account.address.postalCodeLabel')">Postal Code</label>
                       <input type="text" id="postalCode" x-model="profile.postal_code" :disabled="!editAddressMode" />
                     </div>
                     <div class="form-group" x-show="editAddressMode">
-                      <label>Pinpoint Location</label>
+                      <label x-text="$store.i18n.t('account.address.pinpointLabel')">Pinpoint Location</label>
                       <div id="map" style="height: 400px; width: 100%;"></div>
                       <input type="hidden" id="latitude" x-model="profile.latitude" />
                       <input type="hidden" id="longitude" x-model="profile.longitude" />
                     </div>
                     <div class="form-actions" x-show="editAddressMode">
                       <button type="submit" class="btn btn-primary" :disabled="loading">
-                        <span x-show="!loading">Save Address</span>
-                        <span x-show="loading">Saving...</span>
+                        <span x-show="!loading" x-text="$store.i18n.t('account.address.saveButton')">Save Address</span>
+                        <span x-show="loading" x-text="$store.i18n.t('account.address.savingButton')">Saving...</span>
                       </button>
                     </div>
                   </form>
@@ -149,19 +149,19 @@
             <div x-show="activeView === 'orderHistory'">
               <div class="account-section">
                 <div class="section-header">
-                  <h2>Order History</h2>
+                  <h2 x-text="$store.i18n.t('account.orders.title')">Order History</h2>
                 </div>
                 <div class="section-body">
                   <!-- Loading State -->
                   <div x-show="isOrderLoading" x-transition>
-                    <p>Loading order history...</p>
+                    <p x-text="$store.i18n.t('account.orders.loading')">Loading order history...</p>
                   </div>
 
                   <!-- Content: Empty State or Orders List -->
                   <div x-show="!isOrderLoading" x-transition>
                     <!-- Empty State -->
                     <div x-show="orders.length === 0">
-                      <p>You have no order history.</p>
+                      <p x-text="$store.i18n.t('account.orders.empty')">You have no order history.</p>
                     </div>
 
                     <!-- Orders List -->
@@ -170,24 +170,24 @@
                       <div class="order-card">
                         <div class="order-header">
                           <div>
-                            <div class="order-code" x-text="'Order ID: ' + (order.order_code || order.id)"></div>
+                            <div class="order-code" x-text="`${$store.i18n.t('account.orders.orderId')}: ${order.order_code || order.id}`"></div>
                             <div class="order-date" x-text="new Date(order.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })"></div>
                           </div>
                           <div class="order-status" :class="getStatusClass(order.status)" x-text="translateStatus(order.status) || 'Not Updated'"></div>
                         </div>
                         <div class="order-body">
-                          <strong>Order Summary:</strong>
+                          <strong x-text="$store.i18n.t('account.orders.summary')">Order Summary:</strong>
                           <template x-for="(item, index) in (order.order_details || [])" :key="order.id + '-' + index">
                             <div class="item">
                               <div class="item-info">
                                 <div class="item-name" x-text="item.name"></div>
-                                <div class="item-qty" x-text="'Quantity: ' + item.quantity"></div>
+                                <div class="item-qty" x-text="`${$store.i18n.t('account.orders.quantity')}: ${item.quantity}`"></div>
                               </div>
                             </div>
                           </template>
                         </div>
                         <div class="order-footer">
-                          <strong>Total:</strong>
+                          <strong x-text="`${$store.i18n.t('account.orders.total')}:`"></strong>
                           <span x-text="formatRupiah(order.total_amount) || 'N/A'"></span>
                         </div>
                       </div>

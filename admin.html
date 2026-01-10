@@ -67,25 +67,25 @@
     <main class="main-content">
         <div class="container">
             <div class="admin-hub-header">
-                <h1 class="page-title">Admin Center</h1>
-                <p>Select one of the menus below to manage the website.</p>
+                <h1 class="page-title" x-text="$store.i18n.t('admin.hub.title')">Admin Center</h1>
+                <p x-text="$store.i18n.t('admin.hub.description')">Select one of the menus below to manage the website.</p>
             </div>
 
             <div class="admin-hub-grid">
                 <a href="admin-orders.html" class="nav-card">
                     <i data-feather="package"></i>
-                    <h3>Order Management</h3>
-                    <p>View and update the status of customer orders.</p>
+                    <h3 x-text="$store.i18n.t('admin.hub.orderCard.title')">Order Management</h3>
+                    <p x-text="$store.i18n.t('admin.hub.orderCard.description')">View and update the status of customer orders.</p>
                 </a>
                 <a href="admin-products.html" class="nav-card">
                     <i data-feather="edit"></i>
-                    <h3>Content Management</h3>
-                    <p>Add/edit products and latest news.</p>
+                    <h3 x-text="$store.i18n.t('admin.hub.contentCard.title')">Content Management</h3>
+                    <p x-text="$store.i18n.t('admin.hub.contentCard.description')">Add/edit products and latest news.</p>
                 </a>
                 <a href="admin-dashboard.html" class="nav-card">
                     <i data-feather="bar-chart-2"></i>
-                    <h3>Analytics Dashboard</h3>
-                    <p>View sales trends and performance.</p>
+                    <h3 x-text="$store.i18n.t('admin.hub.analyticsCard.title')">Analytics Dashboard</h3>
+                    <p x-text="$store.i18n.t('admin.hub.analyticsCard.description')">View sales trends and performance.</p>
                 </a>
             </div>
         </div>

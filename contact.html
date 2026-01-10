@@ -20,62 +20,76 @@
     <main class="main-content">
       <div class="container">
         <h1 class="page-title" style="text-align: center; margin-bottom: 1rem;" x-text="$store.i18n.t('contact.title')">Contact Us</h1>
-        <p x-text="$store.i18n.t('contact.intro')">
+        <p class="page-intro" x-text="$store.i18n.t('contact.intro')">
           We'd love to hear from you! If you have any questions, suggestions,
           or need assistance, please don't hesitate to reach out using the
           form below or through our contact information.
         </p>
 
-        <div class="contact-grid">
-          <form class="contact-form">
-            <label for="name" x-text="$store.i18n.t('contact.form.name')">Full Name</label>
-            <input type="text" id="name" name="name" required />
-
-            <label for="email" x-text="$store.i18n.t('contact.form.email')">Email</label>
-            <input type="email" id="email" name="email" required />
-
-            <label for="message" x-text="$store.i18n.t('contact.form.message')">Message</label>
-            <textarea id="message" name="message" rows="5" required></textarea>
-
-            <button type="submit" class="btn-primary" x-text="$store.i18n.t('contact.form.send')">Send Message</button>
-          </form>
-
-          <div class="contact-info">
-            <h2 x-text="$store.i18n.t('contact.info.title')">Contact Information</h2>
-            <p>
-              <span x-text="$store.i18n.t('contact.info.email')">Email</span>:
-              <a href="mailto:info@caritahidroponik.com"
-                >info@caritahidroponik.com</a
-              >
-            </p>
-            <p>
-              <span x-text="$store.i18n.t('contact.info.whatsapp')">WhatsApp</span>:
-              <a href="https://wa.me/628213969880" target="_blank"
-                >+62 821-3969-8804</a
-              >
-            </p>
-            <p><span x-text="$store.i18n.t('contact.info.address')">Address</span>: Jl. Example No.123, Jakarta, Indonesia</p>
-            <div class="social-icons">
-              <a href="#" aria-label="Instagram"
-                ><i data-feather="instagram"></i
-              ></a>
-              <a href="#" aria-label="Facebook"
-                ><i data-feather="facebook"></i
-              ></a>
-              <a href="#" aria-label="YouTube"
-                ><i data-feather="youtube"></i
-              ></a>
-            </div>
+        <div class="contact-layout">
+          <div class="contact-form-container">
+            <form action="#" method="POST" class="contact-form">
+              <div class="form-group">
+                <label for="name" x-text="$store.i18n.t('contact.form.name')">Full Name</label>
+                <input type="text" id="name" name="name" required />
+              </div>
+              <div class="form-group">
+                <label for="email" x-text="$store.i18n.t('contact.form.email')">Email</label>
+                <input type="email" id="email" name="email" required />
+              </div>
+              <div class="form-group">
+                <label for="message" x-text="$store.i18n.t('contact.form.message')">Message</label>
+                <textarea
+                  id="message"
+                  name="message"
+                  rows="6"
+                  required
+                ></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary" x-text="$store.i18n.t('contact.form.send')">
+                Send Message
+              </button>
+            </form>
           </div>
+
+          <aside class="contact-info-container">
+            <h3 x-text="$store.i18n.t('contact.info.title')">Contact Information</h3>
+            <div class="contact-item">
+              <i data-feather="mail"></i>
+              <div>
+                <strong x-text="$store.i18n.t('contact.info.email')">Email</strong>
+                <a href="mailto:info@caritahidroponik.com"
+                  >info@caritahidroponik.com</a
+                >
+              </div>
+            </div>
+            <div class="contact-item">
+              <i data-feather="phone"></i>
+              <div>
+                <strong x-text="$store.i18n.t('contact.info.whatsapp')">WhatsApp</strong>
+                <a href="https://wa.me/628213969880" target="_blank"
+                  >+62 821-3969-8804</a
+                >
+              </div>
+            </div>
+            <div class="contact-item">
+              <i data-feather="map-pin"></i>
+              <div>
+                <strong x-text="$store.i18n.t('contact.info.address')">Address</strong>
+                <p>
+                  Jl. Telekomunikasi No. 1, Terusan Buahbatu, Bandung, Jawa
+                  Barat 40257
+                </p>
+              </div>
+            </div>
+          </aside>
         </div>
       </div>
     </main>
     <div id="footer-include"></div>
 
     <script src="https://unpkg.com/feather-icons"></script>
+    <script src="js/main.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js" defer></script>
-    <script>
-      document.addEventListener("DOMContentLoaded", () => feather.replace());
-    </script>
   </body>
 </html>

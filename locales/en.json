@@ -90,5 +90,238 @@
       "title": "Registration Successful!",
       "message": "We have sent a verification link to your email. Please check your inbox to complete the registration."
     }
+  },
+  "footer": {
+    "description": "Carita Hidroponik is a trusted provider of hydroponic seeds, nutrients, and equipment. We support farmers and hobbyists in achieving the best harvests.",
+    "menu": "Menu",
+    "myAccount": "My Account",
+    "contactUs": "Contact Us",
+    "copyright": "© 2025 Carita Hidroponik — All Rights Reserved."
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "header": {
+      "product": "Product",
+      "quantity": "Quantity",
+      "total": "Total"
+    },
+    "emptyMessage": "Your shopping cart is empty.",
+    "continueShopping": "Continue Shopping",
+    "summary": {
+      "title": "Order Summary",
+      "couponPlaceholder": "Enter Coupon Code",
+      "applyButton": "Apply",
+      "subtotal": "Subtotal",
+      "shipping": "Shipping",
+      "total": "Total",
+      "checkoutButton": "Proceed to Checkout"
+    },
+    "modal": {
+      "profileIncomplete": {
+        "title": "Profile Incomplete",
+        "body": "To proceed with checkout, you must complete your profile information first.",
+        "laterButton": "Later",
+        "completeButton": "Complete Profile"
+      },
+      "notLoggedIn": {
+        "title": "You Are Not Logged In",
+        "body": "Please log in or create an account to continue with the checkout process.",
+        "closeButton": "Close",
+        "loginButton": "Login or Register"
+      },
+      "confirmOrder": {
+        "title": "Confirm Your Order",
+        "cancelButton": "Cancel",
+        "confirmButton": "Confirm & Order"
+      }
+    }
+  },
+  "account": {
+    "title": "My Account",
+    "sidebar": {
+      "myProfile": "My Profile",
+      "orderHistory": "Order History",
+      "logout": "Logout"
+    },
+    "profile": {
+      "title": "My Profile",
+      "editButton": "Edit Profile",
+      "cancelButton": "Cancel",
+      "fullNameLabel": "Full Name",
+      "emailLabel": "Email Address",
+      "phoneLabel": "Phone Number",
+      "saveButton": "Save Changes",
+      "savingButton": "Saving..."
+    },
+    "address": {
+      "title": "Shipping Address",
+      "editButton": "Edit Address",
+      "cancelButton": "Cancel",
+      "provinceLabel": "Province",
+      "provincePlaceholder": "Select Province",
+      "regencyLabel": "City/Regency",
+      "regencyPlaceholder": "Select City/Regency",
+      "districtLabel": "District",
+      "districtPlaceholder": "Select District",
+      "villageLabel": "Village",
+      "villagePlaceholder": "Select Village",
+      "streetLabel": "Street Name, Building, House No.",
+      "postalCodeLabel": "Postal Code",
+      "pinpointLabel": "Pinpoint Location",
+      "saveButton": "Save Address",
+      "savingButton": "Saving..."
+    },
+    "orders": {
+      "title": "Order History",
+      "loading": "Loading order history...",
+      "empty": "You have no order history.",
+      "orderId": "Order ID",
+      "total": "Total",
+      "quantity": "Quantity",
+      "summary": "Order Summary"
+    }
+  },
+  "admin": {
+    "hub": {
+      "title": "Admin Center",
+      "description": "Select one of the menus below to manage the website.",
+      "orderCard": {
+        "title": "Order Management",
+        "description": "View and update the status of customer orders."
+      },
+      "contentCard": {
+        "title": "Content Management",
+        "description": "Add/edit products and latest news."
+      },
+      "analyticsCard": {
+        "title": "Analytics Dashboard",
+        "description": "View sales trends and performance."
+      }
+    },
+    "orders": {
+      "title": "Order Management",
+      "description": "Manage and update the status of incoming orders.",
+      "backLink": "Back to Admin Center",
+      "filter": {
+        "sortByTime": "Sort by Time",
+        "newest": "Newest",
+        "oldest": "Oldest",
+        "filterByStatus": "Filter by Status",
+        "allStatuses": "All Statuses",
+        "status": {
+          "awaiting": "Awaiting Confirmation",
+          "processing": "Processing",
+          "shipped": "Shipped",
+          "completed": "Completed",
+          "rejected": "Rejected"
+        }
+      },
+      "loading": "Loading orders...",
+      "card": {
+        "customerInfo": "Customer Information",
+        "customerName": "Customer Name",
+        "phone": "Phone",
+        "address": "Address",
+        "shippingAddress": "Shipping Address",
+        "orderSummary": "Order Summary",
+        "totalAmount": "Total Amount",
+        "actions": "Actions",
+        "updateStatus": "Update Status"
+      },
+      "status": {
+        "menunggu-konfirmasi": "Awaiting Confirmation",
+        "diproses": "Process",
+        "dalam-pengiriman": "Ship",
+        "selesai": "Complete",
+        "ditolak": "Reject"
+      }
+    },
+    "dashboard": {
+      "title": "Analytics Dashboard",
+      "description": "Analyze sales trends and product performance.",
+      "backLink": "Back to Admin Center",
+      "kpi": {
+        "totalRevenue": "Total Revenue",
+        "completedOrders": "Completed Orders",
+        "bestSelling": "Best Selling Product",
+        "loading": "Loading..."
+      },
+      "revenueTrend": {
+        "title": "Revenue Trend",
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "monthly": "Monthly"
+      },
+      "productSales": {
+        "title": "Sales by Product",
+        "barChart": "Bar Chart",
+        "pieChart": "Pie Chart",
+        "totalSales": "Total Sales",
+        "byMonth": "By Month"
+      },
+      "transactions": {
+        "title": "Recent Transactions",
+        "orderId": "Order ID",
+        "date": "Date",
+        "customer": "Customer",
+        "total": "Total",
+        "status": "Status",
+        "loading": "Loading transactions..."
+      }
+    },
+    "products": {
+      "title": "Content Management",
+      "description": "Manage the products and news displayed on your site.",
+      "backLink": "Back to Dashboard",
+      "addProduct": "+ Add Product",
+      "addNews": "+ Add News",
+      "tabs": {
+        "products": "Product Management",
+        "news": "News Management"
+      },
+      "bulk": {
+        "title": "Bulk Discount Tool",
+        "description": "Apply a percentage discount to all products that don't have a fixed discount price set.",
+        "placeholder": "e.g., 15",
+        "applyButton": "Apply Discount"
+      },
+      "productList": {
+        "title": "Product List",
+        "search": "Search products...",
+        "table": {
+          "image": "Image",
+          "product": "Product",
+          "category": "Category",
+          "price": "Price",
+          "actions": "Actions"
+        },
+        "loading": "Loading products...",
+        "empty": "No matching products found.",
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "newsList": {
+        "title": "News List",
+        "search": "Search news...",
+        "table": {
+          "image": "Image",
+          "title": "Title",
+          "excerpt": "Excerpt",
+          "actions": "Actions"
+        },
+        "loading": "Loading news...",
+        "empty": "No matching news found."
+      }
+    }
+  },
+  "productDetail": {
+    "relatedProducts": "Related Products",
+    "specifications": "Specifications",
+    "addToCart": "Add to Cart"
+  },
+  "newsDetail": {
+    "by": "By",
+    "on": "on",
+    "relatedNews": "Related News"
   }
 }

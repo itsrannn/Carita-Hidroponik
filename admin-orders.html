@@ -132,10 +132,10 @@
     <main class="main-content">
         <div class="container">
             <div class="dashboard-header">
-                <h1 class="page-title">Order Management</h1>
-                <p>Manage and update the status of incoming orders.</p>
+                <h1 class="page-title" x-text="$store.i18n.t('admin.orders.title')">Order Management</h1>
+                <p x-text="$store.i18n.t('admin.orders.description')">Manage and update the status of incoming orders.</p>
                 <div style="margin-top: 1rem;">
-                    <a href="admin.html" class="btn">&larr; Back to Admin Center</a>
+                    <a href="admin.html" class="btn">&larr; <span x-text="$store.i18n.t('admin.orders.backLink')">Back to Admin Center</span></a>
                 </div>
             </div>
 
@@ -144,21 +144,21 @@
             <!-- Filter Controls -->
             <div class="filter-container">
                 <div class="filter-group">
-                    <label for="sort-time">Sort by Time</label>
+                    <label for="sort-time" x-text="$store.i18n.t('admin.orders.filter.sortByTime')">Sort by Time</label>
                     <select id="sort-time" class="filter-select">
-                        <option value="newest">Newest</option>
-                        <option value="oldest">Oldest</option>
+                        <option value="newest" x-text="$store.i18n.t('admin.orders.filter.newest')">Newest</option>
+                        <option value="oldest" x-text="$store.i18n.t('admin.orders.filter.oldest')">Oldest</option>
                     </select>
                 </div>
                 <div class="filter-group">
-                    <label for="filter-status">Filter by Status</label>
+                    <label for="filter-status" x-text="$store.i18n.t('admin.orders.filter.filterByStatus')">Filter by Status</label>
                     <select id="filter-status" class="filter-select">
-                        <option value="all">All Statuses</option>
-                        <option value="Menunggu Konfirmasi">Awaiting Confirmation</option>
-                        <option value="Diproses">Processing</option>
-                        <option value="Dalam Pengiriman">Shipped</option>
-                        <option value="Selesai">Completed</option>
-                        <option value="Ditolak">Rejected</option>
+                        <option value="all" x-text="$store.i18n.t('admin.orders.filter.allStatuses')">All Statuses</option>
+                        <option value="Menunggu Konfirmasi" x-text="$store.i18n.t('admin.orders.filter.status.awaiting')">Awaiting Confirmation</option>
+                        <option value="Diproses" x-text="$store.i18n.t('admin.orders.filter.status.processing')">Processing</option>
+                        <option value="Dalam Pengiriman" x-text="$store.i18n.t('admin.orders.filter.status.shipped')">Shipped</option>
+                        <option value="Selesai" x-text="$store.i18n.t('admin.orders.filter.status.completed')">Completed</option>
+                        <option value="Ditolak" x-text="$store.i18n.t('admin.orders.filter.status.rejected')">Rejected</option>
                     </select>
                 </div>
             </div>
@@ -166,7 +166,7 @@
             <!-- Order Cards Grid -->
             <div id="orders-grid" class="order-management-grid"></div>
 
-            <p id="loading-message">Loading orders...</p>
+            <p id="loading-message" x-text="$store.i18n.t('admin.orders.loading')">Loading orders...</p>
         </div>
     </main>
 

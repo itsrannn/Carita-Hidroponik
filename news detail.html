@@ -21,10 +21,10 @@
         <div class="news-layout">
           <!-- Left Column: Main Article -->
           <article class="news-article-content">
-            <h1 id="news-title">Loading News...</h1>
+            <h1 id="news-title" x-text="$store.i18n.t('news.loading')">Loading News...</h1>
 
             <div class="news-meta">
-              <span>By <strong id="news-author">Editorial Team</strong></span>
+              <span><span x-text="$store.i18n.t('newsDetail.by')">By</span> <strong id="news-author">Editorial Team</strong></span>
               <span>|</span>
               <span id="news-date"></span>
             </div>
@@ -37,13 +37,13 @@
             </div>
 
             <div class="news-body" id="news-body">
-              <p>
+              <p x-text="$store.i18n.t('news.loading')">
                 Loading article content.
               </p>
             </div>
 
             <div class="share-buttons">
-              <h4>Share This Article:</h4>
+              <h4 x-text="$store.i18n.t('newsDetail.share')">Share This Article:</h4>
               <a href="#" class="btn btn-icon-only"
                 ><i data-feather="facebook"></i
               ></a>
@@ -59,41 +59,16 @@
           <!-- Right Column: Sidebar -->
           <aside class="news-sidebar">
             <div class="sidebar-widget">
-              <h4>Related Products</h4>
+              <h4 x-text="$store.i18n.t('productDetail.relatedProducts')">Related Products</h4>
               <div id="related-products-list">
-                <a href="product-detail.html?id=2" class="sidebar-product">
-                  <img
-                    src="https://placehold.co/80x80/c7eacb/333?text=Tomato"
-                    alt="Cherry Tomato Seeds"
-                  />
-                  <div>
-                    <h5>Cherry Tomato Seeds</h5>
-                    <span>Rp 12.000</span>
-                  </div>
-                </a>
-                <a href="product-detail.html?id=5" class="sidebar-product">
-                  <img
-                    src="https://placehold.co/80x80/c7eacb/333?text=Fertilizer"
-                    alt="Organic Fertilizer"
-                  />
-                  <div>
-                    <h5>Organic Fertilizer (5kg)</h5>
-                    <span>Rp 25.000</span>
-                  </div>
-                </a>
+
               </div>
             </div>
 
             <div class="sidebar-widget">
-              <h4>Latest News</h4>
+              <h4 x-text="$store.i18n.t('news.latest')">Latest News</h4>
               <ul id="related-news-list" class="sidebar-news-list">
-                <li>
-                  <a href="news detail.html?id=nutrisi-ab-mix"
-                    >Why AB Mix Nutrition is Important</a
-                  >
-                </li>
-                <li><a href="#">NFT vs DFT Technique, Which is Best?</a></li>
-                <li><a href="#">5 Mistakes for Hydroponic Beginners</a></li>
+
               </ul>
             </div>
           </aside>

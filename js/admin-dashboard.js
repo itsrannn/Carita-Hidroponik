@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     const supabase = window.supabase;
+    const t = Alpine.store('i18n').t;
+    const lang = Alpine.store('i18n').lang;
 
     const totalRevenueEl = document.getElementById('total-revenue');
     const totalOrdersEl = document.getElementById('total-orders');
@@ -52,7 +54,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         orders.forEach(order => {
             if (Array.isArray(order.order_details)) {
                 order.order_details.forEach(item => {
-                    productCounts[item.name] = (productCounts[item.name] || 0) + item.quantity;
+                    const itemName = (item.name && item.name[lang]) ? item.name[lang] : (item.name || 'Unknown');
+                    productCounts[itemName] = (productCounts[itemName] || 0) + item.quantity;
                 });
             }
         });
@@ -67,10 +70,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const updateChartDateRange = (startDate, endDate, period) => {
         const options = { month: 'short', day: 'numeric', year: 'numeric' };
+        const locale = lang === 'id' ? 'id-ID' : 'en-US';
         if (period === 'daily') {
-            chartDateRangeEl.textContent = `${startDate.toLocaleDateString('en-US', options)} - ${endDate.toLocaleDateString('en-US', options)}`;
+            chartDateRangeEl.textContent = `${startDate.toLocaleDateString(locale, options)} - ${endDate.toLocaleDateString(locale, options)}`;
         } else if (period === 'weekly') {
-            chartDateRangeEl.textContent = startDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+            chartDateRangeEl.textContent = startDate.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
         } else if (period === 'monthly') {
             chartDateRangeEl.textContent = startDate.getFullYear();
         }
@@ -92,7 +96,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             return orderDate >= startOfWeek && orderDate <= endOfWeek;
         });
 
-        const labels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const labels = (lang === 'id')
+            ? ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+            : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
         const values = Array(7).fill(0);
 
         weekOrders.forEach(order => {
@@ -121,9 +127,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         const firstDayOfMonth = startOfMonth.getDay();
         const daysInMonth = endOfMonth.getDate();
 
+        const weekLabel = (lang === 'id') ? 'Minggu' : 'Week';
         const numWeeks = Math.ceil((firstDayOfMonth + daysInMonth) / 7);
         for (let i = 1; i <= numWeeks; i++) {
-            labels.push(`Week ${i}`);
+            labels.push(`${weekLabel} ${i}`);
             values.push(0);
         }
 
@@ -148,7 +155,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const yearOrders = orders.filter(order => new Date(order.created_at).getFullYear() === year);
 
-        const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const labels = (lang === 'id')
+            ? ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des']
+            : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const values = Array(12).fill(0);
 
         yearOrders.forEach(order => {
@@ -189,7 +198,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             data: {
                 labels: data.labels,
                 datasets: [{
-                    label: 'Revenue',
+                    label: t('admin.dashboard.kpi.totalRevenue'),
                     data: data.values,
                     borderColor: 'rgba(75, 192, 192, 1)',
                     backgroundColor: 'rgba(75, 192, 192, 0.2)',
@@ -217,13 +226,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const populateMonthFilter = () => {
-        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-        months.forEach((month, index) => {
+        const locale = lang === 'id' ? 'id-ID' : 'en-US';
+        for (let i = 0; i < 12; i++) {
+            const date = new Date(2000, i, 1);
+            const monthName = date.toLocaleDateString(locale, { month: 'long' });
             const option = document.createElement('option');
-            option.value = index;
-            option.textContent = month;
+            option.value = i;
+            option.textContent = monthName;
             productMonthFilter.appendChild(option);
-        });
+        }
         productMonthFilter.value = new Date().getMonth();
     };
 
@@ -232,7 +243,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         orders.forEach(order => {
             if (Array.isArray(order.order_details)) {
                 order.order_details.forEach(item => {
-                    productSales[item.name] = (productSales[item.name] || 0) + item.quantity;
+                    const itemName = item.name; // Use the raw name from DB
+                    productSales[itemName] = (productSales[itemName] || 0) + item.quantity;
                 });
             }
         });
@@ -242,7 +254,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (productChartType === 'pie' && sortedProducts.length > 5) {
             const top5 = sortedProducts.slice(0, 5);
             const othersCount = sortedProducts.slice(5).reduce((acc, curr) => acc + curr[1], 0);
-            const others = ['Others', othersCount];
+            const others = [t('admin.dashboard.productSales.others', 'Others'), othersCount];
             sortedProducts = [...top5, others];
         }
 
@@ -295,7 +307,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                      const percentage = ((context.parsed / total) * 100).toFixed(2) + '%';
                                      label += `${context.raw} (${percentage})`;
                                 } else {
-                                     label += `${context.raw} sold`;
+                                     label += `${context.raw} ${t('admin.dashboard.productSales.sold', 'sold')}`;
                                 }
                             }
                             return label;
@@ -324,7 +336,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Quantity Sold',
+                    label: t('admin.dashboard.productSales.quantitySold', 'Quantity Sold'),
                     data: values,
                     backgroundColor: [
                         'rgba(255, 99, 132, 0.7)',
@@ -386,17 +398,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             .slice(0, 5);
 
         if (recentOrders.length === 0) {
-            transactionsBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No completed transactions found.</td></tr>';
+            transactionsBody.innerHTML = `<tr><td colspan="5" style="text-align: center;">${t('admin.dashboard.transactions.empty', 'No completed transactions found.')}</td></tr>`;
             loadingTransactionsEl.style.display = 'none';
             return;
         }
 
         transactionsBody.innerHTML = recentOrders.map(order => {
-            const orderDate = new Date(order.created_at).toLocaleDateString('en-US', {
+            const locale = lang === 'id' ? 'id-ID' : 'en-US';
+            const orderDate = new Date(order.created_at).toLocaleDateString(locale, {
                 day: '2-digit', month: 'short', year: 'numeric'
             });
-            const customerName = order.user_fullname || 'N/A';
-            const shortOrderId = order.id ? `...${order.id.slice(-6)}` : 'N/A';
+            const customerName = order.user_fullname || t('admin.dashboard.transactions.notAvailable', 'N/A');
+            const shortOrderId = order.order_code ? `#${order.order_code}` : (order.id ? `...${order.id.slice(-6)}` : t('admin.dashboard.transactions.notAvailable', 'N/A'));
 
             return `
                 <tr>
@@ -427,7 +440,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         return data.map(order => ({
             ...order,
-            user_fullname: order.profile ? order.profile.full_name : 'Guest'
+            user_fullname: order.profile ? order.profile.full_name : t('admin.dashboard.transactions.guest', 'Guest')
         }));
     };
 

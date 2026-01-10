@@ -25,19 +25,19 @@
     <main class="main-content" x-data="checkoutPage">
       <section class="cart-section">
         <div class="container">
-          <h2 class="section-title">Shopping Cart</h2>
+          <h2 class="section-title" x-text="$store.i18n.t('cart.title')">Shopping Cart</h2>
           <div class="cart-layout">
             <!-- CART ITEMS -->
             <div class="cart-items-container">
               <div class="cart-header">
-                <div class="header-product">Product</div>
-                <div class="header-quantity">Quantity</div>
-                <div class="header-total">Total</div>
+                <div class="header-product" x-text="$store.i18n.t('cart.header.product')">Product</div>
+                <div class="header-quantity" x-text="$store.i18n.t('cart.header.quantity')">Quantity</div>
+                <div class="header-total" x-text="$store.i18n.t('cart.header.total')">Total</div>
               </div>
 
               <div id="cart-items-list">
                 <template x-if="$store.cart.items.length === 0">
-                  <p class="cart-empty-message">Your shopping cart is empty.</p>
+                  <p class="cart-empty-message" x-text="$store.i18n.t('cart.emptyMessage')">Your shopping cart is empty.</p>
                 </template>
 
                 <template x-for="item in $store.cart.details" :key="item.id" x-init="$nextTick(() => feather.replace())">
@@ -73,30 +73,30 @@
               </div>
 
               <a href="index.html#Product" class="continue-shopping">
-                <i data-feather="arrow-left"></i> Continue Shopping
+                <i data-feather="arrow-left"></i> <span x-text="$store.i18n.t('cart.continueShopping')">Continue Shopping</span>
               </a>
             </div>
 
             <!-- SUMMARY -->
             <div class="cart-summary">
-              <h3>Order Summary</h3>
+              <h3 x-text="$store.i18n.t('cart.summary.title')">Order Summary</h3>
 
               <div class="coupon-form">
-                <input type="text" placeholder="Enter Coupon Code" />
-                <button class="btn btn-secondary">Apply</button>
+                <input type="text" :placeholder="$store.i18n.t('cart.summary.couponPlaceholder')" />
+                <button class="btn btn-secondary" x-text="$store.i18n.t('cart.summary.applyButton')">Apply</button>
               </div>
 
               <div class="summary-item">
-                <span>Subtotal</span>
+                <span x-text="$store.i18n.t('cart.summary.subtotal')">Subtotal</span>
                 <span id="summary-subtotal" x-text="window.formatRupiah($store.cart.total)"></span>
               </div>
               <div class="summary-item">
-                <span>Shipping</span>
+                <span x-text="$store.i18n.t('cart.summary.shipping')">Shipping</span>
                 <span id="summary-shipping">Rp 0</span>
               </div>
 
               <div class="summary-total">
-                <span>Total</span>
+                <span x-text="$store.i18n.t('cart.summary.total')">Total</span>
                 <span id="summary-total" x-text="window.formatRupiah($store.cart.total)"></span>
               </div>
 
@@ -104,6 +104,7 @@
                 @click="handleCheckout()"
                 class="btn btn-primary btn-block"
                 :disabled="$store.cart.items.length === 0"
+                x-text="$store.i18n.t('cart.summary.checkoutButton')"
               >
                 Proceed to Checkout
               </button>
@@ -116,8 +117,8 @@
       <!-- ========== NOTIFICATION MODAL ========== -->
       <div x-show="isProfileModalOpen" :class="{'show': isProfileModalOpen}" class="modal-overlay cart-modal-overlay">
         <div class="modal-content" @click.outside="isProfileModalOpen = false">
-          <h3 class="modal-title">Profile Incomplete</h3>
-          <p class="modal-body">
+          <h3 class="modal-title" x-text="$store.i18n.t('cart.modal.profileIncomplete.title')">Profile Incomplete</h3>
+          <p class="modal-body" x-text="$store.i18n.t('cart.modal.profileIncomplete.body')">
             To proceed with checkout, you must complete your profile information
             first.
           </p>
@@ -125,10 +126,12 @@
             <button
               @click="isProfileModalOpen = false"
               class="btn btn-secondary"
+              x-text="$store.i18n.t('cart.modal.profileIncomplete.laterButton')"
             >
               Later
             </button>
             <a href="my-account.html" class="btn btn-primary"
+            x-text="$store.i18n.t('cart.modal.profileIncomplete.completeButton')"
               >Complete Profile</a
             >
           </div>
@@ -143,8 +146,8 @@
         class="modal-overlay cart-modal-overlay"
       >
         <div class="modal-content" @click.outside="isLoginModalOpen = false">
-          <h3 class="modal-title">You Are Not Logged In</h3>
-          <p class="modal-body">
+          <h3 class="modal-title" x-text="$store.i18n.t('cart.modal.notLoggedIn.title')">You Are Not Logged In</h3>
+          <p class="modal-body" x-text="$store.i18n.t('cart.modal.notLoggedIn.body')">
             Please log in or create an account to continue with the checkout
             process.
           </p>
@@ -152,10 +155,12 @@
             <button
               @click="isLoginModalOpen = false"
               class="btn btn-secondary"
+              x-text="$store.i18n.t('cart.modal.notLoggedIn.closeButton')"
             >
               Close
             </button>
             <a href="login-page.html" class="btn btn-primary"
+            x-text="$store.i18n.t('cart.modal.notLoggedIn.loginButton')"
               >Login or Register</a
             >
           </div>
@@ -168,7 +173,7 @@
         class="modal-overlay cart-modal-overlay"
       >
         <div class="modal-content" @click.outside="isConfirmModalOpen = false">
-          <h3 class="modal-title">Confirm Your Order</h3>
+          <h3 class="modal-title" x-text="$store.i18n.t('cart.modal.confirmOrder.title')">Confirm Your Order</h3>
           <div class="confirmation-summary">
             <template x-for="item in $store.cart.details" :key="item.id">
               <div class="summary-product-item">
@@ -184,7 +189,7 @@
             </template>
             <div class="summary-grand-total">
               <span
-                x-text="`Total: ${window.formatRupiah($store.cart.total)}`"
+                x-text="`${$store.i18n.t('cart.summary.total')}: ${window.formatRupiah($store.cart.total)}`"
               ></span>
             </div>
           </div>
@@ -192,12 +197,14 @@
             <button
               @click="isConfirmModalOpen = false"
               class="btn btn-secondary"
+              x-text="$store.i18n.t('cart.modal.confirmOrder.cancelButton')"
             >
               Cancel
             </button>
             <button
               @click="confirmAndProcessCheckout()"
               class="btn btn-primary"
+              x-text="$store.i18n.t('cart.modal.confirmOrder.confirmButton')"
             >
               Confirm & Order
             </button>
