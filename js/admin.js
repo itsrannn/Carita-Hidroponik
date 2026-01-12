@@ -19,6 +19,7 @@ function showAdminMessage(title, message) {
 }
 
 async function fetchOrders() {
+    window.showLoader();
     try {
         const { data: orders, error } = await supabase
             .from('orders')
@@ -50,6 +51,8 @@ async function fetchOrders() {
             'Failed to Load Orders',
             `An error occurred: <strong>${error.message}</strong><br>Ensure you are logged in & have a stable internet connection.`
         );
+    } finally {
+        window.hideLoader();
     }
 }
 
@@ -160,22 +163,27 @@ function createButton(text, onClick, a_class) {
 }
 
 async function updateOrderStatus(order, newStatus) {
-    const { data, error } = await supabase.from('orders').update({ status: newStatus }).eq('id', order.id).select();
-    if (error) {
-        alert(`Failed to update order status: ${error.message}`);
-        return;
-    }
-    if (!data || data.length === 0) {
-        alert('Update Failed: You may not have permission to change this order.');
-        return;
-    }
-    alert('Order status updated successfully.');
+    window.showLoader();
+    try {
+        const { data, error } = await supabase.from('orders').update({ status: newStatus }).eq('id', order.id).select();
+        if (error) {
+            alert(`Failed to update order status: ${error.message}`);
+            return;
+        }
+        if (!data || data.length === 0) {
+            alert('Update Failed: You may not have permission to change this order.');
+            return;
+        }
+        alert('Order status updated successfully.');
 
-    const orderInState = allOrders.find(o => o.id === order.id);
-    if (orderInState) {
-        orderInState.status = newStatus;
+        const orderInState = allOrders.find(o => o.id === order.id);
+        if (orderInState) {
+            orderInState.status = newStatus;
+        }
+        applySortAndFilter();
+    } finally {
+        window.hideLoader();
     }
-    applySortAndFilter();
 }
 
 sortTimeSelect.addEventListener('change', applySortAndFilter);

@@ -106,6 +106,7 @@ document.addEventListener("alpine:init", () => {
     },
 
     async load() {
+        window.showLoader();
         try {
             // Use a cache-busting query parameter for development
             const response = await fetch(`locales/${this.lang}.json?v=${new Date().getTime()}`);
@@ -114,6 +115,8 @@ document.addEventListener("alpine:init", () => {
         } catch (error) {
             console.error(`Failed to load translations for ${this.lang}:`, error);
             this.translations = {}; // Fallback to empty object on error
+        } finally {
+            window.hideLoader();
         }
     },
 
@@ -140,6 +143,7 @@ document.addEventListener("alpine:init", () => {
     all: [],
     isLoading: true,
     async init() {
+      window.showLoader();
       this.isLoading = true;
       try {
         const { data, error } = await window.supabase
@@ -153,6 +157,7 @@ document.addEventListener("alpine:init", () => {
         this.all = []; // Ensure data is empty on error
       } finally {
         this.isLoading = false;
+        window.hideLoader();
       }
     },
     getProductById(id) {
@@ -388,6 +393,7 @@ document.addEventListener("alpine:init", () => {
     },
 
     async fetchProducts() {
+      window.showLoader();
       this.isLoading.products = true;
       try {
         const { data, error } = await supabase
@@ -400,10 +406,12 @@ document.addEventListener("alpine:init", () => {
         window.showNotification('Failed to load products.', true);
       } finally {
         this.isLoading.products = false;
+        window.hideLoader();
       }
     },
 
     async fetchNews() {
+      window.showLoader();
       this.isLoading.news = true;
       try {
         const { data, error } = await supabase
@@ -416,12 +424,14 @@ document.addEventListener("alpine:init", () => {
         window.showNotification('Failed to load news.', true);
       } finally {
         this.isLoading.news = false;
+        window.hideLoader();
       }
     },
 
     async deleteItem(id, imageUrl) {
       if (!confirm('Are you sure you want to delete this item?')) return;
 
+      window.showLoader();
       const tableName = this.activeTab;
       try {
         const { error: dbErr } = await supabase.from(tableName).delete().eq('id', id);
@@ -438,6 +448,8 @@ document.addEventListener("alpine:init", () => {
         window.showNotification('Item successfully deleted.');
       } catch (error) {
         window.showNotification('Failed to delete item.', true);
+      } finally {
+        window.hideLoader();
       }
     },
 
@@ -451,6 +463,7 @@ document.addEventListener("alpine:init", () => {
         return;
       }
 
+      window.showLoader();
       try {
         const { error } = await supabase
           .from('products')
@@ -464,9 +477,11 @@ document.addEventListener("alpine:init", () => {
 
         window.showNotification('Bulk discount applied successfully!');
         this.bulkDiscountPercent = null;
-        this.fetchProducts(); // Refresh the product list
+        await this.fetchProducts(); // Refresh the product list
       } catch (error) {
         window.showNotification('Failed to apply bulk discount.', true);
+      } finally {
+        window.hideLoader();
       }
     }
   }));
@@ -552,33 +567,43 @@ document.addEventListener("alpine:init", () => {
         userProfile: null,
 
         async handleCheckout() {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session) {
-            this.isLoginModalOpen = true;
-            return;
-          }
+          window.showLoader();
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+              this.isLoginModalOpen = true;
+              return;
+            }
 
-          const { complete, profile } = await this.isProfileComplete();
-          if (!complete) {
-            this.isProfileModalOpen = true;
-            return;
+            const { complete, profile } = await this.isProfileComplete();
+            if (!complete) {
+              this.isProfileModalOpen = true;
+              return;
+            }
+            this.userProfile = profile;
+            this.isConfirmModalOpen = true;
+          } finally {
+            window.hideLoader();
           }
-          this.userProfile = profile;
-          this.isConfirmModalOpen = true;
         },
 
         async confirmAndProcessCheckout() {
-          if (this.userProfile) {
-            await this.processCheckout(this.userProfile);
-          } else {
-            // Re-validate just in case
-            const { complete, profile } = await this.isProfileComplete();
-            if (complete) {
-              await this.processCheckout(profile);
+          window.showLoader();
+          try {
+            if (this.userProfile) {
+              await this.processCheckout(this.userProfile);
             } else {
-              this.isConfirmModalOpen = false;
-              this.isProfileModalOpen = true;
+              // Re-validate just in case
+              const { complete, profile } = await this.isProfileComplete();
+              if (complete) {
+                await this.processCheckout(profile);
+              } else {
+                this.isConfirmModalOpen = false;
+                this.isProfileModalOpen = true;
+              }
             }
+          } finally {
+            window.hideLoader();
           }
         },
 
@@ -718,36 +743,41 @@ document.addEventListener("alpine:init", () => {
 
         // --- Initialization ---
         async init() {
-            const { data: { session } } = await window.supabase.auth.getSession();
-            if (!session) {
-                window.location.replace("login-page.html");
-                return;
+            window.showLoader();
+            try {
+                const { data: { session } } = await window.supabase.auth.getSession();
+                if (!session) {
+                    window.location.replace("login-page.html");
+                    return;
+                }
+                this.user = session.user;
+
+                // Setup real-time auth listener
+                supabase.auth.onAuthStateChange((event, session) => {
+                    if (event === 'SIGNED_OUT') {
+                        this.resetState();
+                        window.location.replace('login-page.html');
+                    } else if (event === 'SIGNED_IN') {
+                        // Potentially handle user change if needed in the future
+                        this.user = session.user;
+                    }
+                });
+
+                // Fetch all necessary data
+                await this.fetchProvinces();
+                await this.getProfile();
+                await this.fetchOrders();
+
+                this.$watch('editAddressMode', (value) => {
+                    if (value) {
+                        this.$nextTick(() => {
+                            this.initMap();
+                        });
+                    }
+                });
+            } finally {
+                window.hideLoader();
             }
-            this.user = session.user;
-
-            // Setup real-time auth listener
-            supabase.auth.onAuthStateChange((event, session) => {
-                if (event === 'SIGNED_OUT') {
-                    this.resetState();
-                    window.location.replace('login-page.html');
-                } else if (event === 'SIGNED_IN') {
-                    // Potentially handle user change if needed in the future
-                    this.user = session.user;
-                }
-            });
-
-            // Fetch all necessary data
-            await this.fetchProvinces();
-            await this.getProfile();
-            await this.fetchOrders();
-
-            this.$watch('editAddressMode', (value) => {
-                if (value) {
-                    this.$nextTick(() => {
-                        this.initMap();
-                    });
-                }
-            });
         },
 
         // --- View and URL Management ---
@@ -790,11 +820,14 @@ document.addEventListener("alpine:init", () => {
 
         // --- Regional Data Fetching ---
         async fetchProvinces() {
+            window.showLoader();
             try {
                 const response = await fetch('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json');
                 this.provinces = await response.json();
             } catch (error) {
                 console.error("Failed to load provinces:", error);
+            } finally {
+                window.hideLoader();
             }
         },
 
@@ -805,6 +838,7 @@ document.addEventListener("alpine:init", () => {
                 this.villages = [];
                 return;
             }
+            window.showLoader();
             try {
                 const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${this.selectedProvince}.json`);
                 this.regencies = await response.json();
@@ -812,6 +846,8 @@ document.addEventListener("alpine:init", () => {
                 this.villages = [];
             } catch (error) {
                 console.error("Failed to load regencies:", error);
+            } finally {
+                window.hideLoader();
             }
         },
 
@@ -821,12 +857,15 @@ document.addEventListener("alpine:init", () => {
                 this.villages = [];
                 return;
             }
+            window.showLoader();
             try {
                 const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/${this.selectedRegency}.json`);
                 this.districts = await response.json();
                 this.villages = [];
             } catch (error) {
                 console.error("Failed to load districts:", error);
+            } finally {
+                window.hideLoader();
             }
         },
 
@@ -835,11 +874,14 @@ document.addEventListener("alpine:init", () => {
                 this.villages = [];
                 return;
             }
+            window.showLoader();
             try {
                 const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/villages/${this.selectedDistrict}.json`);
                 this.villages = await response.json();
             } catch (error) {
                 console.error("Failed to load villages:", error);
+            } finally {
+                window.hideLoader();
             }
         },
 
@@ -849,6 +891,7 @@ document.addEventListener("alpine:init", () => {
 
         // --- Order History Functionality ---
         async fetchOrders() {
+            window.showLoader();
             this.isOrderLoading = true;
             try {
                 const { data, error } = await supabase
@@ -864,6 +907,7 @@ document.addEventListener("alpine:init", () => {
                 window.showNotification('Failed to load order history.', true);
             } finally {
                 this.isOrderLoading = false;
+                window.hideLoader();
             }
         },
 
@@ -895,6 +939,7 @@ document.addEventListener("alpine:init", () => {
 
         // --- Profile and Address Management ---
         async getProfile() {
+            window.showLoader();
             this.loading = true;
             try {
                 const { data, error } = await supabase
@@ -951,10 +996,12 @@ document.addEventListener("alpine:init", () => {
                 window.showNotification('Failed to load profile: ' + error.message, true);
             } finally {
                 this.loading = false;
+                window.hideLoader();
             }
         },
 
         async updateProfile() {
+            window.showLoader();
             this.loading = true;
             try {
                 const { data, error } = await supabase.from('profiles').update({
@@ -974,10 +1021,12 @@ document.addEventListener("alpine:init", () => {
                 window.showNotification('Error updating profile: ' + error.message, true);
             } finally {
                 this.loading = false;
+                window.hideLoader();
             }
         },
 
         async updateAddress() {
+            window.showLoader();
             this.loading = true;
 
             const provinceName = this.provinces.find(p => p.id === this.selectedProvince)?.name || '';
@@ -1009,14 +1058,21 @@ document.addEventListener("alpine:init", () => {
                 window.showNotification('Error updating address: ' + error.message, true);
             } finally {
                 this.loading = false;
+                window.hideLoader();
             }
         },
 
         async handleLogout() {
+            window.showLoader();
             this.loading = true;
-            await window.supabase.auth.signOut();
-            this.resetState();
-            window.location.replace('login-page.html');
+            try {
+                await window.supabase.auth.signOut();
+                this.resetState();
+                window.location.replace('login-page.html');
+            } finally {
+                this.loading = false;
+                // No need to hide loader, as the page is navigating away.
+            }
         }
     }));
 });

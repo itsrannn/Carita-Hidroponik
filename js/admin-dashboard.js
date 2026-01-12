@@ -446,12 +446,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     const init = async () => {
-        populateMonthFilter();
-        allOrdersData = await fetchAllOrdersWithNames();
-        displayKPIs(allOrdersData);
-        updateRevenueChart();
-        updateProductSalesChart();
-        displayRecentTransactions(allOrdersData);
+        window.showLoader();
+        try {
+            populateMonthFilter();
+            allOrdersData = await fetchAllOrdersWithNames();
+            displayKPIs(allOrdersData);
+            updateRevenueChart();
+            updateProductSalesChart();
+            displayRecentTransactions(allOrdersData);
+        } finally {
+            window.hideLoader();
+        }
     };
 
     init();

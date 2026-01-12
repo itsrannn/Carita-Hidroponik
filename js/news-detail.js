@@ -30,6 +30,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         async fetchNewsData() {
+            window.showLoader();
             this.isLoading = true;
             try {
                 const { data, error } = await window.supabase
@@ -47,10 +48,12 @@ document.addEventListener('alpine:init', () => {
                 console.error('Error fetching news:', error);
             } finally {
                 this.isLoading = false;
+                window.hideLoader();
             }
         },
 
         async fetchLatestNews() {
+            window.showLoader();
             try {
                 const { data, error } = await supabase
                     .from('news')
@@ -62,6 +65,8 @@ document.addEventListener('alpine:init', () => {
                 this.latestNews = data;
             } catch (error) {
                 console.error("Failed to load latest news:", error);
+            } finally {
+                window.hideLoader();
             }
         },
 
