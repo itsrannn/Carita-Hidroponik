@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Login Page | Carita Hidroponik</title>
     <link rel="icon" type="image/x-icon" href="img/Logo.jpg" />
-    <!-- Lottie Animation Player -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
-    <script src="js/loader.js"></script>
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/login page.css" />
     <link rel="stylesheet" href="css/mobile.css" media="(max-width: 768px)" />
@@ -163,61 +160,51 @@
         // --- Login Form Handler ---
         loginForm.addEventListener('submit', async (event) => {
           event.preventDefault();
-          window.showLoader();
-          try {
-            const email = loginForm.email.value;
-            const password = loginForm.password.value;
+          const email = loginForm.email.value;
+          const password = loginForm.password.value;
 
-            const { data, error } = await supabase.auth.signInWithPassword({
-              email,
-              password,
-            });
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
 
-            if (error) {
-              alert(`Error: ${error.message}`);
-            } else if (data.user) {
-              const urlParams = new URLSearchParams(window.location.search);
-              const redirectUrl = urlParams.get('redirect');
+          if (error) {
+            alert(`Error: ${error.message}`);
+          } else if (data.user) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectUrl = urlParams.get('redirect');
 
-              if (redirectUrl) {
-                window.location.href = redirectUrl;
-              } else {
-                await handleRedirect(data.user);
-              }
+            if (redirectUrl) {
+              window.location.href = redirectUrl;
+            } else {
+              await handleRedirect(data.user);
             }
-          } finally {
-            window.hideLoader();
           }
         });
 
         // --- Registration Form Handler ---
         registerForm.addEventListener('submit', async (event) => {
           event.preventDefault();
-          window.showLoader();
-          try {
-            const name = registerForm.name.value;
-            const email = registerForm.email.value;
-            const password = registerForm.password.value;
+          const name = registerForm.name.value;
+          const email = registerForm.email.value;
+          const password = registerForm.password.value;
 
-            const { data, error } = await supabase.auth.signUp({
-              email,
-              password,
-              options: {
-                data: { full_name: name }
-              }
-            });
-
-            if (error) {
-              alert(`Error: ${error.message}`);
-            } else {
-              // Hide the registration form
-              registerForm.style.display = 'none';
-              // Show the verification message
-              const verificationMessage = document.getElementById('verification-message');
-              verificationMessage.style.display = 'block';
+          const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: { full_name: name }
             }
-          } finally {
-            window.hideLoader();
+          });
+
+          if (error) {
+            alert(`Error: ${error.message}`);
+          } else {
+            // Hide the registration form
+            registerForm.style.display = 'none';
+            // Show the verification message
+            const verificationMessage = document.getElementById('verification-message');
+            verificationMessage.style.display = 'block';
           }
         });
       });
