@@ -79,6 +79,7 @@
                 <input type="email" name="email" :placeholder="$store.i18n.t('login.emailPlaceholder')" required />
                 <i data-feather="mail"></i>
               </div>
+              <span id="email-domain-error" class="error-message" style="display: block; color: red; text-align: left; width: 100%; padding: 0 5px; font-size: 0.8rem; margin-top: -10px; margin-bottom: 10px; visibility: hidden;"></span>
 
               <div class="input-box">
                 <input
@@ -188,6 +189,26 @@
           const name = registerForm.name.value;
           const email = registerForm.email.value;
           const password = registerForm.password.value;
+          const errorSpan = document.getElementById('email-domain-error');
+
+          const allowedDomains = [
+            '@gmail.com',
+            '@yahoo.com',
+            '@yahoo.co.id',
+            '@outlook.com',
+            '@hotmail.com',
+            '@icloud.com'
+          ];
+
+          const emailDomain = email.substring(email.lastIndexOf('@'));
+
+          if (!allowedDomains.includes(emailDomain)) {
+            errorSpan.textContent = "Gunakan email dengan domain umum seperti Gmail, Yahoo, atau Outlook.";
+            errorSpan.style.visibility = 'visible';
+            return;
+          } else {
+            errorSpan.style.visibility = 'hidden';
+          }
 
           const { data, error } = await supabase.auth.signUp({
             email,
@@ -200,11 +221,13 @@
           if (error) {
             alert(`Error: ${error.message}`);
           } else {
-            // Hide the registration form
-            registerForm.style.display = 'none';
-            // Show the verification message
-            const verificationMessage = document.getElementById('verification-message');
-            verificationMessage.style.display = 'block';
+            // Show the global notification
+            window.showNotification("Pendaftaran Berhasil");
+
+            // Redirect to login page after a short delay
+            setTimeout(() => {
+              window.location.href = 'login-page.html';
+            }, 2000); // 2-second delay
           }
         });
       });
