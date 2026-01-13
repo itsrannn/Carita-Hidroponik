@@ -7,9 +7,6 @@
     <link rel="icon" type="image/x-icon" href="img/Logo.jpg" />
     <!-- Quill CSS -->
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <!-- Lottie Animation Player -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
-    <script src="js/loader.js"></script>
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/mobile.css" media="(max-width: 768px)" />
     <style>
@@ -172,8 +169,6 @@
           imagePreviewUrl: null,
 
           async init() {
-            window.showLoader();
-            try {
               const params = new URLSearchParams(window.location.search);
               let typeParam = params.get('type');
               if (typeParam === 'products') {
@@ -192,9 +187,6 @@
                   this.initializeEmptyItem();
                   this.isLoading = false;
               }
-            } finally {
-                window.hideLoader();
-            }
 
               if (this.type === 'news') {
                   this.$nextTick(() => {
@@ -245,32 +237,28 @@
           },
 
           async fetchData() {
-              window.showLoader();
               this.isLoading = true;
-              try {
-                const tableName = this.type === 'product' ? 'products' : 'news';
-                const selectString = this.type === 'product' ? '*, characteristics:char' : '*';
-                const { data, error } = await supabase
-                    .from(tableName)
-                    .select(selectString)
-                    .eq('id', this.id)
-                    .single();
+              const tableName = this.type === 'product' ? 'products' : 'news';
+              const selectString = this.type === 'product' ? '*, characteristics:char' : '*';
+              const { data, error } = await supabase
+                  .from(tableName)
+                  .select(selectString)
+                  .eq('id', this.id)
+                  .single();
 
-                if (error) {
-                    window.showNotification('Failed to load data. Please try again.', true);
-                    return;
-                }
-
-                if (this.type === 'product' && data.characteristics) {
-                    data.characteristics = data.characteristics.replace(/<br\s*\/?>/gi, '\n');
-                }
-
-                this.item = data;
-                this.initializeDiscountState();
-              } finally {
-                this.isLoading = false;
-                window.hideLoader();
+              if (error) {
+                  window.showNotification('Failed to load data. Please try again.', true);
+                  this.isLoading = false;
+                  return;
               }
+
+              if (this.type === 'product' && data.characteristics) {
+                  data.characteristics = data.characteristics.replace(/<br\s*\/?>/gi, '\n');
+              }
+
+              this.item = data;
+              this.initializeDiscountState();
+              this.isLoading = false;
           },
 
           initializeDiscountState() {
@@ -347,84 +335,81 @@
                   return;
               }
 
-              window.showLoader();
               this.isLoading = true;
               this.submitButtonText = 'Saving...';
 
-              try {
-                const imageInput = document.getElementById(this.type === 'product' ? 'image-input' : 'news-image-input');
-                const file = imageInput.files[0];
-                let imageUrl = this.item.image_url;
+              const imageInput = document.getElementById(this.type === 'product' ? 'image-input' : 'news-image-input');
+              const file = imageInput.files[0];
+              let imageUrl = this.item.image_url;
 
-                if (file) {
-                    const filePath = `${this.type}-images/${Date.now()}-${file.name}`;
-                    const { data: uploadData, error: uploadError } = await supabase.storage
-                        .from('product-images')
-                        .upload(filePath, file);
+              if (file) {
+                  const filePath = `${this.type}-images/${Date.now()}-${file.name}`;
+                  const { data: uploadData, error: uploadError } = await supabase.storage
+                      .from('product-images')
+                      .upload(filePath, file);
 
-                    if (uploadError) {
-                        window.showNotification('Failed to upload image.', true);
-                        return;
-                    }
+                  if (uploadError) {
+                      window.showNotification('Failed to upload image.', true);
+                      this.isLoading = false;
+                      this.submitButtonText = this.action === 'add' ? 'Save' : 'Save Changes';
+                      return;
+                  }
 
-                    const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(uploadData.path);
-                    imageUrl = urlData.publicUrl;
-                }
-
-                // Create a clean copy of the item to avoid issues with Alpine's proxy
-                let dataToSubmit = JSON.parse(JSON.stringify(this.item));
-                dataToSubmit.image_url = imageUrl;
-
-                if (this.type === 'news') {
-                    dataToSubmit.content = this.quill.root.innerHTML;
-                } else if (this.type === 'product') {
-                    if (this.discount.enabled && this.discount.value) {
-                        const discountValue = Number(this.discount.value);
-                        if (this.discount.type === 'percent') {
-                            dataToSubmit.discount_percent = discountValue || null;
-                            dataToSubmit.discount_price = null;
-                        } else { // fixed
-                            dataToSubmit.discount_price = discountValue || null;
-                            dataToSubmit.discount_percent = 0;
-                        }
-                    } else {
-                        dataToSubmit.discount_percent = 0;
-                        dataToSubmit.discount_price = null;
-                    }
-
-                    if (dataToSubmit.characteristics) {
-                        dataToSubmit.char = dataToSubmit.characteristics.replace(/\n/g, '<br>');
-                    }
-                    // This field doesn't exist on the db, so it must be removed.
-                    delete dataToSubmit.characteristics;
-                }
-
-                delete dataToSubmit.id; // Always remove id before upsert
-
-                const tableName = this.type === 'product' ? 'products' : 'news';
-                let query = supabase.from(tableName);
-
-                if (this.action === 'add') {
-                    query = query.insert([dataToSubmit]);
-                } else {
-                    query = query.update(dataToSubmit).eq('id', this.id);
-                }
-
-                const { error } = await query;
-
-                if (error) {
-                    window.showNotification('Failed to save data. Please try again.', true);
-                } else {
-                    window.showNotification('Data saved successfully!', false);
-                    setTimeout(() => {
-                        window.location.href = 'admin-products.html';
-                    }, 1500);
-                }
-              } finally {
-                this.isLoading = false;
-                this.submitButtonText = this.action === 'add' ? 'Save' : 'Save Changes';
-                window.hideLoader();
+                  const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(uploadData.path);
+                  imageUrl = urlData.publicUrl;
               }
+
+              // Create a clean copy of the item to avoid issues with Alpine's proxy
+              let dataToSubmit = JSON.parse(JSON.stringify(this.item));
+              dataToSubmit.image_url = imageUrl;
+
+              if (this.type === 'news') {
+                  dataToSubmit.content = this.quill.root.innerHTML;
+              } else if (this.type === 'product') {
+                  if (this.discount.enabled && this.discount.value) {
+                      const discountValue = Number(this.discount.value);
+                      if (this.discount.type === 'percent') {
+                          dataToSubmit.discount_percent = discountValue || null;
+                          dataToSubmit.discount_price = null;
+                      } else { // fixed
+                          dataToSubmit.discount_price = discountValue || null;
+                          dataToSubmit.discount_percent = 0;
+                      }
+                  } else {
+                      dataToSubmit.discount_percent = 0;
+                      dataToSubmit.discount_price = null;
+                  }
+
+                  if (dataToSubmit.characteristics) {
+                    dataToSubmit.char = dataToSubmit.characteristics.replace(/\n/g, '<br>');
+                  }
+                  // This field doesn't exist on the db, so it must be removed.
+                  delete dataToSubmit.characteristics;
+              }
+
+              delete dataToSubmit.id; // Always remove id before upsert
+
+              const tableName = this.type === 'product' ? 'products' : 'news';
+              let query = supabase.from(tableName);
+
+              if (this.action === 'add') {
+                query = query.insert([dataToSubmit]);
+              } else {
+                query = query.update(dataToSubmit).eq('id', this.id);
+              }
+
+              const { error } = await query;
+
+              if (error) {
+                  window.showNotification('Failed to save data. Please try again.', true);
+              } else {
+                  window.showNotification('Data saved successfully!', false);
+                  setTimeout(() => {
+                      window.location.href = 'admin-products.html';
+                  }, 1500);
+              }
+              this.isLoading = false;
+              this.submitButtonText = this.action === 'add' ? 'Save' : 'Save Changes';
           }
         }));
       });
