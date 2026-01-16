@@ -157,6 +157,44 @@ document.addEventListener("alpine:init", () => {
     },
     getProductById(id) {
       return this.all.find(p => String(p.id) === String(id));
+    },
+    renderProductCard(item) {
+      const { finalPrice, percentOff, originalPrice } = window.calculateDiscount(item);
+      const isPromo = percentOff > 0;
+      const lang = Alpine.store('i18n').lang;
+      const itemName = (item.name && item.name[lang]) ? item.name[lang] : ((item.name && item.name['id']) ? item.name['id'] : 'Unnamed Product');
+
+
+      const ribbonHtml = isPromo ? `
+        <div class="discount-ribbon"><span>${percentOff}% OFF</span></div>
+      ` : '';
+
+      const priceHtml = isPromo ? `
+        <div class="price-container">
+          <div class="price-original">${window.formatRupiah(originalPrice)}</div>
+          <div class="price-discounted">${window.formatRupiah(finalPrice)}</div>
+        </div>
+      ` : `<div class="price">${window.formatRupiah(originalPrice)}</div>`;
+
+      return `
+        <a href="product detail.html?id=${item.id}" class="product-link">
+          <article class="product-card">
+            ${ribbonHtml}
+            <figure class="product-media">
+              <img src="${item.image_url ? item.image_url : 'img/coming soon.jpg'}" alt="${itemName}" />
+            </figure>
+            <div class="product-body">
+              <h3 class="product-title">${itemName}</h3>
+              <div class="product-meta">
+                ${priceHtml}
+                <button class="btn-sm add-cart" @click.prevent.stop="$store.cart.add(${item.id})">
+                  <i data-feather="shopping-bag"></i> Add
+                </button>
+              </div>
+            </div>
+          </article>
+        </a>
+      `;
     }
   });
 
@@ -238,45 +276,6 @@ document.addEventListener("alpine:init", () => {
 
     promoItems() {
       return this.$store.products.all.filter(p => p.discount_price || p.discount_percent > 0).slice(0, 4);
-    },
-
-    renderProductCard(item) {
-      const { finalPrice, percentOff, originalPrice } = window.calculateDiscount(item);
-      const isPromo = percentOff > 0;
-      const lang = this.$store.i18n.lang;
-      const itemName = (item.name && item.name[lang]) ? item.name[lang] : ((item.name && item.name['id']) ? item.name['id'] : 'Unnamed Product');
-
-
-      const ribbonHtml = isPromo ? `
-        <div class="discount-ribbon"><span>${percentOff}% OFF</span></div>
-      ` : '';
-
-      const priceHtml = isPromo ? `
-        <div class="price-container">
-          <div class="price-original">${window.formatRupiah(originalPrice)}</div>
-          <div class="price-discounted">${window.formatRupiah(finalPrice)}</div>
-        </div>
-      ` : `<div class="price">${window.formatRupiah(originalPrice)}</div>`;
-
-      return `
-        <a href="product detail.html?id=${item.id}" class="product-link">
-          <article class="product-card">
-            ${ribbonHtml}
-            <figure class="product-media">
-              <img src="${item.image_url ? item.image_url : 'img/coming soon.jpg'}" alt="${itemName}" />
-            </figure>
-            <div class="product-body">
-              <h3 class="product-title">${itemName}</h3>
-              <div class="product-meta">
-                ${priceHtml}
-                <button class="btn-sm add-cart" @click.prevent.stop="$store.cart.add(${item.id})">
-                  <i data-feather="shopping-bag"></i> Add
-                </button>
-              </div>
-            </div>
-          </article>
-        </a>
-      `;
     },
 
     processedItems() {
@@ -474,19 +473,20 @@ document.addEventListener("alpine:init", () => {
   Alpine.data('productDetail', () => ({
         product: null,
         relatedProducts: [],
-        ready: false, // Add a ready flag
+        isLoadingRelated: true,
+        ready: false,
         init() {
             const urlParams = new URLSearchParams(window.location.search);
             const productId = urlParams.get('id');
 
             Alpine.effect(() => {
                 const isLoading = this.$store.products.isLoading;
-                const lang = this.$store.i18n.lang; // React to language changes
+                const lang = this.$store.i18n.lang;
 
                 if (!isLoading) {
                     this.product = this.$store.products.getProductById(productId);
                     if (this.product) {
-                        const productName = (this.product.name && this.product.name[lang]) ? this.product.name[lang] : ((this.product.name && this.product.name['id']) ? this.product.name['id'] : '');
+                        const productName = (this.product.name && this.product.name[lang]) ? this.product.name[lang] : ((this.product.name && this.product.name['id']) ? this.product.name['id'] : 'Product');
                         document.title = "Carita Hidroponik | " + productName;
                         this.fetchRelatedProducts();
                     }
@@ -495,10 +495,19 @@ document.addEventListener("alpine:init", () => {
             });
         },
         fetchRelatedProducts() {
-            if (!this.product) return;
+            this.isLoadingRelated = true;
+            if (!this.product) {
+                this.relatedProducts = [];
+                this.isLoadingRelated = false;
+                return;
+            }
+            // Simulate a short delay to show loading state if needed, or perform async fetch
+            // For now, it's synchronous:
             this.relatedProducts = this.$store.products.all.filter(p =>
                 p.category === this.product.category && String(p.id) !== String(this.product.id)
             );
+            this.isLoadingRelated = false;
+
             this.$nextTick(() => this.initSwiper());
         },
         initSwiper() {

@@ -36,78 +36,86 @@
         </p>
       </div>
 
-      <div x-show="!$store.products.isLoading && product" class="product-detail-container" :data-ready="ready">
-        <section class="product-detail-banner">
-          <nav class="breadcrumb">
-            <a href="index.html">Home</a>
-            <span class="breadcrumb-separator">/</span>
-            <a href="index.html#Product">Products</a>
-            <span class="breadcrumb-separator">/</span>
-            <span x-text="productName"></span>
-          </nav>
-        </section>
+      <template x-if="product">
+        <div class="product-detail-container" :data-ready="ready">
+          <section class="product-detail-banner">
+            <nav class="breadcrumb">
+              <a href="index.html">Home</a>
+              <span class="breadcrumb-separator">/</span>
+              <a href="index.html#Product">Products</a>
+              <span class="breadcrumb-separator">/</span>
+              <span x-text="productName"></span>
+            </nav>
+          </section>
 
-        <!-- SECTION HEAD -->
-        <section class="product-detail-head">
-          <div class="product-detail-img">
-            <img
-              :src="product.image_url ? product.image_url : 'img/general/default.jpg'"
-              :alt="productName"
-            />
-          </div>
-          <div class="product-detail-info">
-            <h2 x-text="product.category.toUpperCase()" class="badge-category"></h2>
-            <h1 x-text="productName" class="product-detail-title"></h1>
+          <!-- SECTION HEAD -->
+          <section class="product-detail-head">
+            <div class="product-detail-img">
+              <img
+                :src="product.image_url ? product.image_url : 'img/general/default.jpg'"
+                :alt="productName"
+              />
+            </div>
+            <div class="product-detail-info">
+              <h2 x-text="product.category.toUpperCase()" class="badge-category"></h2>
+              <h1 x-text="productName" class="product-detail-title"></h1>
 
-            <div class="price-container-detail" x-data="{ priceInfo: calculateDiscount(product) }">
-              <template x-if="priceInfo.percentOff > 0">
-                <div>
-                  <span class="product-detail-price-original" x-text="formatRupiah(priceInfo.originalPrice)"></span>
-                  <span class="product-detail-price-final" x-text="formatRupiah(priceInfo.finalPrice)"></span>
-                  <span class="product-detail-discount-badge" x-text="'-' + priceInfo.percentOff + '%'"></span>
+              <div class="price-container-detail" x-data="{ priceInfo: calculateDiscount(product) }">
+                <template x-if="priceInfo.percentOff > 0">
+                  <div>
+                    <span class="product-detail-price-original" x-text="formatRupiah(priceInfo.originalPrice)"></span>
+                    <span class="product-detail-price-final" x-text="formatRupiah(priceInfo.finalPrice)"></span>
+                    <span class="product-detail-discount-badge" x-text="'-' + priceInfo.percentOff + '%'"></span>
+                  </div>
+                </template>
+                <template x-if="!(priceInfo.percentOff > 0)">
+                  <p x-text="formatRupiah(priceInfo.originalPrice)" class="product-detail-price"></p>
+                </template>
+              </div>
+
+              <p x-html="productCharacteristics" class="product-detail-desc-short"></p>
+              <button
+                @click="$store.cart.add(product.id)"
+                class="btn-sm add-cart"
+              >
+                <i data-feather="shopping-bag"></i> <span x-text="$store.i18n.t('productDetail.addToCart')">Add to Cart</span>
+              </button>
+            </div>
+          </section>
+
+          <!-- SECTION DESCRIPTION -->
+          <section class="product-detail-description">
+            <h2 x-text="$store.i18n.t('productDetail.specifications')">Product Description</h2>
+            <p x-text="productDescription"></p>
+          </section>
+
+          <!-- SECTION RELATED PRODUCTS -->
+          <section class="related-products">
+            <h2 x-text="$store.i18n.t('productDetail.relatedProducts')">Related Products</h2>
+
+            <p x-show="isLoadingRelated" class="loading-text" style="text-align: center;">Loading related products...</p>
+
+            <template x-if="!isLoadingRelated">
+              <div>
+                <div x-show="relatedProducts.length > 0" class="swiper related-product-slider">
+                  <div class="swiper-wrapper">
+                    <template x-for="item in relatedProducts" :key="item.id">
+                      <div class="swiper-slide" x-html="$store.products.renderProductCard(item)"></div>
+                    </template>
+                  </div>
+                  <div class="swiper-button-prev"></div>
+                  <div class="swiper-button-next"></div>
+                  <div class="swiper-pagination"></div>
                 </div>
-              </template>
-              <template x-if="!(priceInfo.percentOff > 0)">
-                <p x-text="formatRupiah(priceInfo.originalPrice)" class="product-detail-price"></p>
-              </template>
-            </div>
 
-            <p x-html="productCharacteristics" class="product-detail-desc-short"></p>
-            <button
-              @click="$store.cart.add(product.id)"
-              class="btn-sm add-cart"
-            >
-              <i data-feather="shopping-bag"></i> <span x-text="$store.i18n.t('productDetail.addToCart')">Add to Cart</span>
-            </button>
-          </div>
-        </section>
-
-        <!-- SECTION DESCRIPTION -->
-        <section class="product-detail-description">
-          <h2 x-text="$store.i18n.t('productDetail.specifications')">Product Description</h2>
-          <p x-text="productDescription"></p>
-        </section>
-
-        <!-- SECTION RELATED PRODUCTS -->
-        <section class="related-products">
-          <h2 x-text="$store.i18n.t('productDetail.relatedProducts')">Related Products</h2>
-
-          <div x-show="relatedProducts.length > 0" class="swiper related-product-slider">
-            <div class="swiper-wrapper">
-              <template x-for="item in relatedProducts" :key="item.id">
-                <div class="swiper-slide" x-html="$store.products.renderProductCard(item)"></div>
-              </template>
-            </div>
-            <div class="swiper-button-prev"></div>
-            <div class="swiper-button-next"></div>
-            <div class="swiper-pagination"></div>
-          </div>
-
-          <p x-show="relatedProducts.length === 0" class="muted" style="text-align: center;">
-            No other related products.
-          </p>
-        </section>
-      </div>
+                <p x-show="relatedProducts.length === 0" class="muted" style="text-align: center;">
+                  No related products available.
+                </p>
+              </div>
+            </template>
+          </section>
+        </div>
+      </template>
     </main>
 
     <div id="footer-include"></div>
