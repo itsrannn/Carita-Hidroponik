@@ -259,7 +259,7 @@ document.addEventListener("alpine:init", () => {
       ` : `<div class="price">${window.formatRupiah(originalPrice)}</div>`;
 
       return `
-        <a href="product detail.html?id=${item.id}" class="product-link">
+        <a href="product-details.html?id=${item.id}" class="product-link">
           <article class="product-card">
             ${ribbonHtml}
             <figure class="product-media">
@@ -474,6 +474,8 @@ document.addEventListener("alpine:init", () => {
   Alpine.data('productDetail', () => ({
         product: null,
         relatedProducts: [],
+        relatedLoading: true,
+        priceInfo: { percentOff: 0, originalPrice: 0, discountedPrice: 0 },
         ready: false, // Add a ready flag
         init() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -486,6 +488,7 @@ document.addEventListener("alpine:init", () => {
                 if (!isLoading) {
                     this.product = this.$store.products.getProductById(productId);
                     if (this.product) {
+                        this.priceInfo = calculateDiscount(this.product);
                         const productName = (this.product.name && this.product.name[lang]) ? this.product.name[lang] : ((this.product.name && this.product.name['id']) ? this.product.name['id'] : '');
                         document.title = "Carita Hidroponik | " + productName;
                         this.fetchRelatedProducts();
@@ -496,9 +499,11 @@ document.addEventListener("alpine:init", () => {
         },
         fetchRelatedProducts() {
             if (!this.product) return;
+            this.relatedLoading = true;
             this.relatedProducts = this.$store.products.all.filter(p =>
                 p.category === this.product.category && String(p.id) !== String(this.product.id)
             );
+            this.relatedLoading = false;
             this.$nextTick(() => this.initSwiper());
         },
         initSwiper() {

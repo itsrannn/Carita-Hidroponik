@@ -6,7 +6,7 @@
     <title>Product Detail | Carita Hidroponik</title>
     <link rel="icon" type="image/x-icon" href="img/Logo.jpg" />
     <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/product detail.css" />
+    <link rel="stylesheet" href="css/product-details.css" />
     <link rel="stylesheet" href="css/mobile.css" media="(max-width: 768px)" />
 
     <link
@@ -50,16 +50,30 @@
         <!-- SECTION HEAD -->
         <section class="product-detail-head">
           <div class="product-detail-img">
-            <img
-              :src="product.image_url ? product.image_url : 'img/general/default.jpg'"
-              :alt="productName"
-            />
+            <template x-if="product">
+              <img
+                :src="product.image_url ? product.image_url : 'img/general/default.jpg'"
+                :alt="productName"
+              />
+            </template>
+            <template x-if="!product">
+              <img
+                src="img/general/default.jpg"
+                alt="Loading product image"
+              />
+            </template>
           </div>
           <div class="product-detail-info">
-            <h2 x-text="product.category.toUpperCase()" class="badge-category"></h2>
-            <h1 x-text="productName" class="product-detail-title"></h1>
+            <template x-if="product">
+              <h2 x-text="product.category.toUpperCase()" class="badge-category"></h2>
+              <h1 x-text="productName" class="product-detail-title"></h1>
+            </template>
+            <template x-if="!product">
+              <h2 class="badge-category">Loading...</h2>
+              <h1 class="product-detail-title">Loading...</h1>
+            </template>
 
-            <div class="price-container-detail" x-data="{ priceInfo: calculateDiscount(product) }">
+            <div class="price-container-detail">
               <template x-if="priceInfo.percentOff > 0">
                 <div>
                   <span class="product-detail-price-original" x-text="formatRupiah(priceInfo.originalPrice)"></span>
@@ -92,10 +106,42 @@
         <section class="related-products">
           <h2 x-text="$store.i18n.t('productDetail.relatedProducts')">Related Products</h2>
 
-          <div x-show="relatedProducts.length > 0" class="swiper related-product-slider">
+          <p x-show="relatedLoading" class="loading-text">Loading related products...</p>
+
+          <div x-show="!relatedLoading && relatedProducts.length > 0" class="swiper related-product-slider">
             <div class="swiper-wrapper">
               <template x-for="item in relatedProducts" :key="item.id">
-                <div class="swiper-slide" x-html="$store.products.renderProductCard(item)"></div>
+                <div class="swiper-slide">
+                  <a :href="'product-details.html?id=' + item.id" class="product-link">
+                    <article class="product-card">
+                      <template x-if="calculateDiscount(item).percentOff > 0">
+                        <div class="discount-ribbon">
+                          <span x-text="calculateDiscount(item).percentOff + '% OFF'"></span>
+                        </div>
+                      </template>
+                      <figure class="product-media">
+                        <img :src="item.image_url ? item.image_url : 'img/coming soon.jpg'" :alt="item.name[$store.i18n.lang] || item.name['id']" />
+                      </figure>
+                      <div class="product-body">
+                        <h3 class="product-title" x-text="item.name[$store.i18n.lang] || item.name['id']"></h3>
+                        <div class="product-meta">
+                          <template x-if="calculateDiscount(item).percentOff > 0">
+                            <div class="price-container">
+                              <div class="price-original" x-text="formatRupiah(calculateDiscount(item).originalPrice)"></div>
+                              <div class="price-discounted" x-text="formatRupiah(calculateDiscount(item).finalPrice)"></div>
+                            </div>
+                          </template>
+                          <template x-if="!(calculateDiscount(item).percentOff > 0)">
+                            <div class="price" x-text="formatRupiah(calculateDiscount(item).originalPrice)"></div>
+                          </template>
+                          <button class="btn-sm add-cart" @click.prevent.stop="$store.cart.add(item.id)">
+                            <i data-feather="shopping-bag"></i> Add
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  </a>
+                </div>
               </template>
             </div>
             <div class="swiper-button-prev"></div>
@@ -103,8 +149,8 @@
             <div class="swiper-pagination"></div>
           </div>
 
-          <p x-show="relatedProducts.length === 0" class="muted" style="text-align: center;">
-            No other related products.
+          <p x-show="!relatedLoading && relatedProducts.length === 0" class="muted" style="text-align: center;">
+            No related products available.
           </p>
         </section>
       </div>
