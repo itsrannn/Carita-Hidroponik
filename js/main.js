@@ -160,6 +160,11 @@ document.addEventListener("alpine:init", () => {
     }
   });
 
+  Alpine.store('news', {
+    relatedProducts: [],
+    // Future properties for news can be added here
+  });
+
   Alpine.store("cart", {
     items: [],
     init() {
