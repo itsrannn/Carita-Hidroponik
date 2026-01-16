@@ -34,15 +34,29 @@ document.addEventListener('alpine:init', () => {
             try {
                 const { data, error } = await window.supabase
                     .from('news')
-                    .select('*')
+                    .select(`
+                        *,
+                        products:news_related_products (
+                            products (
+                                id,
+                                name,
+                                price,
+                                image_url,
+                                discount_percent,
+                                discount_price
+                            )
+                        )
+                    `)
                     .eq('id', this.newsId)
                     .single();
 
                 if (error) throw error;
 
                 this.newsItem = data;
+                // The related products are nested; we need to extract them.
+                this.relatedProducts = data.products.map(item => item.products);
                 this.updateDocumentTitle();
-                this.fetchRelatedProducts(); // Fetch related products after getting the category
+
             } catch (error) {
                 console.error('Error fetching news:', error);
             } finally {
@@ -63,30 +77,6 @@ document.addEventListener('alpine:init', () => {
             } catch (error) {
                 console.error("Failed to load latest news:", error);
             }
-        },
-
-        fetchRelatedProducts() {
-            // This now relies on the global product store
-            if (!this.$store.products.all.length) {
-                // Wait for products to be loaded if they aren't already
-                this.$watch('$store.products.isLoading', (loading) => {
-                    if (!loading) {
-                        this.filterRelatedProducts();
-                    }
-                });
-            } else {
-                this.filterRelatedProducts();
-            }
-        },
-
-        filterRelatedProducts() {
-            if (!this.newsItem || !this.newsItem.category) {
-                this.relatedProducts = [];
-                return;
-            }
-            this.relatedProducts = this.$store.products.all
-                .filter(p => p.category === this.newsItem.category)
-                .slice(0, 4); // Limit to 4 related products
         },
 
         updateDocumentTitle() {
