@@ -218,7 +218,11 @@
         }
       },
       "loading": "Loading orders...",
+      "empty": "No orders found for the selected filter.",
+      "orderIdLabel": "Order ID",
       "card": {
+        "noItems": "No items found",
+        "noActions": "No actions available",
         "customerInfo": "Customer Information",
         "customerName": "Customer Name",
         "phone": "Phone",

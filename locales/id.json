@@ -218,7 +218,11 @@
         }
       },
       "loading": "Memuat pesanan...",
+      "empty": "Tidak ada pesanan yang sesuai dengan filter.",
+      "orderIdLabel": "ID Pesanan",
       "card": {
+        "noItems": "Tidak ada item",
+        "noActions": "Tidak ada aksi yang tersedia",
         "customerInfo": "Informasi Pelanggan",
         "customerName": "Nama Pelanggan",
         "phone": "Telepon",
