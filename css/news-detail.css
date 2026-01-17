@@ -88,20 +88,22 @@
 }
 
 .news-detail-page .news-article-content h1 {
-  font-size: 2rem;
+  /* Style updated for better dominance */
+  font-size: 2.5rem;
   font-weight: 700;
   color: var(--green, #1b5e20);
-  margin-bottom: 0.8rem;
-  line-height: 1.3;
+  margin-bottom: 0.75rem;
+  line-height: 1.25;
 }
 
 .news-detail-page .news-meta {
-  font-size: 0.9rem;
-  color: #777;
+  /* Style updated for subtlety */
+  font-size: 0.85rem;
+  color: #888;
   margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
 }
 
 /* Hero image / video */
@@ -123,7 +125,7 @@
 /* Body konten */
 .news-detail-page .news-body {
   font-size: 1rem;
-  line-height: 1.7;
+  line-height: 1.8; /* Increased for better readability */
   color: #444;
   margin-bottom: 2rem;
 }
