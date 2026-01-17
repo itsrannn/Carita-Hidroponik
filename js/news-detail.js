@@ -131,7 +131,8 @@ document.addEventListener('alpine:init', () => {
         get newsContent() {
             if (!this.newsItem) return '';
             const lang = this.$store.i18n.lang;
-            return this.newsItem.description[lang] || this.newsItem.description.id;
+            // Defensive coding: handle cases where 'description' might be null or not an object
+            return (this.newsItem.description || {})[lang] || (this.newsItem.description || {}).id || '';
         },
 
         get formattedDate() {
