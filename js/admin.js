@@ -77,7 +77,7 @@ function renderOrders(orders) {
     const t = Alpine.store('i18n').t;
 
     if (orders.length === 0) {
-        ordersGrid.innerHTML = `<p>${t('admin.orders.empty') || 'No orders match your filter criteria.'}</p>`;
+        ordersGrid.innerHTML = `<p>${t('admin.orders.empty')}</p>`;
         return;
     }
 
@@ -86,7 +86,7 @@ function renderOrders(orders) {
         card.className = 'admin-order-card';
         card.id = `order-${order.id}`;
 
-        let itemsList = `<li>${t('admin.orders.card.noItems') || 'No items found'}</li>`;
+        let itemsList = `<li>${t('admin.orders.card.noItems')}</li>`;
         const orderItems = order.order_details || order.items;
         if (orderItems && orderItems.length > 0) {
             itemsList = orderItems.map(item => `<li>${item.name} (x${item.quantity})</li>`).join('');
@@ -107,7 +107,7 @@ function renderOrders(orders) {
         card.innerHTML = `
             <div class="admin-order-card">
                 <div class="order-header">
-                    <h3>${t('account.orders.orderId')} #${order.order_code || order.id}</h3>
+                    <h3>${t('admin.orders.orderIdLabel')} #${order.order_code || order.id}</h3>
                     <span class="status-badge status-${(order.status || '').toLowerCase().replace(/\s+/g, '-')}">${window.translateStatus(order.status)}</span>
                 </div>
                 <div class="order-body">
@@ -147,7 +147,7 @@ function addActions(cell, order) {
     } else if (order.status === 'Selesai' || order.status === 'Ditolak'){
         cell.textContent = window.translateStatus(order.status);
     } else {
-        cell.textContent = t('admin.orders.card.noActions') || 'No actions available';
+        cell.textContent = t('admin.orders.card.noActions');
     }
 }
 
