@@ -124,14 +124,19 @@
 
 /* Body konten */
 .news-detail-page .news-body {
-  font-size: 1rem;
-  line-height: 1.8; /* Increased for better readability */
+  font-size: 1.1rem;
+  line-height: 1.7;
   color: #444;
   margin-bottom: 2rem;
 }
 
 .news-detail-page .news-body p {
   margin-bottom: 1rem;
+}
+
+.news-detail-page .news-body img {
+  max-width: 100%;
+  height: auto;
 }
 
 .news-detail-page .news-body h2,
