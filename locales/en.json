@@ -8,6 +8,13 @@
     "equipment": "Equipment",
     "promos": "Promos"
   },
+  "categories": {
+    "seeds": "Seeds",
+    "nutrition": "Nutrition",
+    "media": "Growing Media",
+    "equipment": "Equipment",
+    "promos": "Promos"
+  },
   "hero": {
     "title1": "12.12 Big Sale!",
     "subtitle1": "Get up to 50% off on selected items.",
@@ -317,6 +324,33 @@
         "loading": "Loading news...",
         "empty": "No matching news found."
       }
+    },
+    "productEditor": {
+      "loading": "Loading...",
+      "backLink": "Back to Product Management",
+      "editTitle": "Edit Product",
+      "addTitle": "Add New Product",
+      "nameEn": "Product Name (English)",
+      "nameId": "Product Name (Bahasa Indonesia)",
+      "category": "Category",
+      "selectCategory": "Select Category",
+      "price": "Price (IDR)",
+      "discount": "Discount",
+      "discountType": "Discount Type",
+      "discountPercent": "Discount Percent (%)",
+      "discountPrice": "Discount Price (IDR)",
+      "discountValue": "Discount Value",
+      "imageUrl": "Image URL",
+      "characteristicsEn": "Characteristics (English)",
+      "characteristicsEnPlaceholder": "Example: 1 pack contains ±12 seeds, Super Spicy, Harvest in ±90 days",
+      "characteristicsId": "Characteristics (Bahasa Indonesia)",
+      "characteristicsIdPlaceholder": "Contoh: 1 pak berisi ±12 benih, Super Pedas, Panen dalam ±90 hari",
+      "descriptionEn": "Full Description (English)",
+      "descriptionId": "Full Description (Bahasa Indonesia)",
+      "cancel": "Cancel",
+      "submit": "Save Changes",
+      "submitting": "Saving...",
+      "notFound": "Product Not Found"
     }
   },
   "productDetail": {

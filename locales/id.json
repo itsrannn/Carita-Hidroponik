@@ -8,6 +8,13 @@
     "equipment": "Peralatan",
     "promos": "Promo"
   },
+  "categories": {
+    "seeds": "Benih",
+    "nutrition": "Nutrisi",
+    "media": "Media Tanam",
+    "equipment": "Peralatan",
+    "promos": "Promo"
+  },
   "hero": {
     "title1": "Diskon Besar 12.12!",
     "subtitle1": "Dapatkan diskon hingga 50% untuk item tertentu.",
@@ -317,6 +324,33 @@
         "loading": "Memuat berita...",
         "empty": "Tidak ada berita yang cocok ditemukan."
       }
+    },
+    "productEditor": {
+      "loading": "Memuat...",
+      "backLink": "Kembali ke Manajemen Produk",
+      "editTitle": "Ubah Produk",
+      "addTitle": "Tambah Produk Baru",
+      "nameEn": "Nama Produk (Bahasa Inggris)",
+      "nameId": "Nama Produk (Bahasa Indonesia)",
+      "category": "Kategori",
+      "selectCategory": "Pilih Kategori",
+      "price": "Harga (IDR)",
+      "discount": "Diskon",
+      "discountType": "Tipe Diskon",
+      "discountPercent": "Diskon Persen (%)",
+      "discountPrice": "Diskon Harga (IDR)",
+      "discountValue": "Nilai Diskon",
+      "imageUrl": "URL Gambar",
+      "characteristicsEn": "Karakteristik (Bahasa Inggris)",
+      "characteristicsEnPlaceholder": "Contoh: 1 pak berisi ±12 benih, Super Pedas, Panen dalam ±90 hari",
+      "characteristicsId": "Karakteristik (Bahasa Indonesia)",
+      "characteristicsIdPlaceholder": "Contoh: 1 pak berisi ±12 benih, Super Pedas, Panen dalam ±90 hari",
+      "descriptionEn": "Deskripsi Lengkap (Bahasa Inggris)",
+      "descriptionId": "Deskripsi Lengkap (Bahasa Indonesia)",
+      "cancel": "Batal",
+      "submit": "Simpan Perubahan",
+      "submitting": "Menyimpan...",
+      "notFound": "Produk Tidak Ditemukan"
     }
   },
   "productDetail": {

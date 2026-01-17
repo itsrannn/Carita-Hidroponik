@@ -7,15 +7,16 @@ document.addEventListener('alpine:init', () => {
             name_id: '',
             category: '',
             price: null,
-            discount_percent: null,
             image_url: '',
             description_en: '',
             description_id: '',
             char_en: '',
             char_id: '',
         },
-        title: 'Loading...',
-        submitButtonText: 'Save Changes',
+        discount_type: 'percent', // 'percent' or 'price'
+        discount_value: null,
+        title: 'admin.productEditor.loading',
+        submitButtonText: 'admin.productEditor.submit',
         isLoading: true,
         isError: false,
         imagePreviewUrl: null,
@@ -25,11 +26,11 @@ document.addEventListener('alpine:init', () => {
             this.id = params.get('id');
 
             if (this.id) {
-                this.title = 'Edit Product';
+                this.title = 'admin.productEditor.editTitle';
                 await this.fetchData();
             } else {
                 // This page is only for editing, so show an error if no ID is provided.
-                this.title = 'Error';
+                this.title = 'admin.productEditor.notFound';
                 this.isError = true;
                 this.isLoading = false;
             }
@@ -46,6 +47,7 @@ document.addEventListener('alpine:init', () => {
             if (error || !data) {
                 this.isError = true;
                 this.isLoading = false;
+                this.title = 'admin.productEditor.notFound';
                 return;
             }
 
@@ -75,16 +77,31 @@ document.addEventListener('alpine:init', () => {
 
             this.item.category = data.category;
             this.item.price = data.price;
-            this.item.discount_percent = data.discount_percent;
             this.item.image_url = data.image_url;
             this.imagePreviewUrl = data.image_url;
+
+            // Handle discount logic
+            if (data.discount < 0) {
+                this.discount_type = 'price';
+                this.discount_value = -data.discount;
+            } else {
+                this.discount_type = 'percent';
+                this.discount_value = data.discount;
+            }
 
             this.isLoading = false;
         },
 
         async submitForm() {
             this.isLoading = true;
-            this.submitButtonText = 'Saving...';
+            this.submitButtonText = 'admin.productEditor.submitting';
+
+            let discountForDb = 0;
+            if (this.discount_value !== null && this.discount_value > 0) {
+                discountForDb = this.discount_type === 'price'
+                    ? -Math.abs(this.discount_value)
+                    : Math.abs(this.discount_value);
+            }
 
             // Consolidate bilingual fields into JSON objects
             const dataToSubmit = {
@@ -93,7 +110,7 @@ document.addEventListener('alpine:init', () => {
                 characteristics: { en: this.item.char_en, id: this.item.char_id },
                 category: this.item.category,
                 price: this.item.price,
-                discount_percent: this.item.discount_percent,
+                discount: discountForDb,
                 image_url: this.item.image_url,
             };
 
@@ -103,16 +120,16 @@ document.addEventListener('alpine:init', () => {
                 .eq('id', this.id);
 
             if (error) {
-                window.showNotification('Failed to save data. Please try again.', true);
+                window.showNotification(`Failed to save data: ${error.message}`, true);
             } else {
                 window.showNotification('Data saved successfully!', false);
-                setTimeout(() => {
-                    window.location.href = 'admin-products.html';
-                }, 1500);
+                // As per requirement, stay on the page.
+                // Optionally, refetch data to confirm it's updated.
+                // await this.fetchData();
             }
 
             this.isLoading = false;
-            this.submitButtonText = 'Save Changes';
+            this.submitButtonText = 'admin.productEditor.submit';
         }
     }));
 });
