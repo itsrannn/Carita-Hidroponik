@@ -11,6 +11,58 @@
       href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@300;400;600&family=Roboto:wght@400;700&display=swap"
       rel="stylesheet"
     />
+    <style>
+        .news-full-content {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .news-article-content {
+            flex: 3;
+            min-width: 300px;
+        }
+
+        .news-sidebar {
+            flex: 1;
+            min-width: 280px;
+        }
+
+        .related-product-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+        .related-product-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .related-product-image {
+            width: 70px;
+            height: 70px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        .related-product-details .name {
+            font-weight: 600;
+            margin: 0;
+        }
+        .related-product-details .price {
+            margin: 0;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        @media (max-width: 768px) {
+            .news-full-content {
+                flex-direction: column;
+            }
+        }
+    </style>
   </head>
 
   <body x-data>
@@ -55,15 +107,21 @@
               <!-- Right Column: Sidebar -->
               <aside class="news-sidebar">
                 <!-- Related Products Section: only shown if there are related products -->
-                <template x-if="$store.news.relatedProducts.length > 0">
-                  <div class="sidebar-widget">
-                    <h4 x-text="$store.i18n.t('productDetail.relatedProducts')">Related Products</h4>
-                    <div id="related-products" class="products-grid" style="--grid-cols: 2;">
-                      <template x-for="item in $store.news.relatedProducts" :key="item.id">
-                        <div x-html="$store.products.renderProductCard(item)"></div>
-                      </template>
+                <template x-if="relatedProducts.length > 0">
+                    <div class="sidebar-widget">
+                        <h4 x-text="$store.i18n.t('productDetail.relatedProducts')">Related Products</h4>
+                        <div class="related-products-list">
+                            <template x-for="product in relatedProducts" :key="product.id">
+                                <a :href="'product-details.html?id=' + product.id" class="related-product-item">
+                                    <img :src="product.image_url" :alt="product.name[$store.i18n.lang] || product.name.id" class="related-product-image">
+                                    <div class="related-product-details">
+                                        <p class="name" x-text="product.name[$store.i18n.lang] || product.name.id"></p>
+                                        <p class="price" x-text="formatRupiah(product.price)"></p>
+                                    </div>
+                                </a>
+                            </template>
+                        </div>
                     </div>
-                  </div>
                 </template>
 
                 <div class="sidebar-widget">

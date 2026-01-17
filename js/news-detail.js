@@ -4,6 +4,7 @@ document.addEventListener('alpine:init', () => {
         notFound: false,
         newsItem: null,
         latestNews: [],
+        relatedProducts: [],
         newsId: null,
 
         init() {
@@ -78,7 +79,7 @@ document.addEventListener('alpine:init', () => {
 
             if (linksError) {
                 console.error('Error fetching related product links:', linksError);
-                this.$store.news.relatedProducts = [];
+                this.relatedProducts = [];
                 return;
             }
 
@@ -92,12 +93,12 @@ document.addEventListener('alpine:init', () => {
 
                 if (productsError) {
                     console.error('Error fetching related products:', productsError);
-                    this.$store.news.relatedProducts = [];
+                    this.relatedProducts = [];
                 } else {
-                    this.$store.news.relatedProducts = productsData;
+                    this.relatedProducts = productsData;
                 }
             } else {
-                this.$store.news.relatedProducts = [];
+                this.relatedProducts = [];
             }
         },
 
@@ -130,7 +131,7 @@ document.addEventListener('alpine:init', () => {
         get newsContent() {
             if (!this.newsItem) return '';
             const lang = this.$store.i18n.lang;
-            return this.newsItem.body[lang] || this.newsItem.body.id;
+            return this.newsItem.description[lang] || this.newsItem.description.id;
         },
 
         get formattedDate() {
@@ -139,6 +140,13 @@ document.addEventListener('alpine:init', () => {
             return new Date(this.newsItem.created_at).toLocaleDateString(lang, {
                 year: 'numeric', month: 'long', day: 'numeric'
             });
+        },
+
+        formatRupiah(value) {
+            if (typeof value !== 'number') {
+                return 'Rp 0';
+            }
+            return "Rp " + value.toLocaleString("id-ID");
         }
     }));
 });
