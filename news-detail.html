@@ -19,47 +19,61 @@
         }
 
         .news-article-content {
-            flex: 3;
-            min-width: 300px;
+            flex: 0 0 73%; /* Konten utama mengambil ~3/4 */
         }
 
         .news-sidebar {
-            flex: 1;
+            flex: 0 0 24%; /* Sidebar mengambil ~1/4 */
             min-width: 280px;
         }
 
+        /* Styling for Related Products to match product cards */
         .related-product-item {
             display: flex;
             align-items: center;
             gap: 1rem;
+            padding: 0.75rem;
+            border-radius: 10px;
+            border: 1px solid rgba(0,0,0,0.08);
+            background: #fff;
             margin-bottom: 1rem;
-            padding: 0.5rem;
-            border-radius: 8px;
-            transition: background-color 0.2s;
+            transition: box-shadow 0.2s ease, transform 0.2s ease;
+            text-decoration: none;
+            color: inherit;
         }
         .related-product-item:hover {
-            background-color: #f0f0f0;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.08);
         }
 
-        .related-product-image {
-            width: 70px;
-            height: 70px;
+        .related-product-item img {
+            width: 60px;
+            height: 60px;
             object-fit: cover;
-            border-radius: 4px;
+            border-radius: 6px;
+        }
+        .related-product-details {
+            flex: 1;
         }
         .related-product-details .name {
-            font-weight: 600;
-            margin: 0;
+            font-weight: 700;
+            margin: 0 0 0.25rem 0;
+            font-size: 0.9rem;
+            color: #333;
         }
         .related-product-details .price {
             margin: 0;
-            font-size: 0.9em;
-            color: #555;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent, #2e7d32);
         }
 
         @media (max-width: 768px) {
             .news-full-content {
                 flex-direction: column;
+            }
+             .news-article-content, .news-sidebar {
+                flex-basis: 100%; /* Lebar penuh di mobile */
             }
         }
     </style>
@@ -106,6 +120,7 @@
 
               <!-- Right Column: Sidebar -->
               <aside class="news-sidebar">
+
                 <!-- Related Products Section: only shown if there are related products -->
                 <template x-if="relatedProducts.length > 0">
                     <div class="sidebar-widget">
@@ -113,7 +128,7 @@
                         <div class="related-products-list">
                             <template x-for="product in relatedProducts" :key="product.id">
                                 <a :href="'product-details.html?id=' + product.id" class="related-product-item">
-                                    <img :src="product.image_url" :alt="product.name[$store.i18n.lang] || product.name.id" class="related-product-image">
+                                    <img :src="product.image_url" :alt="product.name[$store.i18n.lang] || product.name.id">
                                     <div class="related-product-details">
                                         <p class="name" x-text="product.name[$store.i18n.lang] || product.name.id"></p>
                                         <p class="price" x-text="formatRupiah(product.price)"></p>
@@ -124,6 +139,7 @@
                     </div>
                 </template>
 
+                <!-- Latest News Section -->
                 <div class="sidebar-widget">
                   <h4 x-text="$store.i18n.t('news.latest')">Latest News</h4>
                   <ul class="sidebar-news-list">
