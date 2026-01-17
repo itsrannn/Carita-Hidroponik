@@ -123,28 +123,24 @@ document.addEventListener('alpine:init', () => {
         },
 
         get newsTitle() {
-            if (!this.newsItem) return '';
+            if (!this.newsItem || !this.newsItem.title) return ''; // Guard clause
+
             const lang = this.$store.i18n.lang;
-            return this.newsItem.title[lang] || this.newsItem.title.id;
+            const title = this.newsItem.title;
+
+            // Return title for the active language, with fallback to 'id', then to an empty string.
+            return (title && title[lang]) || (title && title.id) || '';
         },
 
         get newsContent() {
-            // More robust handling to prevent "undefined"
-            if (!this.newsItem || !this.newsItem.description) {
-                return ''; // Return empty string if no item or no description
-            }
+            if (!this.newsItem) return ''; // Guard clause
 
             const lang = this.$store.i18n.lang;
-            const desc = this.newsItem.description;
+            const content = this.newsItem.content;
 
-            // Check if description is a valid object for multi-language
-            if (typeof desc === 'object' && desc !== null) {
-                // Return the description in the current language, fallback to 'id', then to an empty string
-                return desc[lang] || desc.id || '';
-            }
-
-            // Fallback for any other unexpected type (e.g. string, number)
-            return '';
+            // Return content for the active language, with fallback to 'id', then to an empty string.
+            // This handles cases where content is null or not a multilingual object.
+            return (content && content[lang]) || (content && content.id) || '';
         },
 
         get formattedDate() {

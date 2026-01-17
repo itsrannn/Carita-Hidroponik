@@ -124,14 +124,24 @@
 
 /* Body konten */
 .news-detail-page .news-body {
-  font-size: 1.1rem;
-  line-height: 1.7;
-  color: #444;
+  font-size: 17px;
+  line-height: 1.8;
+  color: #333;
   margin-bottom: 2rem;
 }
 
 .news-detail-page .news-body p {
   margin-bottom: 1rem;
+}
+
+.news-detail-page .news-body br {
+  display: block;
+  content: "";
+  margin-bottom: 0.8rem;
+}
+
+.news-detail-page .news-body b {
+  font-weight: 600;
 }
 
 .news-detail-page .news-body img {
