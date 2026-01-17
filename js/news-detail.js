@@ -1,80 +1,103 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('newsDetail', () => ({
-        newsItem: null,
-        relatedProducts: [],
-        latestNews: [],
         isLoading: true,
         notFound: false,
+        newsItem: null,
+        latestNews: [],
         newsId: null,
 
         init() {
+            // This watcher is the gate. It ensures fetchNewsData only runs when i18n is ready.
+            this.$watch('$store.i18n.ready', (isReady) => {
+                if (isReady) {
+                    this.fetchNewsData();
+                }
+            });
+
+            // If i18n is already ready when the component initializes, fire immediately.
+            if (this.$store.i18n.ready) {
+                this.fetchNewsData();
+            }
+
+            // Effect to update title reactively when newsItem or language changes.
+            Alpine.effect(() => {
+                if (this.newsItem) {
+                    this.updateDocumentTitle();
+                }
+            });
+        },
+
+        async fetchNewsData() {
+            this.isLoading = true;
             const urlParams = new URLSearchParams(window.location.search);
             this.newsId = urlParams.get('id');
 
             if (!this.newsId) {
-                console.error('News ID is missing.');
+                console.error('News ID is missing from URL.');
                 this.isLoading = false;
                 this.notFound = true;
                 return;
             }
 
-            // Use Alpine.effect to react to language changes from the i18n store
-            Alpine.effect(() => {
-                const lang = this.$store.i18n.lang; // Dependency
-                // This will re-run whenever the language changes.
-                if (this.newsItem) {
-                    this.updateDocumentTitle();
-                }
-            });
-
-            this.fetchNewsData();
-            this.fetchLatestNews();
-        },
-
-        async fetchNewsData() {
-            this.isLoading = true;
-            this.notFound = false;
             try {
-                const { data, error } = await window.supabase
+                // Step 1: Fetch the main news article.
+                const { data: newsData, error: newsError } = await window.supabase
                     .from('news')
-                    .select(`
-                        *,
-                        news_related_products(
-                          product_id,
-                          products(*)
-                        )
-                    `)
+                    .select('*')
                     .eq('id', this.newsId)
                     .single();
 
-                if (error) {
-                    // Log the error but don't re-throw, as a 406 PostgREST error
-                    // can mean "not found", which we handle by checking `data`.
-                    console.error('Error fetching news:', error);
-                }
-
-                if (!data) {
+                if ((newsError && newsError.code === 'PGRST116') || !newsData) {
+                    // PGRST116 means no rows found, a valid "not found" case.
                     this.notFound = true;
                     return;
                 }
+                if (newsError) throw newsError; // Throw other errors
 
-                this.newsItem = data;
+                this.newsItem = newsData;
 
-                // Transform the related products data into a pure products array
-                if (data.news_related_products && Array.isArray(data.news_related_products)) {
-                    const relatedProducts = data.news_related_products.map(r => r.products).filter(p => p); // filter out nulls
-                    this.$store.news.relatedProducts = relatedProducts; // Use the store as per instructions
-                } else {
-                    this.$store.news.relatedProducts = [];
-                }
-
-                this.updateDocumentTitle();
+                // Step 2 & 3: Fetch related products.
+                await this.fetchRelatedProducts();
+                await this.fetchLatestNews();
 
             } catch (error) {
-                console.error('An unexpected error occurred:', error);
+                console.error('An unexpected error occurred during data fetching:', error);
                 this.notFound = true;
             } finally {
                 this.isLoading = false;
+            }
+        },
+
+        async fetchRelatedProducts() {
+            if (!this.newsId) return;
+            // Fetch related product IDs
+            const { data: relatedLinks, error: linksError } = await window.supabase
+                .from('news_related_products')
+                .select('product_id')
+                .eq('news_id', this.newsId);
+
+            if (linksError) {
+                console.error('Error fetching related product links:', linksError);
+                this.$store.news.relatedProducts = [];
+                return;
+            }
+
+            const productIds = relatedLinks.map(link => link.product_id);
+            if (productIds.length > 0) {
+                // Fetch the actual products
+                const { data: productsData, error: productsError } = await window.supabase
+                    .from('products')
+                    .select('*')
+                    .in('id', productIds);
+
+                if (productsError) {
+                    console.error('Error fetching related products:', productsError);
+                    this.$store.news.relatedProducts = [];
+                } else {
+                    this.$store.news.relatedProducts = productsData;
+                }
+            } else {
+                this.$store.news.relatedProducts = [];
             }
         },
 
@@ -83,7 +106,7 @@ document.addEventListener('alpine:init', () => {
                 const { data, error } = await window.supabase
                     .from('news')
                     .select('id, title, created_at')
-                    .neq('id', this.newsId) // Exclude the current article
+                    .neq('id', this.newsId)
                     .order('created_at', { ascending: false })
                     .limit(5);
                 if (error) throw error;
@@ -94,32 +117,27 @@ document.addEventListener('alpine:init', () => {
         },
 
         updateDocumentTitle() {
+            if (!this.newsItem) return;
             document.title = `${this.newsTitle} | Carita Hidroponik`;
         },
 
         get newsTitle() {
-            if (this.isLoading) return this.$store.i18n.t('news.loading');
-            if (this.notFound) return this.$store.i18n.t('news.notFound');
             if (!this.newsItem) return '';
             const lang = this.$store.i18n.lang;
             return this.newsItem.title[lang] || this.newsItem.title.id;
         },
 
         get newsContent() {
-            if (this.isLoading) return `<p>${this.$store.i18n.t('news.loading')}</p>`;
-            if (this.notFound) return `<p>${this.$store.i18n.t('news.notFound')}</p>`;
             if (!this.newsItem) return '';
             const lang = this.$store.i18n.lang;
-            return this.newsItem.content[lang] || this.newsItem.content.id;
+            return this.newsItem.body[lang] || this.newsItem.body.id;
         },
 
         get formattedDate() {
             if (!this.newsItem) return '';
             const lang = this.$store.i18n.lang;
             return new Date(this.newsItem.created_at).toLocaleDateString(lang, {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
+                year: 'numeric', month: 'long', day: 'numeric'
             });
         }
     }));

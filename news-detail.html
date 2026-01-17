@@ -13,33 +13,25 @@
     />
   </head>
 
-  <body x-data @alpine:init="
-    $store.i18n.init();
-    $store.products.init();
-    $store.cart.init();
-  ">
+  <body x-data>
     <div id="header-include"></div>
 
     <main class="main-content news-detail-page">
       <div class="container">
-        <div class="news-layout" x-data="newsDetail()">
+        <div class="news-layout" x-data="newsDetail">
+
           <!-- Loading State -->
-          <template x-if="isLoading">
-            <p x-text="$store.i18n.t('news.loading')">Memuat berita...</p>
-          </template>
+          <p x-show="isLoading" x-text="$store.i18n.t('news.loading')">Memuat berita...</p>
 
           <!-- Not Found State -->
-          <template x-if="!isLoading && notFound">
-            <p x-text="$store.i18n.t('news.notFound')">Berita tidak ditemukan.</p>
-          </template>
+          <p x-show="!isLoading && notFound" x-text="$store.i18n.t('news.notFound')">Berita tidak ditemukan.</p>
 
-          <!-- Content: Display only when loaded and not notFound -->
-          <template x-if="!isLoading && !notFound && newsItem">
+          <!-- Main content, rendered only when newsItem is available -->
+          <template x-if="newsItem">
             <div class="news-full-content">
               <!-- Left Column: Main Article -->
               <article class="news-article-content">
                 <h1 x-text="newsTitle"></h1>
-
                 <div class="news-meta">
                   <span>
                     <span x-text="$store.i18n.t('newsDetail.by')">By</span>
@@ -48,13 +40,10 @@
                   <span>|</span>
                   <span x-text="formattedDate"></span>
                 </div>
-
                 <div class="news-hero">
                   <img :src="newsItem.image_url || 'img/coming soon.jpg'" :alt="newsTitle" />
                 </div>
-
                 <div class="news-body" x-html="newsContent"></div>
-
                 <div class="share-buttons">
                   <h4 x-text="$store.i18n.t('newsDetail.share')">Share This Article:</h4>
                   <a href="#" class="btn btn-icon-only"><i data-feather="facebook"></i></a>
@@ -65,39 +54,41 @@
 
               <!-- Right Column: Sidebar -->
               <aside class="news-sidebar">
-                <div class="sidebar-widget">
-                  <h4 x-text="$store.i18n.t('productDetail.relatedProducts')">Related Products</h4>
-                  <div id="related-products" class="products-grid" style="--grid-cols: 2;">
-                    <template x-for="item in $store.news.relatedProducts" :key="item.id">
-                      <div x-html="$store.products.renderProductCard(item)"></div>
-                    </template>
+                <!-- Related Products Section: only shown if there are related products -->
+                <template x-if="$store.news.relatedProducts.length > 0">
+                  <div class="sidebar-widget">
+                    <h4 x-text="$store.i18n.t('productDetail.relatedProducts')">Related Products</h4>
+                    <div id="related-products" class="products-grid" style="--grid-cols: 2;">
+                      <template x-for="item in $store.news.relatedProducts" :key="item.id">
+                        <div x-html="$store.products.renderProductCard(item)"></div>
+                      </template>
+                    </div>
                   </div>
-                </div>
+                </template>
 
                 <div class="sidebar-widget">
                   <h4 x-text="$store.i18n.t('news.latest')">Latest News</h4>
-              <ul class="sidebar-news-list">
-                <template x-if="isLoading">
-                  <p x-text="$store.i18n.t('news.loading')"></p>
-                </template>
-                <template x-if="!isLoading" x-for="item in latestNews" :key="item.id">
-                  <li>
-                    <a :href="'news-detail.html?id=' + item.id">
-                      <span x-text="item.title[$store.i18n.lang] || item.title.id"></span>
-                      <small x-text="new Date(item.created_at).toLocaleDateString($store.i18n.lang, { year: 'numeric', month: 'short', day: 'numeric' })"></small>
-                    </a>
-                  </li>
-                </template>
-              </ul>
+                  <ul class="sidebar-news-list">
+                    <template x-if="latestNews && latestNews.length > 0">
+                      <template x-for="item in latestNews" :key="item.id">
+                        <li>
+                          <a :href="'news-detail.html?id=' + item.id">
+                            <span x-text="item.title[$store.i18n.lang] || item.title.id"></span>
+                            <small x-text="new Date(item.created_at).toLocaleDateString($store.i18n.lang, { year: 'numeric', month: 'short', day: 'numeric' })"></small>
+                          </a>
+                        </li>
+                      </template>
+                    </template>
+                  </ul>
+                </div>
+              </aside>
             </div>
-          </aside>
-        </div>
+          </template>
         </div>
       </div>
     </main>
 
     <div id="notification" class="notification"></div>
-
     <div id="footer-include"></div>
 
     <script src="https://unpkg.com/feather-icons"></script>
