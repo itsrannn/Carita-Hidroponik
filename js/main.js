@@ -94,6 +94,7 @@ document.addEventListener("alpine:init", () => {
   // --- Centralized Stores ---
   Alpine.store('i18n', {
     lang: localStorage.getItem('language') || 'id',
+    ready: false,
     supportedLangs: {
         'en': 'English',
         'id': 'Bahasa Indonesia'
@@ -101,19 +102,24 @@ document.addEventListener("alpine:init", () => {
     translations: {},
 
     async init() {
+        // This function is now idempotent
+        if (this.ready) return;
+
         await this.load();
         document.documentElement.lang = this.lang;
+
+        // This is the gate. Only set to true after everything is loaded.
+        this.ready = true;
     },
 
     async load() {
         try {
-            // Use a cache-busting query parameter for development
             const response = await fetch(`locales/${this.lang}.json?v=${new Date().getTime()}`);
             if (!response.ok) throw new Error('Translations file not found');
             this.translations = await response.json();
         } catch (error) {
             console.error(`Failed to load translations for ${this.lang}:`, error);
-            this.translations = {}; // Fallback to empty object on error
+            this.translations = {};
         }
     },
 
@@ -550,6 +556,12 @@ document.addEventListener("alpine:init", () => {
             return (this.product.char && this.product.char[lang]) ? this.product.char[lang] : ((this.product.char && this.product.char['id']) ? this.product.char['id'] : '');
         }
     }));
+
+    // --- Global Initialization ---
+    // Initialize stores on startup. Components will react to their state changes.
+    Alpine.store('i18n').init();
+    Alpine.store('products').init();
+    Alpine.store('cart').init();
 
     // Signal that Alpine is ready
     document.documentElement.setAttribute('data-alpine-ready', 'true');
