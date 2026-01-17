@@ -95,6 +95,7 @@
           <!-- Main content, rendered only when newsItem is available -->
           <template x-if="newsItem">
             <div class="news-full-content">
+
               <!-- Left Column: Main Article -->
               <article class="news-article-content">
                 <h1 x-text="newsTitle"></h1>
@@ -120,26 +121,47 @@
 
               <!-- Right Column: Sidebar -->
               <aside class="news-sidebar">
+                <!-- 1. Related Products Section -->
+                <div class="sidebar-widget">
+                  <h4 x-text="$store.i18n.t('productDetail.relatedProducts')">Related Products</h4>
+                  <div class="related-products-list">
+                    <!-- Case 1: Real data exists -->
+                    <template x-if="relatedProducts.length > 0">
+                      <template x-for="product in relatedProducts" :key="product.id">
+                        <a :href="'product-details.html?id=' + product.id" class="related-product-item">
+                          <img :src="product.image_url || 'img/coming soon.jpg'" :alt="product.name[$store.i18n.lang] || product.name.id" />
+                          <div class="related-product-details">
+                            <p class="name" x-text="product.name[$store.i18n.lang] || product.name.id"></p>
+                            <p class="price" x-text="formatRupiah(product.price)"></p>
+                          </div>
+                        </a>
+                      </template>
+                    </template>
+                    <!-- Case 2: No real data, show placeholders -->
+                    <template x-if="relatedProducts.length === 0">
+                      <div>
+                        <!-- Placeholder 1 -->
+                        <a href="#" class="related-product-item placeholder">
+                          <img src="img/coming soon.jpg" alt="Placeholder Product" />
+                          <div class="related-product-details">
+                            <p class="name">Product Name</p>
+                            <p class="price">Rp —</p>
+                          </div>
+                        </a>
+                        <!-- Placeholder 2 -->
+                        <a href="#" class="related-product-item placeholder">
+                          <img src="img/coming soon.jpg" alt="Placeholder Product" />
+                          <div class="related-product-details">
+                            <p class="name">Product Name</p>
+                            <p class="price">Rp —</p>
+                          </div>
+                        </a>
+                      </div>
+                    </template>
+                  </div>
+                </div>
 
-                <!-- Related Products Section: only shown if there are related products -->
-                <template x-if="relatedProducts.length > 0">
-                    <div class="sidebar-widget">
-                        <h4 x-text="$store.i18n.t('productDetail.relatedProducts')">Related Products</h4>
-                        <div class="related-products-list">
-                            <template x-for="product in relatedProducts" :key="product.id">
-                                <a :href="'product-details.html?id=' + product.id" class="related-product-item">
-                                    <img :src="product.image_url" :alt="product.name[$store.i18n.lang] || product.name.id">
-                                    <div class="related-product-details">
-                                        <p class="name" x-text="product.name[$store.i18n.lang] || product.name.id"></p>
-                                        <p class="price" x-text="formatRupiah(product.price)"></p>
-                                    </div>
-                                </a>
-                            </template>
-                        </div>
-                    </div>
-                </template>
-
-                <!-- Latest News Section -->
+                <!-- 2. Latest News Section -->
                 <div class="sidebar-widget">
                   <h4 x-text="$store.i18n.t('news.latest')">Latest News</h4>
                   <ul class="sidebar-news-list">

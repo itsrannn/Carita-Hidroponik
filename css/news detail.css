@@ -5,18 +5,77 @@
   background: #fafafa;
 }
 
-/* Layout dua kolom */
-.news-detail-page .news-layout {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 2.5rem;
-  align-items: start;
+/* New 2-column layout using Flexbox for responsiveness */
+.news-full-content {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
 }
 
+.news-article-content {
+  flex: 1 1 70%; /* Takes up ~75% */
+  min-width: 300px; /* Ensure content doesn't get too squished */
+}
+
+.news-sidebar {
+  flex: 1 1 25%; /* Takes up ~25% */
+  min-width: 280px;
+}
+
+/* Responsive stacking for mobile */
 @media (max-width: 992px) {
-  .news-detail-page .news-layout {
-    grid-template-columns: 1fr;
+  .news-full-content {
+    flex-direction: column;
   }
+  .news-article-content, .news-sidebar {
+    flex-basis: 100%; /* Full width on mobile */
+  }
+}
+
+/* Styling for Related Products to match product cards */
+.related-product-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.08);
+  background: #fff;
+  margin-bottom: 1rem;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  text-decoration: none;
+  color: inherit;
+}
+.related-product-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+}
+.related-product-item.placeholder {
+  pointer-events: none; /* Not clickable */
+  user-select: none;
+  opacity: 0.8;
+}
+
+.related-product-item img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+.related-product-details {
+  flex: 1;
+}
+.related-product-details .name {
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+  font-size: 0.9rem;
+  color: #333;
+}
+.related-product-details .price {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent, #2e7d32);
 }
 
 /* Artikel utama */
