@@ -1,3 +1,4 @@
+/*
 (async function() {
     // Wait for supabase client to be available
     while (typeof window.supabase === 'undefined') {
@@ -17,3 +18,4 @@
         window.location.href = 'index.html';
     }
 })();
+*/
