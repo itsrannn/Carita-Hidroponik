@@ -129,10 +129,22 @@ document.addEventListener('alpine:init', () => {
         },
 
         get newsContent() {
-            if (!this.newsItem) return '';
+            // More robust handling to prevent "undefined"
+            if (!this.newsItem || !this.newsItem.description) {
+                return ''; // Return empty string if no item or no description
+            }
+
             const lang = this.$store.i18n.lang;
-            // Defensive coding: handle cases where 'description' might be null or not an object
-            return (this.newsItem.description || {})[lang] || (this.newsItem.description || {}).id || '';
+            const desc = this.newsItem.description;
+
+            // Check if description is a valid object for multi-language
+            if (typeof desc === 'object' && desc !== null) {
+                // Return the description in the current language, fallback to 'id', then to an empty string
+                return desc[lang] || desc.id || '';
+            }
+
+            // Fallback for any other unexpected type (e.g. string, number)
+            return '';
         },
 
         get formattedDate() {
@@ -141,6 +153,26 @@ document.addEventListener('alpine:init', () => {
             return new Date(this.newsItem.created_at).toLocaleDateString(lang, {
                 year: 'numeric', month: 'long', day: 'numeric'
             });
+        },
+
+        // --- Share URLs ---
+        get currentUrl() {
+            return window.location.href;
+        },
+
+        get twitterShareUrl() {
+            const text = encodeURIComponent(this.newsTitle);
+            return `https://twitter.com/intent/tweet?url=${this.currentUrl}&text=${text}`;
+        },
+
+        get facebookShareUrl() {
+            return `https://www.facebook.com/sharer/sharer.php?u=${this.currentUrl}`;
+        },
+
+        get emailShareUrl() {
+            const subject = encodeURIComponent(this.newsTitle);
+            const body = encodeURIComponent(this.currentUrl);
+            return `mailto:?subject=${subject}&body=${body}`;
         },
 
         formatRupiah(value) {
