@@ -70,28 +70,33 @@
 
           <!-- Right Column: Product Information -->
           <div class="product-info-panel">
-            <!-- (A) Product Name -->
             <h1 x-text="productName" class="product-title"></h1>
-
-            <!-- (B) Price -->
             <div class="price-container-detail">
-                <template x-if="product && product.discounted_price">
-                    <div>
-                        <span class="product-detail-price-final" x-text="formatRupiah(product.discounted_price)"></span>
-                        <span class="product-detail-price-original" x-text="formatRupiah(product.price)"></span>
-                    </div>
-                </template>
-                <template x-if="product && !product.discounted_price">
-                    <p x-text="formatRupiah(product.price)" class="product-detail-price"></p>
-                </template>
+              <template x-if="priceInfo.percentOff > 0">
+                <div>
+                  <span class="product-detail-price-original" x-text="formatRupiah(priceInfo.originalPrice)"></span>
+                  <span class="product-detail-price-final" x-text="formatRupiah(priceInfo.finalPrice)"></span>
+                  <span class="product-detail-discount-badge" x-text="'-' + priceInfo.percentOff + '%'"></span>
+                </div>
+              </template>
+              <template x-if="!(priceInfo.percentOff > 0)">
+                <p x-text="formatRupiah(priceInfo.originalPrice)" class="product-detail-price"></p>
+              </template>
             </div>
 
-            <!-- (C) Voucher Slot (Empty Spacer) -->
-            <div class="voucher-slot"></div>
+            <!-- Color Selector -->
+            <div class="color-selector">
+              <h3 class="selector-title">Color: <span x-text="selectedColor"></span></h3>
+              <div class="color-swatches">
+                <template x-for="color in mockColors" :key="color.name">
+                  <button @click="selectColor(color)" class="color-swatch" :style="{ backgroundColor: color.value }" :class="{'selected': selectedColor === color.name}" :title="color.name"></button>
+                </template>
+              </div>
+            </div>
 
-            <!-- (D) Quantity Input -->
+            <!-- Quantity Selector -->
             <div class="quantity-selector">
-                <h3 class="selector-title" x-text="$store.i18n.t('product.quantity')">QTY</h3>
+                <h3 class="selector-title">Atur jumlah</h3>
                 <div class="quantity-input">
                     <button @click="decreaseQuantity()" aria-label="Decrease quantity">-</button>
                     <input type="text" x-model="quantity" readonly aria-label="Current quantity" />
@@ -99,14 +104,8 @@
                 </div>
             </div>
 
-            <!-- (E) Add to Cart Button -->
             <button @click="addToCart()" class="btn add-cart-main">
-                <i data-feather="shopping-bag"></i> <span x-text="$store.i18n.t('product.add_to_cart')"></span>
-            </button>
-
-            <!-- (F) Buy Now Button -->
-            <button @click="buyNow()" class="btn btn-primary buy-now">
-                <span x-text="$store.i18n.t('product.buy_now')"></span>
+                <i data-feather="shopping-bag"></i> <span x-text="$store.i18n.t('productDetail.addToCart')">Add to Cart</span>
             </button>
           </div>
         </section>
@@ -184,21 +183,6 @@
             No related products available.
           </p>
         </section>
-      </div>
-
-      <!-- "Added to Cart" Popup -->
-      <div x-show="showAddedToCartPopup" class="popup-overlay" @click.self="showAddedToCartPopup = false">
-          <div class="popup-content">
-              <div class="popup-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-check-circle"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-              </div>
-              <h3 x-text="$store.i18n.t('product.added_to_cart_title')"></h3>
-              <p x-text="$store.i18n.t('product.added_to_cart_desc')"></p>
-              <div class="popup-actions">
-                  <button @click="showAddedToCartPopup = false" class="btn btn-secondary" x-text="$store.i18n.t('product.continue_shopping')"></button>
-                  <a href="my cart.html" class="btn btn-primary" x-text="$store.i18n.t('product.view_cart')"></a>
-              </div>
-          </div>
       </div>
     </main>
 
