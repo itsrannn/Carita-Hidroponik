@@ -49,30 +49,28 @@
 
         <!-- SECTION HEAD -->
         <section class="product-detail-head">
-          <div class="product-detail-img">
-            <template x-if="product">
-              <img
-                :src="product.image_url ? product.image_url : 'img/general/default.jpg'"
-                :alt="productName"
-              />
-            </template>
-            <template x-if="!product">
-              <img
-                src="img/general/default.jpg"
-                alt="Loading product image"
-              />
-            </template>
+          <!-- Left Column: Product Images -->
+          <div class="product-gallery">
+            <div class="product-main-image">
+                <img :src="mainImage" :alt="productName" />
+            </div>
+            <!-- Thumbnail Slider -->
+            <div class="swiper product-thumbnail-slider">
+                <div class="swiper-wrapper">
+                    <template x-for="(image, index) in mockImages" :key="index">
+                        <div class="swiper-slide thumbnail-item" @click="selectThumbnail(image)" :class="{'active': mainImage === image}">
+                            <img :src="image" :alt="productName + ' thumbnail ' + (index + 1)" />
+                        </div>
+                    </template>
+                </div>
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
+            </div>
           </div>
-          <div class="product-detail-info">
-            <template x-if="product">
-              <h2 x-text="product.category.toUpperCase()" class="badge-category"></h2>
-              <h1 x-text="productName" class="product-detail-title"></h1>
-            </template>
-            <template x-if="!product">
-              <h2 class="badge-category">Loading...</h2>
-              <h1 class="product-detail-title">Loading...</h1>
-            </template>
 
+          <!-- Right Column: Product Information -->
+          <div class="product-info-panel">
+            <h1 x-text="productName" class="product-title"></h1>
             <div class="price-container-detail">
               <template x-if="priceInfo.percentOff > 0">
                 <div>
@@ -86,20 +84,52 @@
               </template>
             </div>
 
-            <p x-html="productCharacteristics" class="product-detail-desc-short"></p>
-            <button
-              @click="$store.cart.add(product.id)"
-              class="btn-sm add-cart"
-            >
-              <i data-feather="shopping-bag"></i> <span x-text="$store.i18n.t('productDetail.addToCart')">Add to Cart</span>
+            <!-- Color Selector -->
+            <div class="color-selector">
+              <h3 class="selector-title">Color: <span x-text="selectedColor"></span></h3>
+              <div class="color-swatches">
+                <template x-for="color in mockColors" :key="color.name">
+                  <button @click="selectColor(color)" class="color-swatch" :style="{ backgroundColor: color.value }" :class="{'selected': selectedColor === color.name}" :title="color.name"></button>
+                </template>
+              </div>
+            </div>
+
+            <!-- Quantity Selector -->
+            <div class="quantity-selector">
+                <h3 class="selector-title">Atur jumlah</h3>
+                <div class="quantity-input">
+                    <button @click="decreaseQuantity()" aria-label="Decrease quantity">-</button>
+                    <input type="text" x-model="quantity" readonly aria-label="Current quantity" />
+                    <button @click="increaseQuantity()" aria-label="Increase quantity">+</button>
+                </div>
+            </div>
+
+            <button @click="addToCart()" class="btn add-cart-main">
+                <i data-feather="shopping-bag"></i> <span x-text="$store.i18n.t('productDetail.addToCart')">Add to Cart</span>
             </button>
           </div>
         </section>
 
-        <!-- SECTION DESCRIPTION -->
-        <section class="product-detail-description">
-          <h2 x-text="$store.i18n.t('productDetail.specifications')">Product Description</h2>
-          <p x-text="productDescription"></p>
+        <!-- SECTION TABS: Details & Specifications -->
+        <section class="product-extra-details">
+            <div class="tab-ui">
+                <div class="tab-header">
+                    <button class="tab-link active" data-tab="details">Detail Produk</button>
+                    <button class="tab-link" data-tab="specs">Spesifikasi</button>
+                </div>
+                <div class="tab-content">
+                    <div id="details" class="tab-pane active">
+                        <h3>Karakteristik Produk</h3>
+                        <ul x-html="productCharacteristicsList">
+                            <!-- Populated by Alpine -->
+                        </ul>
+                    </div>
+                    <div id="specs" class="tab-pane">
+                        <h3>Spesifikasi</h3>
+                        <p x-text="productDescription"></p>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- SECTION RELATED PRODUCTS -->
@@ -167,6 +197,7 @@
 
     <!-- App Logic -->
     <script src="js/main.js"></script>
+    <script src="js/product-details.js"></script>
 
     <!-- Alpine Core -->
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js?nounit=true" defer></script>
