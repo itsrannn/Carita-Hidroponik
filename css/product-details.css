@@ -386,6 +386,58 @@
   font-size: 2rem;
   margin-bottom: 0.5rem;
 }
+.product-detail-price-original {
+    font-size: 1.2rem;
+    color: var(--muted);
+    text-decoration: line-through;
+    margin-left: 0.5rem;
+}
+.voucher-slot {
+    height: 1.5rem; /* Spacer */
+}
+.buy-now {
+    margin-top: 0.75rem;
+    background-color: var(--primary); /* Assuming a primary color variable */
+    color: white;
+}
+
+/* Popup Styles */
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+.popup-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+}
+.popup-icon {
+    color: var(--green);
+    margin-bottom: 1rem;
+}
+.popup-content h3 {
+    margin-top: 0;
+    color: var(--dark);
+}
+.popup-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
 /* Responsive Styles */
 @media (max-width: 768px) {
     .product-detail-head {

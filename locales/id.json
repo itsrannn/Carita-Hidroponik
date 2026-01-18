@@ -360,6 +360,15 @@
     "selectColor": "Pilih Warna",
     "details": "Detail Produk"
   },
+  "product": {
+    "add_to_cart": "Keranjang",
+    "buy_now": "Beli Langsung",
+    "quantity": "QTY",
+    "added_to_cart_title": "Produk berhasil ditambahkan ke keranjang",
+    "added_to_cart_desc": "Silakan lanjutkan berbelanja atau buka keranjang Anda.",
+    "continue_shopping": "Lanjutkan Belanja",
+    "view_cart": "Lihat Keranjang"
+  },
   "newsDetail": {
     "by": "Oleh",
     "author": "Tim Editorial",
