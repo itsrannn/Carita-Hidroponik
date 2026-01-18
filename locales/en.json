@@ -356,7 +356,9 @@
   "productDetail": {
     "relatedProducts": "Related Products",
     "specifications": "Specifications",
-    "addToCart": "Add to Cart"
+    "addToCart": "Add to Cart",
+    "selectColor": "Select Color",
+    "details": "Product Details"
   },
   "newsDetail": {
     "by": "By",
