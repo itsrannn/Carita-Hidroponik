@@ -10,6 +10,7 @@ Alpine.data('productDetail', () => ({
   relatedProducts: [],
   relatedLoading: true,
   ready: false,
+  showAddedToCartPopup: false,
   // Mock Data for UI development
   mockColors: [
     { name: 'Red', value: '#E53935', image: 'img/products/cabai-merah-keriting.jpg' },
@@ -138,8 +139,15 @@ Alpine.data('productDetail', () => ({
 
   addToCart() {
     if (this.product) {
+      this.$store.cart.add(this.product.id, 1); // Always add 1 item
+      this.showAddedToCartPopup = true;
+    }
+  },
+
+  buyNow() {
+    if (this.product) {
       this.$store.cart.add(this.product.id, this.quantity);
-      // Optional: Show a confirmation toast/message
+      window.location.href = 'my cart.html';
     }
   },
 

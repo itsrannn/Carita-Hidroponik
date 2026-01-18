@@ -360,6 +360,15 @@
     "selectColor": "Select Color",
     "details": "Product Details"
   },
+  "product": {
+    "add_to_cart": "Add to Cart",
+    "buy_now": "Buy Now",
+    "quantity": "QTY",
+    "added_to_cart_title": "Product added to cart",
+    "added_to_cart_desc": "You may continue shopping or view your cart.",
+    "continue_shopping": "Continue Shopping",
+    "view_cart": "View Cart"
+  },
   "newsDetail": {
     "by": "By",
     "author": "Editorial Team",
