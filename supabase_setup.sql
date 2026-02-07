@@ -110,6 +110,7 @@ CREATE TABLE IF NOT EXISTS public.products (
     characteristics TEXT,
     description TEXT,
     image_url TEXT,
+    variants JSONB DEFAULT NULL,
     discount_percent INTEGER DEFAULT NULL,
     discount_price NUMERIC DEFAULT NULL
 );
