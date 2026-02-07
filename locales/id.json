@@ -1,5 +1,6 @@
 {
   "nav": {
+    "home": "Beranda",
     "categories": "Kategori",
     "products": "Semua Produk",
     "seeds": "Benih",
@@ -357,8 +358,17 @@
     "relatedProducts": "Produk Terkait",
     "specifications": "Spesifikasi",
     "addToCart": "Tambah ke Keranjang",
+    "addToCartSmall": "Tambah",
     "selectColor": "Pilih Warna",
-    "details": "Detail Produk"
+    "details": "Detail Produk",
+    "quantity": "Atur jumlah",
+    "characteristics": "Karakteristik Produk",
+    "productDescription": "Deskripsi Produk",
+    "backToList": "Kembali ke daftar",
+    "notFound": "Produk Tidak Ditemukan",
+    "notFoundDesc": "Maaf, produk yang Anda cari tidak dapat ditemukan. Silakan kembali ke beranda.",
+    "off": "DISKON",
+    "addedToCart": "Item berhasil ditambahkan ke keranjang!"
   },
   "newsDetail": {
     "by": "Oleh",
