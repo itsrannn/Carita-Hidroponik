@@ -6,23 +6,13 @@ Alpine.data('productDetail', () => ({
   productCharacteristicsList: '',
   priceInfo: {},
   mainImage: '',
+  productImages: [],
   quantity: 1,
   relatedProducts: [],
   relatedLoading: true,
   ready: false,
-  // Mock Data for UI development
-  mockColors: [
-    { name: 'Red', value: '#E53935', image: 'img/products/cabai-merah-keriting.jpg' },
-    { name: 'Green', value: '#43A047', image: 'img/products/caisim.jpg' },
-    { name: 'Blue', value: '#1E88E5', image: 'img/products/selada-hidroponik.jpg' }
-  ],
-  selectedColor: 'Red',
-  mockImages: [
-    'img/products/cabai-merah-keriting.jpg',
-    'img/products/caisim.jpg',
-    'img/products/selada-hidroponik.jpg',
-    'img/products/kangkung-hidroponik.jpg',
-  ],
+  colorOptions: [],
+  selectedColor: '',
 
   // Methods
   init() {
@@ -44,22 +34,23 @@ Alpine.data('productDetail', () => ({
 
   setupProductData() {
     const lang = this.$store.i18n.lang;
-    this.productName = (this.product.name && this.product.name[lang]) || (this.product.name && this.product.name.id) || 'No name';
-    this.productDescription = (this.product.description && this.product.description[lang]) || (this.product.description && this.product.description.id) || '';
+    this.productName = this.getLocalizedValue(this.product.name, lang, 'Produk tanpa nama');
+    this.productDescription = this.getLocalizedValue(this.product.description, lang, '');
 
     // Process characteristics: split by newline and wrap in <li>
-    const characteristics = (this.product.characteristics && this.product.characteristics[lang]) || (this.product.characteristics && this.product.characteristics.id) || '';
+    const characteristics = this.getLocalizedValue(this.product.characteristics, lang, '');
     this.productCharacteristicsList = characteristics
+      .replace(/<br\s*\/?>/gi, '\n')
       .split('\n')
       .filter(line => line.trim() !== '')
-      .map(line => `<li>✔ ${line.trim()}</li>`)
+      .map(line => `<li>✔ ${line.replace(/^-+/, '').trim()}</li>`)
       .join('');
 
     this.priceInfo = this.calculateDiscount(this.product);
-    this.mainImage = this.product.image_url || 'img/coming-soon.jpg';
-    // Sync mock images with product image
-    this.mockImages.unshift(this.mainImage);
-    this.mockImages = [...new Set(this.mockImages)]; // Remove duplicates
+    this.productImages = this.getProductImages(this.product);
+    this.mainImage = this.productImages[0] || 'img/coming soon.jpg';
+    this.colorOptions = this.getColorOptions(this.product);
+    this.selectedColor = this.colorOptions[0]?.name || '';
     this.ready = true;
   },
 
@@ -85,16 +76,18 @@ Alpine.data('productDetail', () => ({
     if (this.thumbnailSwiper) this.thumbnailSwiper.destroy();
     if (this.relatedSwiper) this.relatedSwiper.destroy();
 
-    this.thumbnailSwiper = new Swiper('.product-thumbnail-slider', {
-      spaceBetween: 10,
-      slidesPerView: 4,
-      freeMode: true,
-      watchSlidesProgress: true,
-      navigation: {
-        nextEl: '.swiper-button-next',
-        prevEl: '.swiper-button-prev',
-      },
-    });
+    if (this.productImages.length > 1) {
+      this.thumbnailSwiper = new Swiper('.product-thumbnail-slider', {
+        spaceBetween: 10,
+        slidesPerView: 4,
+        freeMode: true,
+        watchSlidesProgress: true,
+        navigation: {
+          nextEl: '.swiper-button-next',
+          prevEl: '.swiper-button-prev',
+        },
+      });
+    }
 
     this.relatedSwiper = new Swiper('.related-product-slider', {
       loop: true,
@@ -118,8 +111,11 @@ Alpine.data('productDetail', () => ({
 
   // UI Interaction Methods
   selectColor(color) {
+    if (!color) return;
     this.selectedColor = color.name;
-    this.mainImage = color.image; // Change main image based on color
+    if (color.image) {
+      this.mainImage = color.image;
+    }
   },
 
   selectThumbnail(image) {
@@ -145,6 +141,9 @@ Alpine.data('productDetail', () => ({
 
   // Utility Methods (assuming they might not be globally available on this page)
   formatRupiah(number) {
+    if (window.formatRupiah) {
+      return window.formatRupiah(number);
+    }
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
       currency: 'IDR',
@@ -154,18 +153,51 @@ Alpine.data('productDetail', () => ({
   },
 
   calculateDiscount(product) {
-    const originalPrice = product.price || 0;
-    let finalPrice = originalPrice;
-    let percentOff = 0;
-
-    if (product.discount_type === 'percent' && product.discount_value > 0) {
-      percentOff = product.discount_value;
-      finalPrice = originalPrice - (originalPrice * percentOff / 100);
-    } else if (product.discount_type === 'fixed' && product.discount_value > 0) {
-      finalPrice = product.discount_value;
-      percentOff = Math.round(((originalPrice - finalPrice) / originalPrice) * 100);
+    if (window.calculateDiscount) {
+      return window.calculateDiscount(product);
     }
+    const originalPrice = product.price || 0;
+    return { originalPrice, finalPrice: originalPrice, percentOff: 0 };
+  },
 
-    return { originalPrice, finalPrice, percentOff };
+  getLocalizedValue(field, lang, fallback = '') {
+    if (!field) return fallback;
+    if (typeof field === 'string') return field;
+    return field[lang] || field.id || fallback;
+  },
+
+  getProductImages(product) {
+    const images = [];
+    if (product.image_url) {
+      images.push(product.image_url);
+    }
+    if (Array.isArray(product.images)) {
+      images.push(...product.images.filter(Boolean));
+    }
+    if (typeof product.gallery === 'string') {
+      images.push(
+        ...product.gallery
+          .split(',')
+          .map(item => item.trim())
+          .filter(Boolean)
+      );
+    }
+    return [...new Set(images)];
+  },
+
+  getColorOptions(product) {
+    if (Array.isArray(product.colors)) {
+      return product.colors.filter(option => option && option.name);
+    }
+    if (Array.isArray(product.variants)) {
+      return product.variants
+        .filter(variant => variant && variant.name)
+        .map(variant => ({
+          name: variant.name,
+          value: variant.color || variant.value,
+          image: variant.image
+        }));
+    }
+    return [];
   }
 }));

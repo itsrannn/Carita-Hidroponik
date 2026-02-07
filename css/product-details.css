@@ -3,7 +3,7 @@
   flex-wrap: wrap;
   gap: 2rem;
   margin-top: 2rem;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .product-detail-img {
@@ -171,6 +171,7 @@
     flex-wrap: wrap;
     gap: 3rem;
     margin-top: 2rem;
+    align-items: flex-start;
 }
 
 /* Left Column: Product Gallery */
@@ -250,6 +251,7 @@
 .color-swatches {
     display: flex;
     gap: 0.75rem;
+    flex-wrap: wrap;
 }
 
 .color-swatch {
@@ -388,6 +390,10 @@
 }
 /* Responsive Styles */
 @media (max-width: 768px) {
+    .product-detail-container {
+        padding: 0 20px;
+    }
+
     .product-detail-head {
         gap: 1.5rem;
     }

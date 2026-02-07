@@ -176,12 +176,13 @@ document.addEventListener("alpine:init", () => {
     init() {
       this.items = JSON.parse(localStorage.getItem("cart")) || [];
     },
-    add(productId) {
+    add(productId, quantity = 1) {
+      const safeQuantity = Number.isFinite(Number(quantity)) ? Math.max(1, Number(quantity)) : 1;
       const existing = this.items.find(item => String(item.id) === String(productId));
       if (existing) {
-        existing.quantity++;
+        existing.quantity += safeQuantity;
       } else {
-        this.items.push({ id: productId, quantity: 1 });
+        this.items.push({ id: productId, quantity: safeQuantity });
       }
       this.save();
       window.showNotification('Item added to cart');
