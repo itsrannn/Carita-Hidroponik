@@ -84,14 +84,23 @@
               </template>
             </div>
 
-            <!-- Color Selector -->
-            <div class="color-selector" x-show="colorOptions.length">
-              <h3 class="selector-title">Color: <span x-text="selectedColor"></span></h3>
-              <div class="color-swatches">
-                <template x-for="color in colorOptions" :key="color.name">
-                  <button @click="selectColor(color)" class="color-swatch" :style="{ backgroundColor: color.value }" :class="{'selected': selectedColor === color.name}" :title="color.name"></button>
+            <!-- Variant Selector -->
+            <div class="color-selector" x-show="variantOptions.length">
+              <h3 class="selector-title">Varian: <span x-text="selectedVariant ? selectedVariant.label : 'Pilih varian'"></span></h3>
+              <div class="color-swatches" style="gap: 0.5rem;">
+                <template x-for="variant in variantOptions" :key="variant.id">
+                  <button
+                    type="button"
+                    class="btn-sm"
+                    @click="selectVariant(variant)"
+                    :style="selectedVariant && selectedVariant.id === variant.id ? 'background-color: var(--green); color: #fff;' : ''"
+                    :aria-pressed="selectedVariant && selectedVariant.id === variant.id"
+                  >
+                    <span x-text="variant.label"></span>
+                  </button>
                 </template>
               </div>
+              <p class="muted" x-show="variantOptions.length && !selectedVariant">Pilih varian terlebih dahulu.</p>
             </div>
 
             <!-- Quantity Selector -->
@@ -104,9 +113,26 @@
                 </div>
             </div>
 
-            <button @click="addToCart()" class="btn add-cart-main">
-                <i data-feather="shopping-bag"></i> <span x-text="$store.i18n.t('productDetail.addToCart')">Add to Cart</span>
-            </button>
+            <div class="cta-actions" style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 2rem;">
+              <button
+                @click="addToCart()"
+                class="btn add-cart-main"
+                style="flex: 1 1 200px; margin-top: 0;"
+                :disabled="variantOptions.length && !selectedVariant"
+              >
+                <i data-feather="shopping-bag"></i>
+                <span x-text="$store.i18n.t('productDetail.addToCart')">Add to Cart</span>
+              </button>
+              <button
+                @click="buyNow()"
+                class="btn add-cart-main"
+                style="flex: 1 1 200px; margin-top: 0; background: var(--green); color: #fff; border: none;"
+                :disabled="variantOptions.length && !selectedVariant"
+              >
+                <i data-feather="shopping-bag"></i>
+                <span>Beli Sekarang</span>
+              </button>
+            </div>
           </div>
         </section>
 

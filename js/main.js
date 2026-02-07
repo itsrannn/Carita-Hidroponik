@@ -173,22 +173,68 @@ document.addEventListener("alpine:init", () => {
 
   Alpine.store("cart", {
     items: [],
-    init() {
-      this.items = JSON.parse(localStorage.getItem("cart")) || [];
+    parseCartKey(cartKey) {
+      const [productId, variantId] = String(cartKey).split('::');
+      return { productId, variantId: variantId || null };
     },
-    add(productId, quantity = 1) {
+    getCartKey(productId, variantId) {
+      const baseId = String(productId);
+      return variantId ? `${baseId}::${variantId}` : baseId;
+    },
+    normalizeVariant(variant) {
+      if (!variant) return null;
+      if (typeof variant === 'string') {
+        return { id: variant, label: variant };
+      }
+      const id = variant.id || variant.value || variant.name || variant.label;
+      const label = variant.label || variant.name || variant.value || id;
+      return id ? { id, label } : null;
+    },
+    init() {
+      const storedItems = JSON.parse(localStorage.getItem("cart")) || [];
+      this.items = storedItems
+        .map(item => {
+          if (!item) return null;
+          const normalized = { ...item };
+          if (!normalized.productId) {
+            const parsed = this.parseCartKey(normalized.id);
+            normalized.productId = parsed.productId;
+            normalized.variantId = normalized.variantId || parsed.variantId;
+          }
+          if (!normalized.id) {
+            normalized.id = this.getCartKey(normalized.productId, normalized.variantId);
+          }
+          return normalized;
+        })
+        .filter(Boolean);
+    },
+    add(productId, quantity = 1, variant = null) {
       const safeQuantity = Number.isFinite(Number(quantity)) ? Math.max(1, Number(quantity)) : 1;
-      const existing = this.items.find(item => String(item.id) === String(productId));
+      const normalizedVariant = this.normalizeVariant(variant);
+      const parsed = normalizedVariant ? null : this.parseCartKey(productId);
+      const resolvedProductId = normalizedVariant ? productId : parsed.productId;
+      const resolvedVariantId = normalizedVariant ? normalizedVariant.id : parsed.variantId;
+      const resolvedVariantLabel = normalizedVariant ? normalizedVariant.label : null;
+      const cartKey = this.getCartKey(resolvedProductId, resolvedVariantId);
+      const existing = this.items.find(item => String(item.id) === String(cartKey));
       if (existing) {
         existing.quantity += safeQuantity;
       } else {
-        this.items.push({ id: productId, quantity: safeQuantity });
+        this.items.push({
+          id: cartKey,
+          productId: resolvedProductId,
+          variantId: resolvedVariantId || null,
+          variantLabel: resolvedVariantLabel || null,
+          quantity: safeQuantity
+        });
       }
       this.save();
       window.showNotification('Item added to cart');
     },
     remove(productId, force = false) {
-      const itemIndex = this.items.findIndex(item => String(item.id) === String(productId));
+      const parsed = this.parseCartKey(productId);
+      const cartKey = this.getCartKey(parsed.productId, parsed.variantId);
+      const itemIndex = this.items.findIndex(item => String(item.id) === String(cartKey));
       if (itemIndex > -1) {
         if (force || this.items[itemIndex].quantity === 1) {
           this.items.splice(itemIndex, 1);
@@ -208,7 +254,9 @@ document.addEventListener("alpine:init", () => {
     get details() {
       return this.items
         .map(item => {
-          const product = Alpine.store("products").getProductById(item.id);
+          const resolvedProductId = item.productId || this.parseCartKey(item.id).productId;
+          const resolvedVariantId = item.variantId || this.parseCartKey(item.id).variantId;
+          const product = Alpine.store("products").getProductById(resolvedProductId);
           if (!product) return null;
 
           const { finalPrice, percentOff } = window.calculateDiscount(product);
@@ -219,6 +267,10 @@ document.addEventListener("alpine:init", () => {
             ...product,
             name: safeName,
             quantity: item.quantity,
+            id: this.getCartKey(resolvedProductId, resolvedVariantId),
+            productId: resolvedProductId,
+            variantId: resolvedVariantId || null,
+            variantLabel: item.variantLabel || null,
             img: product.image_url,
             price: product.price,
             finalPrice: finalPrice,
@@ -720,7 +772,13 @@ document.addEventListener("alpine:init", () => {
 
           const orderCode = this.generateOrderCode();
           const orderDetails = this.$store.cart.details.map(item => ({
-            product_id: item.id, name: item.name, quantity: item.quantity, price: item.price, subtotal: item.subtotal
+            product_id: item.productId || item.id,
+            variant_id: item.variantId || null,
+            variant_label: item.variantLabel || null,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.price,
+            subtotal: item.subtotal
           }));
 
           const { error } = await supabase.from('orders').insert({

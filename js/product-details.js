@@ -11,8 +11,8 @@ Alpine.data('productDetail', () => ({
   relatedProducts: [],
   relatedLoading: true,
   ready: false,
-  colorOptions: [],
-  selectedColor: '',
+  variantOptions: [],
+  selectedVariant: null,
 
   // Methods
   init() {
@@ -49,8 +49,8 @@ Alpine.data('productDetail', () => ({
     this.priceInfo = this.calculateDiscount(this.product);
     this.productImages = this.getProductImages(this.product);
     this.mainImage = this.productImages[0] || 'img/coming soon.jpg';
-    this.colorOptions = this.getColorOptions(this.product);
-    this.selectedColor = this.colorOptions[0]?.name || '';
+    this.variantOptions = this.getVariantOptions(this.product);
+    this.selectedVariant = null;
     this.ready = true;
   },
 
@@ -110,11 +110,11 @@ Alpine.data('productDetail', () => ({
   },
 
   // UI Interaction Methods
-  selectColor(color) {
-    if (!color) return;
-    this.selectedColor = color.name;
-    if (color.image) {
-      this.mainImage = color.image;
+  selectVariant(variant) {
+    if (!variant) return;
+    this.selectedVariant = variant;
+    if (variant.image) {
+      this.mainImage = variant.image;
     }
   },
 
@@ -132,10 +132,24 @@ Alpine.data('productDetail', () => ({
     }
   },
 
+  ensureVariantSelected() {
+    if (this.variantOptions.length > 0 && !this.selectedVariant) {
+      return false;
+    }
+    return true;
+  },
+
   addToCart() {
-    if (this.product) {
-      this.$store.cart.add(this.product.id, this.quantity);
+    if (this.product && this.ensureVariantSelected()) {
+      this.$store.cart.add(this.product.id, this.quantity, this.selectedVariant);
       // Optional: Show a confirmation toast/message
+    }
+  },
+
+  buyNow() {
+    if (this.product && this.ensureVariantSelected()) {
+      this.$store.cart.add(this.product.id, this.quantity, this.selectedVariant);
+      window.location.href = 'my cart.html';
     }
   },
 
@@ -185,18 +199,33 @@ Alpine.data('productDetail', () => ({
     return [...new Set(images)];
   },
 
-  getColorOptions(product) {
-    if (Array.isArray(product.colors)) {
-      return product.colors.filter(option => option && option.name);
-    }
+  getVariantOptions(product) {
+    if (!product) return [];
     if (Array.isArray(product.variants)) {
       return product.variants
-        .filter(variant => variant && variant.name)
-        .map(variant => ({
-          name: variant.name,
-          value: variant.color || variant.value,
-          image: variant.image
-        }));
+        .map(variant => {
+          const label = variant.label || variant.name || variant.value;
+          const id = variant.id || (label ? String(label).toLowerCase().replace(/\s+/g, '-') : '');
+          return {
+            id,
+            label,
+            image: variant.image || null
+          };
+        })
+        .filter(variant => variant.id && variant.label);
+    }
+    if (Array.isArray(product.colors)) {
+      return product.colors
+        .map(color => {
+          const label = color.name || color.label;
+          const id = color.id || (label ? String(label).toLowerCase().replace(/\s+/g, '-') : '');
+          return {
+            id,
+            label,
+            image: color.image || null
+          };
+        })
+        .filter(variant => variant.id && variant.label);
     }
     return [];
   }
