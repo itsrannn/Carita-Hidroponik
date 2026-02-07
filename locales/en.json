@@ -1,5 +1,6 @@
 {
   "nav": {
+    "home": "Home",
     "categories": "Categories",
     "products": "All Products",
     "seeds": "Seeds",
@@ -357,8 +358,17 @@
     "relatedProducts": "Related Products",
     "specifications": "Specifications",
     "addToCart": "Add to Cart",
+    "addToCartSmall": "Add",
     "selectColor": "Select Color",
-    "details": "Product Details"
+    "details": "Product Details",
+    "quantity": "Set Quantity",
+    "characteristics": "Product Characteristics",
+    "productDescription": "Product Description",
+    "backToList": "Back to list",
+    "notFound": "Product Not Found",
+    "notFoundDesc": "Sorry, the product you are looking for could not be found. Please return to the homepage.",
+    "off": "OFF",
+    "addedToCart": "Item added to cart!"
   },
   "newsDetail": {
     "by": "By",
