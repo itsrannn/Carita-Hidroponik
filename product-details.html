@@ -55,16 +55,16 @@
                 <img :src="mainImage" :alt="productName" />
             </div>
             <!-- Thumbnail Slider -->
-            <div class="swiper product-thumbnail-slider">
-                <div class="swiper-wrapper">
-                    <template x-for="(image, index) in mockImages" :key="index">
-                        <div class="swiper-slide thumbnail-item" @click="selectThumbnail(image)" :class="{'active': mainImage === image}">
-                            <img :src="image" :alt="productName + ' thumbnail ' + (index + 1)" />
-                        </div>
-                    </template>
-                </div>
-                <div class="swiper-button-next"></div>
-                <div class="swiper-button-prev"></div>
+            <div class="swiper product-thumbnail-slider" x-show="productImages.length > 1">
+              <div class="swiper-wrapper">
+                <template x-for="(image, index) in productImages" :key="index">
+                  <div class="swiper-slide thumbnail-item" @click="selectThumbnail(image)" :class="{'active': mainImage === image}">
+                    <img :src="image" :alt="productName + ' thumbnail ' + (index + 1)" />
+                  </div>
+                </template>
+              </div>
+              <div class="swiper-button-next"></div>
+              <div class="swiper-button-prev"></div>
             </div>
           </div>
 
@@ -85,10 +85,10 @@
             </div>
 
             <!-- Color Selector -->
-            <div class="color-selector">
+            <div class="color-selector" x-show="colorOptions.length">
               <h3 class="selector-title">Color: <span x-text="selectedColor"></span></h3>
               <div class="color-swatches">
-                <template x-for="color in mockColors" :key="color.name">
+                <template x-for="color in colorOptions" :key="color.name">
                   <button @click="selectColor(color)" class="color-swatch" :style="{ backgroundColor: color.value }" :class="{'selected': selectedColor === color.name}" :title="color.name"></button>
                 </template>
               </div>
@@ -150,10 +150,10 @@
                         </div>
                       </template>
                       <figure class="product-media">
-                        <img :src="item.image_url ? item.image_url : 'img/coming soon.jpg'" :alt="item.name[$store.i18n.lang] || item.name['id']" />
+                        <img :src="item.image_url ? item.image_url : 'img/coming soon.jpg'" :alt="getLocalizedValue(item.name, $store.i18n.lang, '')" />
                       </figure>
                       <div class="product-body">
-                        <h3 class="product-title" x-text="item.name[$store.i18n.lang] || item.name['id']"></h3>
+                        <h3 class="product-title" x-text="getLocalizedValue(item.name, $store.i18n.lang, '')"></h3>
                         <div class="product-meta">
                           <template x-if="calculateDiscount(item).percentOff > 0">
                             <div class="price-container">
