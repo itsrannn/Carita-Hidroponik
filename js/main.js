@@ -176,17 +176,15 @@ document.addEventListener("alpine:init", () => {
     init() {
       this.items = JSON.parse(localStorage.getItem("cart")) || [];
     },
-    add(productId, quantity = 1) {
-      const q = parseInt(quantity) || 1;
+    add(productId) {
       const existing = this.items.find(item => String(item.id) === String(productId));
       if (existing) {
-        existing.quantity += q;
+        existing.quantity++;
       } else {
-        this.items.push({ id: productId, quantity: q });
+        this.items.push({ id: productId, quantity: 1 });
       }
       this.save();
-      const name = productId ? '' : ''; // Placeholder if we wanted product name here
-      window.showNotification(Alpine.store('i18n').t('productDetail.addedToCart'));
+      window.showNotification('Item added to cart');
     },
     remove(productId, force = false) {
       const itemIndex = this.items.findIndex(item => String(item.id) === String(productId));
@@ -484,6 +482,159 @@ document.addEventListener("alpine:init", () => {
     }
   }));
 
+  Alpine.data('productDetail', () => ({
+        product: null,
+        relatedProducts: [],
+        relatedLoading: true,
+        priceInfo: { percentOff: 0, originalPrice: 0, discountedPrice: 0 },
+        ready: false,
+
+        // --- Mock Data for UI ---
+        mockImages: [],
+        mockColors: [],
+
+        // --- Component State ---
+        mainImage: '',
+        selectedColor: '',
+        quantity: 1,
+
+        init() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('id');
+
+            Alpine.effect(() => {
+                const isLoading = this.$store.products.isLoading;
+                const lang = this.$store.i18n.lang;
+
+                if (!isLoading) {
+                    this.product = this.$store.products.getProductById(productId);
+                    if (this.product) {
+                        this.priceInfo = calculateDiscount(this.product);
+                        const productName = (this.product.name && this.product.name[lang]) ? this.product.name[lang] : ((this.product.name && this.product.name['id']) ? this.product.name['id'] : '');
+                        document.title = "Carita Hidroponik | " + productName;
+
+                        this.setupMockData();
+                        this.mainImage = this.product.image_url || 'img/general/default.jpg';
+
+                        this.fetchRelatedProducts();
+                    }
+                    this.ready = true;
+                }
+            });
+        },
+
+        setupMockData() {
+            this.mockImages = [
+                this.product.image_url || 'img/general/default.jpg',
+                'img/products/cabe-keriting-2.webp',
+                'img/products/cabe-keriting-3.webp',
+                'img/products/cabe-keriting-4.webp',
+            ];
+            this.mockColors = [
+                { name: 'Red', value: '#FF0000', image: this.product.image_url || 'img/general/default.jpg' },
+                { name: 'Green', value: '#008000', image: 'img/products/cabe-hijau.webp' },
+                { name: 'Yellow', value: '#FFFF00', image: 'img/products/cabe-kuning.webp' }
+            ];
+            this.selectedColor = this.mockColors[0].name;
+        },
+
+        selectColor(color) {
+            this.selectedColor = color.name;
+            this.mainImage = color.image;
+        },
+
+        selectThumbnail(image) {
+            this.mainImage = image;
+        },
+
+        increaseQuantity() {
+            this.quantity++;
+        },
+
+        decreaseQuantity() {
+            if (this.quantity > 1) {
+                this.quantity--;
+            }
+        },
+
+        addToCart() {
+            this.$store.cart.add(this.product.id, this.quantity);
+        },
+
+        fetchRelatedProducts() {
+            if (!this.product) return;
+            this.relatedLoading = true;
+            this.relatedProducts = this.$store.products.all.filter(p =>
+                p.category === this.product.category && String(p.id) !== String(this.product.id)
+            );
+            this.relatedLoading = false;
+            this.$nextTick(() => this.initSwiper());
+        },
+
+        initSwiper() {
+            if (this.mockImages.length > 0) {
+                new Swiper(".product-thumbnail-slider", {
+                    spaceBetween: 10,
+                    slidesPerView: 4,
+                    freeMode: true,
+                    watchSlidesProgress: true,
+                     navigation: {
+                        nextEl: ".swiper-button-next",
+                        prevEl: ".swiper-button-prev",
+                    },
+                });
+            }
+            if (this.relatedProducts.length > 0) {
+                new Swiper(".related-product-slider", {
+                    loop: this.relatedProducts.length > 4,
+                    spaceBetween: 15,
+                    navigation: {
+                        nextEl: ".swiper-button-next",
+                        prevEl: ".swiper-button-prev",
+                    },
+                    pagination: {
+                        el: ".swiper-pagination",
+                        clickable: true,
+                    },
+                    breakpoints: {
+                        320: { slidesPerView: 2, spaceBetween: 10 },
+                        768: { slidesPerView: 5, spaceBetween: 20 },
+                    },
+                });
+            }
+            this.$nextTick(() => feather.replace());
+        },
+
+        get productName() {
+            if (!this.product) return '';
+            const lang = this.$store.i18n.lang;
+            return (this.product.name && this.product.name[lang]) ? this.product.name[lang] : ((this.product.name && this.product.name['id']) ? this.product.name['id'] : '');
+        },
+
+        get productDescription() {
+            if (!this.product) return '';
+            const lang = this.$store.i18n.lang;
+            return (this.product.description && this.product.description[lang]) ? this.product.description[lang] : ((this.product.description && this.product.description['id']) ? this.product.description['id'] : '');
+        },
+
+        get productCharacteristicsList() {
+            if (!this.product || !this.product.characteristics) return '';
+
+            const rawText = this.product.characteristics;
+
+            const textToParse = (typeof rawText === 'object' && rawText !== null)
+                ? (rawText[this.$store.i18n.lang] || rawText['id'] || '')
+                : (typeof rawText === 'string' ? rawText : '');
+
+            if (!textToParse) return '';
+
+            return textToParse
+                .split('\n')
+                .filter(line => line.trim() !== '')
+                .map(line => `<li>✔ ${line.trim()}</li>`)
+                .join('');
+        }
+    }));
 
     // --- Global Initialization ---
     // Initialize stores on startup. Components will react to their state changes.

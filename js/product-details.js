@@ -1,210 +1,171 @@
-document.addEventListener('alpine:init', () => {
-  Alpine.data('productDetail', () => ({
-    product: null,
-    mainImage: '',
-    quantity: 1,
-    relatedProducts: [],
-    relatedLoading: false,
-    ready: false,
-    activeTab: 'details',
+Alpine.data('productDetail', () => ({
+  // Data
+  product: null,
+  productName: '',
+  productDescription: '',
+  productCharacteristicsList: '',
+  priceInfo: {},
+  mainImage: '',
+  quantity: 1,
+  relatedProducts: [],
+  relatedLoading: true,
+  ready: false,
+  // Mock Data for UI development
+  mockColors: [
+    { name: 'Red', value: '#E53935', image: 'img/products/cabai-merah-keriting.jpg' },
+    { name: 'Green', value: '#43A047', image: 'img/products/caisim.jpg' },
+    { name: 'Blue', value: '#1E88E5', image: 'img/products/selada-hidroponik.jpg' }
+  ],
+  selectedColor: 'Red',
+  mockImages: [
+    'img/products/cabai-merah-keriting.jpg',
+    'img/products/caisim.jpg',
+    'img/products/selada-hidroponik.jpg',
+    'img/products/kangkung-hidroponik.jpg',
+  ],
 
-    // For future expansion
-    mockImages: [],
-    mockColors: [],
-    selectedColor: '',
+  // Methods
+  init() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('id');
 
-    async init() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const productId = urlParams.get('id');
-
-      if (!productId) {
-        this.ready = true;
-        return;
-      }
-
-      try {
-        const { data, error } = await window.supabase
-          .from('products')
-          .select('*')
-          .eq('id', productId)
-          .single();
-
-        if (error) throw error;
-        this.product = data;
-        this.setupProductData();
-        await this.fetchRelatedProducts();
-      } catch (err) {
-        console.error('Error fetching product:', err);
-      } finally {
-        this.ready = true;
-        this.$nextTick(() => {
-          this.initSliders();
-        });
-      }
-    },
-
-    setupProductData() {
-      if (this.product) {
-        this.mainImage = this.product.image_url || 'img/coming soon.jpg';
-        this.mockImages = [this.mainImage];
-      }
-    },
-
-    async fetchRelatedProducts() {
-      if (!this.product) return;
-      this.relatedLoading = true;
-      try {
-        // First try to find products in the same category
-        let { data, error } = await window.supabase
-          .from('products')
-          .select('*')
-          .eq('category', this.product.category)
-          .neq('id', this.product.id)
-          .limit(4);
-
-        if (error) throw error;
-
-        // Fallback: If no products in same category, fetch any other products
-        if (!data || data.length === 0) {
-            const { data: fallbackData, error: fallbackError } = await window.supabase
-                .from('products')
-                .select('*')
-                .neq('id', this.product.id)
-                .limit(4);
-
-            if (fallbackError) throw fallbackError;
-            data = fallbackData;
+    Alpine.effect(() => {
+        const isLoading = this.$store.products.isLoading;
+        if (!isLoading) {
+            this.product = this.$store.products.getProductById(productId);
+            if (this.product) {
+                this.setupProductData();
+                this.fetchRelatedProducts();
+            }
+            this.$nextTick(() => this.initSliders());
         }
+    });
+  },
 
-        this.relatedProducts = data;
-      } catch (err) {
-        console.error('Error fetching related products:', err);
-      } finally {
-        this.relatedLoading = false;
-        this.$nextTick(() => {
-          this.initSliders();
-        });
-      }
-    },
+  setupProductData() {
+    const lang = this.$store.i18n.lang;
+    this.productName = (this.product.name && this.product.name[lang]) || (this.product.name && this.product.name.id) || 'No name';
+    this.productDescription = (this.product.description && this.product.description[lang]) || (this.product.description && this.product.description.id) || '';
 
-    initSliders() {
-      // Related products slider
-      new Swiper('.related-product-slider', {
-        slidesPerView: 1,
-        spaceBetween: 10,
-        navigation: {
-          nextEl: '.swiper-button-next',
-          prevEl: '.swiper-button-prev',
-        },
-        pagination: {
-          el: '.swiper-pagination',
-          clickable: true,
-        },
-        breakpoints: {
-          640: { slidesPerView: 2, spaceBetween: 20 },
-          1024: { slidesPerView: 4, spaceBetween: 30 },
-        }
-      });
+    // Process characteristics: split by newline and wrap in <li>
+    const characteristics = (this.product.characteristics && this.product.characteristics[lang]) || (this.product.characteristics && this.product.characteristics.id) || '';
+    this.productCharacteristicsList = characteristics
+      .split('\n')
+      .filter(line => line.trim() !== '')
+      .map(line => `<li>✔ ${line.trim()}</li>`)
+      .join('');
 
-      // Thumbnail slider
-      if (this.mockImages.length > 1) {
-          new Swiper('.product-thumbnail-slider', {
-              slidesPerView: 4,
-              spaceBetween: 10,
-              navigation: {
-                  nextEl: '.swiper-button-next',
-                  prevEl: '.swiper-button-prev',
-              }
-          });
-      }
+    this.priceInfo = this.calculateDiscount(this.product);
+    this.mainImage = this.product.image_url || 'img/coming-soon.jpg';
+    // Sync mock images with product image
+    this.mockImages.unshift(this.mainImage);
+    this.mockImages = [...new Set(this.mockImages)]; // Remove duplicates
+    this.ready = true;
+  },
 
-      if (window.feather) {
-        window.feather.replace();
-      }
-    },
+  async fetchRelatedProducts() {
+    this.relatedLoading = true;
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .neq('id', this.product.id) // Exclude the current product
+      .limit(5);
 
-    selectThumbnail(image) {
-      this.mainImage = image;
-    },
-
-    selectColor(color) {
-        this.selectedColor = color.name;
-        this.mainImage = color.image;
-    },
-
-    increaseQuantity() {
-      this.quantity++;
-    },
-
-    decreaseQuantity() {
-      if (this.quantity > 1) this.quantity--;
-    },
-
-    addToCart() {
-      if (this.product) {
-        this.$store.cart.add(this.product.id, this.quantity);
-        // Notification is now handled globally in cart.add
-      }
-    },
-
-    setTab(tab) {
-      this.activeTab = tab;
-    },
-
-    get productName() {
-      if (!this.product) return '';
-      const lang = this.$store.i18n.lang;
-
-      // Handle both JSON and string
-      if (typeof this.product.name === 'object' && this.product.name !== null) {
-          return this.product.name[lang] || this.product.name.id || '';
-      }
-      return this.product.name || '';
-    },
-
-    get productDescription() {
-      if (!this.product) return '';
-      const lang = this.$store.i18n.lang;
-
-      // Handle both JSON and string
-      if (typeof this.product.description === 'object' && this.product.description !== null) {
-          return this.product.description[lang] || this.product.description.id || '';
-      }
-      return this.product.description || '';
-    },
-
-    get productCharacteristicsList() {
-      if (!this.product || !this.product.characteristics) return '';
-      const lang = this.$store.i18n.lang;
-
-      let characteristics = '';
-      // Handle both JSON and string
-      if (typeof this.product.characteristics === 'object' && this.product.characteristics !== null) {
-          characteristics = this.product.characteristics[lang] || this.product.characteristics.id || '';
-      } else {
-          characteristics = this.product.characteristics || '';
-      }
-
-      if (!characteristics) return '';
-
-      return characteristics.split('\n').map(line => {
-        return `<li>✔ ${line.trim()}</li>`;
-      }).join('');
-    },
-
-    get priceInfo() {
-      if (!this.product) return { originalPrice: 0, finalPrice: 0, percentOff: 0 };
-      // Use global discount calculator
-      return window.calculateDiscount(this.product);
-    },
-
-    formatRupiah(number) {
-        return window.formatRupiah(number);
-    },
-
-    calculateDiscount(item) {
-      // Use global discount calculator
-      return window.calculateDiscount(item);
+    if (error) {
+      console.error('Error fetching related products:', error);
+      this.relatedProducts = [];
+    } else {
+      this.relatedProducts = data;
     }
-  }));
-});
+    this.relatedLoading = false;
+  },
+
+  initSliders() {
+    // Ensure Swiper instances are destroyed before re-initializing
+    if (this.thumbnailSwiper) this.thumbnailSwiper.destroy();
+    if (this.relatedSwiper) this.relatedSwiper.destroy();
+
+    this.thumbnailSwiper = new Swiper('.product-thumbnail-slider', {
+      spaceBetween: 10,
+      slidesPerView: 4,
+      freeMode: true,
+      watchSlidesProgress: true,
+      navigation: {
+        nextEl: '.swiper-button-next',
+        prevEl: '.swiper-button-prev',
+      },
+    });
+
+    this.relatedSwiper = new Swiper('.related-product-slider', {
+      loop: true,
+      slidesPerView: 2,
+      spaceBetween: 15,
+      pagination: {
+        el: '.swiper-pagination',
+        clickable: true,
+      },
+      navigation: {
+        nextEl: '.swiper-button-next',
+        prevEl: '.swiper-button-prev',
+      },
+      breakpoints: {
+        640: { slidesPerView: 3, spaceBetween: 20 },
+        768: { slidesPerView: 4, spaceBetween: 25 },
+        1024: { slidesPerView: 5, spaceBetween: 30 },
+      },
+    });
+  },
+
+  // UI Interaction Methods
+  selectColor(color) {
+    this.selectedColor = color.name;
+    this.mainImage = color.image; // Change main image based on color
+  },
+
+  selectThumbnail(image) {
+    this.mainImage = image;
+  },
+
+  increaseQuantity() {
+    this.quantity++;
+  },
+
+  decreaseQuantity() {
+    if (this.quantity > 1) {
+      this.quantity--;
+    }
+  },
+
+  addToCart() {
+    if (this.product) {
+      this.$store.cart.add(this.product.id, this.quantity);
+      // Optional: Show a confirmation toast/message
+    }
+  },
+
+  // Utility Methods (assuming they might not be globally available on this page)
+  formatRupiah(number) {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(number);
+  },
+
+  calculateDiscount(product) {
+    const originalPrice = product.price || 0;
+    let finalPrice = originalPrice;
+    let percentOff = 0;
+
+    if (product.discount_type === 'percent' && product.discount_value > 0) {
+      percentOff = product.discount_value;
+      finalPrice = originalPrice - (originalPrice * percentOff / 100);
+    } else if (product.discount_type === 'fixed' && product.discount_value > 0) {
+      finalPrice = product.discount_value;
+      percentOff = Math.round(((originalPrice - finalPrice) / originalPrice) * 100);
+    }
+
+    return { originalPrice, finalPrice, percentOff };
+  }
+}));
