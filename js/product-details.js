@@ -3,7 +3,7 @@ Alpine.data('productDetail', () => ({
   product: null,
   productName: '',
   productDescription: '',
-  productCharacteristicsList: '',
+  productSpecsList: '',
   priceInfo: {},
   mainImage: '',
   productImages: [],
@@ -37,9 +37,9 @@ Alpine.data('productDetail', () => ({
     this.productName = this.getLocalizedValue(this.product.name, lang, 'Produk tanpa nama');
     this.productDescription = this.getLocalizedValue(this.product.description, lang, '');
 
-    // Process characteristics: split by newline and wrap in <li>
-    const characteristics = this.getLocalizedValue(this.product.characteristics, lang, '');
-    this.productCharacteristicsList = characteristics
+    // Process specifications: split by newline and wrap in <li>
+    const specs = this.getLocalizedValue(this.product.char, lang, '');
+    this.productSpecsList = specs
       .replace(/<br\s*\/?>/gi, '\n')
       .split('\n')
       .filter(line => line.trim() !== '')
@@ -149,7 +149,7 @@ Alpine.data('productDetail', () => ({
   buyNow() {
     if (this.product && this.ensureVariantSelected()) {
       this.$store.cart.add(this.product.id, this.quantity, this.selectedVariant);
-      window.location.href = 'my cart.html';
+      window.location.href = 'my-cart.html';
     }
   },
 

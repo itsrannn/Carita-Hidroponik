@@ -354,11 +354,30 @@
     }
   },
   "productDetail": {
-    "relatedProducts": "Produk Terkait",
+    "pageTitle": "Detail Produk | Carita Hidroponik",
+    "loading": "Memuat produk...",
+    "notFoundTitle": "Produk Tidak Ditemukan",
+    "notFoundBody": "Maaf, produk yang Anda cari tidak dapat ditemukan. Silakan kembali ke beranda.",
+    "breadcrumbHome": "Beranda",
+    "breadcrumbProducts": "Produk",
+    "variantLabel": "Varian",
+    "selectVariant": "Pilih varian",
+    "selectVariantFirst": "Pilih varian terlebih dahulu.",
+    "quantityLabel": "Atur jumlah",
+    "decreaseQuantity": "Kurangi jumlah",
+    "currentQuantity": "Jumlah saat ini",
+    "increaseQuantity": "Tambah jumlah",
+    "buyNow": "Beli Sekarang",
+    "details": "Detail Produk",
     "specifications": "Spesifikasi",
+    "characteristics": "Karakteristik Produk",
+    "relatedProducts": "Produk Terkait",
+    "relatedLoading": "Memuat produk terkait...",
+    "relatedEmpty": "Tidak ada produk terkait.",
+    "thumbnailLabel": "thumbnail",
+    "discountSuffix": "% DISKON",
     "addToCart": "Tambah ke Keranjang",
-    "selectColor": "Pilih Warna",
-    "details": "Detail Produk"
+    "selectColor": "Pilih Warna"
   },
   "newsDetail": {
     "by": "Oleh",
