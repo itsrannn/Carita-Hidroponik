@@ -133,7 +133,6 @@
                 @click="addToCart()"
                 class="btn add-cart-main"
                 style="flex: 1 1 200px; margin-top: 0;"
-                :disabled="variantOptions.length && !selectedVariant"
               >
                 <i data-feather="shopping-bag"></i>
                 <span x-text="$store.i18n.t('productDetail.addToCart')"></span>
@@ -143,7 +142,6 @@
                 @click="buyNow()"
                 class="btn add-cart-main"
                 style="flex: 1 1 200px; margin-top: 0; background: var(--green); color: #fff; border: none;"
-                :disabled="variantOptions.length && !selectedVariant"
               >
                 <i data-feather="shopping-bag"></i>
                 <span x-text="$store.i18n.t('productDetail.buyNow')"></span>
