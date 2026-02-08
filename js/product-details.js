@@ -11,6 +11,8 @@ document.addEventListener('alpine:init', () => {
     quantity: 1,
     relatedProducts: [],
     relatedLoading: true,
+    crossSellProducts: [],
+    crossSellLoading: true,
     ready: false,
     variantOptions: [],
     selectedVariant: null,
@@ -27,7 +29,7 @@ document.addEventListener('alpine:init', () => {
             this.product = this.$store.products.getProductById(productId);
             if (this.product) {
                 this.setupProductData();
-                this.fetchRelatedProducts();
+                this.refreshProductSuggestions();
             }
             this.$nextTick(() => this.initSliders());
         }
@@ -56,21 +58,19 @@ document.addEventListener('alpine:init', () => {
     this.ready = true;
   },
 
-  async fetchRelatedProducts() {
-    this.relatedLoading = true;
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .neq('id', this.product.id) // Exclude the current product
-      .limit(5);
+  refreshProductSuggestions() {
+    const allProducts = this.$store.products.all || [];
+    const category = this.product ? this.product.category : null;
+    const excludeId = this.product ? this.product.id : null;
 
-    if (error) {
-      console.error('Error fetching related products:', error);
-      this.relatedProducts = [];
-    } else {
-      this.relatedProducts = data;
-    }
+    this.relatedLoading = true;
+    this.crossSellLoading = true;
+
+    this.relatedProducts = this.filterByCategory(allProducts, category, excludeId, 'include');
+    this.crossSellProducts = this.filterByCategory(allProducts, category, excludeId, 'exclude');
+
     this.relatedLoading = false;
+    this.crossSellLoading = false;
     this.$nextTick(() => {
       if (window.feather) {
         feather.replace();
@@ -187,6 +187,57 @@ document.addEventListener('alpine:init', () => {
     if (!field) return fallback;
     if (typeof field === 'string') return field;
     return field[lang] || field.id || fallback;
+  },
+
+  filterByCategory(products, category, excludeId, mode = 'include') {
+    if (!Array.isArray(products)) return [];
+    return products.filter(product => {
+      if (!product) return false;
+      if (excludeId && product.id === excludeId) return false;
+      if (!category) {
+        return mode === 'exclude';
+      }
+      const isMatch = product.category === category;
+      return mode === 'include' ? isMatch : !isMatch;
+    });
+  },
+
+  renderProductCard(item) {
+    const { finalPrice, percentOff, originalPrice } = this.calculateDiscount(item);
+    const isPromo = percentOff > 0;
+    const lang = this.$store.i18n.lang;
+    const itemName = this.getLocalizedValue(item.name, lang, 'Unnamed Product');
+
+    const ribbonHtml = isPromo ? `
+      <div class="discount-ribbon"><span>${percentOff}% OFF</span></div>
+    ` : '';
+
+    const priceHtml = isPromo ? `
+      <div class="price-container">
+        <div class="price-original">${this.formatRupiah(originalPrice)}</div>
+        <div class="price-discounted">${this.formatRupiah(finalPrice)}</div>
+      </div>
+    ` : `<div class="price">${this.formatRupiah(originalPrice)}</div>`;
+
+    return `
+      <a href="product-details.html?id=${item.id}" class="product-link">
+        <article class="product-card">
+          ${ribbonHtml}
+          <figure class="product-media">
+            <img src="${item.image_url ? item.image_url : 'img/coming soon.jpg'}" alt="${itemName}" />
+          </figure>
+          <div class="product-body">
+            <h3 class="product-title">${itemName}</h3>
+            <div class="product-meta">
+              ${priceHtml}
+              <button class="btn-sm add-cart" @click.prevent.stop="$store.cart.add(${item.id})">
+                <i data-feather="shopping-bag"></i> Add
+              </button>
+            </div>
+          </div>
+        </article>
+      </a>
+    `;
   },
 
   getProductImages(product) {

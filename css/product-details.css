@@ -87,6 +87,28 @@
   justify-content: center;
 }
 
+.products-scroll {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.products-scroll > div {
+  flex: 0 0 clamp(220px, 26%, 260px);
+  scroll-snap-align: start;
+}
+
+.products-scroll .product-link {
+  height: 100%;
+}
+
+.cross-sell-products {
+  margin-top: 2.5rem;
+}
+
 .breadcrumb {
   font-size: 0.9rem;
   margin-bottom: 1rem;
@@ -323,9 +345,44 @@
     transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
-.add-cart-main:hover {
-    opacity: 0.9;
+.cta-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+}
+
+.cta-actions .add-cart-main {
+    flex: 1 1 200px;
+    margin-top: 0;
+    border-radius: 12px;
+}
+
+.cta-actions .btn-primary {
+    background: var(--green);
+    color: #fff;
+    border: none;
+    box-shadow: 0 6px 16px rgba(46, 125, 50, 0.2);
+}
+
+.cta-actions .btn-primary:hover {
+    background: #256b2b;
     transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(46, 125, 50, 0.28);
+    cursor: pointer;
+}
+
+.cta-actions .btn-secondary {
+    background: #fff;
+    color: var(--green);
+    border: 1.5px solid var(--green);
+}
+
+.cta-actions .btn-secondary:hover {
+    background: #f1fbf4;
+    box-shadow: 0 6px 16px rgba(46, 125, 50, 0.12);
+    transform: translateY(-1px);
+    cursor: pointer;
 }
 
 /* Tab Section for Details & Specs */
@@ -427,5 +484,13 @@
     .tab-link {
         flex-basis: 50%;
         text-align: center;
+    }
+
+    .products-scroll {
+        gap: 1rem;
+    }
+
+    .products-scroll > div {
+        flex-basis: 70%;
     }
 }

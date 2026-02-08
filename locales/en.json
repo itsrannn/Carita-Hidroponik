@@ -372,6 +372,7 @@
     "specifications": "Specifications",
     "characteristics": "Product Characteristics",
     "relatedProducts": "Related Products",
+    "crossSellTitle": "You Might Also Need",
     "relatedLoading": "Loading related products...",
     "relatedEmpty": "No related products available.",
     "thumbnailLabel": "thumbnail",
