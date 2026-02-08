@@ -250,7 +250,7 @@
     box-shadow: 0 4px 12px var(--shadow);
 }
 
-.product-title {
+.product-info-panel .product-title {
     font-family: var(--font-heading);
     color: var(--green);
     font-size: 2.8rem;
@@ -469,7 +469,7 @@
         max-width: 100%;
     }
 
-    .product-title {
+    .product-info-panel .product-title {
         font-size: 2rem;
     }
 
