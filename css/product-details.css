@@ -82,7 +82,7 @@
 }
 
 .related-products .products-grid {
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
   justify-content: center;
 }
@@ -318,6 +318,14 @@
     font-size: 1.1rem;
     width: 100%;
     max-width: 100%; /* Full width */
+    cursor: pointer;
+    pointer-events: auto;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.add-cart-main:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
 }
 
 /* Tab Section for Details & Specs */

@@ -71,6 +71,11 @@ document.addEventListener('alpine:init', () => {
       this.relatedProducts = data;
     }
     this.relatedLoading = false;
+    this.$nextTick(() => {
+      if (window.feather) {
+        feather.replace();
+      }
+    });
   },
 
   initSliders() {
@@ -91,24 +96,26 @@ document.addEventListener('alpine:init', () => {
       });
     }
 
-    this.relatedSwiper = new Swiper('.related-product-slider', {
-      loop: true,
-      slidesPerView: 2,
-      spaceBetween: 15,
-      pagination: {
-        el: '.swiper-pagination',
-        clickable: true,
-      },
-      navigation: {
-        nextEl: '.swiper-button-next',
-        prevEl: '.swiper-button-prev',
-      },
-      breakpoints: {
-        640: { slidesPerView: 3, spaceBetween: 20 },
-        768: { slidesPerView: 4, spaceBetween: 25 },
-        1024: { slidesPerView: 5, spaceBetween: 30 },
-      },
-    });
+    if (document.querySelector('.related-product-slider')) {
+      this.relatedSwiper = new Swiper('.related-product-slider', {
+        loop: true,
+        slidesPerView: 2,
+        spaceBetween: 15,
+        pagination: {
+          el: '.swiper-pagination',
+          clickable: true,
+        },
+        navigation: {
+          nextEl: '.swiper-button-next',
+          prevEl: '.swiper-button-prev',
+        },
+        breakpoints: {
+          640: { slidesPerView: 3, spaceBetween: 20 },
+          768: { slidesPerView: 4, spaceBetween: 25 },
+          1024: { slidesPerView: 5, spaceBetween: 30 },
+        },
+      });
+    }
   },
 
   // UI Interaction Methods
