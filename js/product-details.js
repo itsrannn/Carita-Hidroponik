@@ -203,10 +203,11 @@ document.addEventListener('alpine:init', () => {
   },
 
   renderProductCard(item) {
-    const { finalPrice, percentOff, originalPrice } = this.calculateDiscount(item);
+    const { finalPrice, percentOff, originalPrice } = window.calculateDiscount(item);
     const isPromo = percentOff > 0;
     const lang = this.$store.i18n.lang;
-    const itemName = this.getLocalizedValue(item.name, lang, 'Unnamed Product');
+    const itemName = (item.name && item.name[lang]) ? item.name[lang] : ((item.name && item.name['id']) ? item.name['id'] : 'Unnamed Product');
+
 
     const ribbonHtml = isPromo ? `
       <div class="discount-ribbon"><span>${percentOff}% OFF</span></div>
@@ -214,10 +215,10 @@ document.addEventListener('alpine:init', () => {
 
     const priceHtml = isPromo ? `
       <div class="price-container">
-        <div class="price-original">${this.formatRupiah(originalPrice)}</div>
-        <div class="price-discounted">${this.formatRupiah(finalPrice)}</div>
+        <div class="price-original">${window.formatRupiah(originalPrice)}</div>
+        <div class="price-discounted">${window.formatRupiah(finalPrice)}</div>
       </div>
-    ` : `<div class="price">${this.formatRupiah(originalPrice)}</div>`;
+    ` : `<div class="price">${window.formatRupiah(originalPrice)}</div>`;
 
     return `
       <a href="product-details.html?id=${item.id}" class="product-link">
