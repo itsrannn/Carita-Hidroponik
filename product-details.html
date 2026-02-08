@@ -127,12 +127,11 @@
                 </div>
             </div>
 
-            <div class="cta-actions" style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 2rem;">
+            <div class="cta-actions">
               <button
                 type="button"
                 @click="addToCart"
-                class="btn add-cart-main"
-                style="flex: 1 1 200px; margin-top: 0;"
+                class="btn add-cart-main btn-secondary"
               >
                 <i data-feather="shopping-bag"></i>
                 <span x-text="$store.i18n.t('productDetail.addToCart')"></span>
@@ -140,8 +139,7 @@
               <button
                 type="button"
                 @click="buyNow"
-                class="btn add-cart-main"
-                style="flex: 1 1 200px; margin-top: 0; background: var(--green); color: #fff; border: none;"
+                class="btn add-cart-main btn-primary"
               >
                 <span x-text="$store.i18n.t('productDetail.buyNow')"></span>
               </button>
@@ -187,41 +185,27 @@
 
           <p x-show="relatedLoading" class="loading-text" x-text="$store.i18n.t('productDetail.relatedLoading')"></p>
 
-          <div x-show="!relatedLoading && relatedProducts.length > 0" class="products-grid">
+          <div x-show="!relatedLoading && relatedProducts.length > 0" class="products-grid products-scroll">
             <template x-for="item in relatedProducts" :key="item.id">
-              <a :href="'product-details.html?id=' + item.id" class="product-link">
-                <article class="product-card">
-                  <template x-if="calculateDiscount(item).percentOff > 0">
-                    <div class="discount-ribbon">
-                      <span x-text="calculateDiscount(item).percentOff + $store.i18n.t('productDetail.discountSuffix')"></span>
-                    </div>
-                  </template>
-                  <figure class="product-media">
-                    <img :src="item.image_url ? item.image_url : 'img/coming soon.jpg'" :alt="getLocalizedValue(item.name, $store.i18n.lang, '')" />
-                  </figure>
-                  <div class="product-body">
-                    <h3 class="product-title" x-text="getLocalizedValue(item.name, $store.i18n.lang, '')"></h3>
-                    <div class="product-meta">
-                      <template x-if="calculateDiscount(item).percentOff > 0">
-                        <div class="price-container">
-                          <div class="price-original" x-text="formatRupiah(calculateDiscount(item).originalPrice)"></div>
-                          <div class="price-discounted" x-text="formatRupiah(calculateDiscount(item).finalPrice)"></div>
-                        </div>
-                      </template>
-                      <template x-if="!(calculateDiscount(item).percentOff > 0)">
-                        <div class="price" x-text="formatRupiah(calculateDiscount(item).originalPrice)"></div>
-                      </template>
-                      <button class="btn-sm add-cart" @click.prevent.stop="$store.cart.add(item.id)">
-                        <i data-feather="shopping-bag"></i> Add
-                      </button>
-                    </div>
-                  </div>
-                </article>
-              </a>
+              <div x-html="renderProductCard(item)"></div>
             </template>
           </div>
 
           <p x-show="!relatedLoading && relatedProducts.length === 0" class="muted" style="text-align: center;" x-text="$store.i18n.t('productDetail.relatedEmpty')"></p>
+        </section>
+
+        <section class="related-products cross-sell-products">
+          <h2 x-text="$store.i18n.t('productDetail.crossSellTitle')"></h2>
+
+          <p x-show="crossSellLoading" class="loading-text" x-text="$store.i18n.t('productDetail.relatedLoading')"></p>
+
+          <div x-show="!crossSellLoading && crossSellProducts.length > 0" class="products-grid products-scroll">
+            <template x-for="item in crossSellProducts" :key="item.id">
+              <div x-html="renderProductCard(item)"></div>
+            </template>
+          </div>
+
+          <p x-show="!crossSellLoading && crossSellProducts.length === 0" class="muted" style="text-align: center;" x-text="$store.i18n.t('productDetail.relatedEmpty')"></p>
         </section>
       </div>
     </main>
