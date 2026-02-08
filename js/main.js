@@ -333,9 +333,6 @@ document.addEventListener("alpine:init", () => {
               <h3 class="product-title">${itemName}</h3>
               <div class="product-meta">
                 ${priceHtml}
-                <button class="btn-sm add-cart" @click.prevent.stop="$store.cart.add(${item.id})">
-                  <i data-feather="shopping-bag"></i> Add
-                </button>
               </div>
             </div>
           </article>
