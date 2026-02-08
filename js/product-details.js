@@ -1,18 +1,20 @@
-Alpine.data('productDetail', () => ({
-  // Data
-  product: null,
-  productName: '',
-  productDescription: '',
-  productSpecsList: '',
-  priceInfo: {},
-  mainImage: '',
-  productImages: [],
-  quantity: 1,
-  relatedProducts: [],
-  relatedLoading: true,
-  ready: false,
-  variantOptions: [],
-  selectedVariant: null,
+document.addEventListener('alpine:init', () => {
+  Alpine.data('productDetail', () => ({
+    // Data
+    product: null,
+    productName: '',
+    productDescription: '',
+    productSpecsList: '',
+    priceInfo: {},
+    mainImage: '',
+    productImages: [],
+    quantity: 1,
+    relatedProducts: [],
+    relatedLoading: true,
+    ready: false,
+    variantOptions: [],
+    selectedVariant: null,
+    activeTab: 'detail',
 
   // Methods
   init() {
@@ -199,34 +201,35 @@ Alpine.data('productDetail', () => ({
     return [...new Set(images)];
   },
 
-  getVariantOptions(product) {
-    if (!product) return [];
-    if (Array.isArray(product.variants)) {
-      return product.variants
-        .map(variant => {
-          const label = variant.label || variant.name || variant.value;
-          const id = variant.id || (label ? String(label).toLowerCase().replace(/\s+/g, '-') : '');
-          return {
-            id,
-            label,
-            image: variant.image || null
-          };
-        })
-        .filter(variant => variant.id && variant.label);
+    getVariantOptions(product) {
+      if (!product) return [];
+      if (Array.isArray(product.variants)) {
+        return product.variants
+          .map(variant => {
+            const label = variant.label || variant.name || variant.value;
+            const id = variant.id || (label ? String(label).toLowerCase().replace(/\s+/g, '-') : '');
+            return {
+              id,
+              label,
+              image: variant.image || null
+            };
+          })
+          .filter(variant => variant.id && variant.label);
+      }
+      if (Array.isArray(product.colors)) {
+        return product.colors
+          .map(color => {
+            const label = color.name || color.label;
+            const id = color.id || (label ? String(label).toLowerCase().replace(/\s+/g, '-') : '');
+            return {
+              id,
+              label,
+              image: color.image || null
+            };
+          })
+          .filter(variant => variant.id && variant.label);
+      }
+      return [];
     }
-    if (Array.isArray(product.colors)) {
-      return product.colors
-        .map(color => {
-          const label = color.name || color.label;
-          const id = color.id || (label ? String(label).toLowerCase().replace(/\s+/g, '-') : '');
-          return {
-            id,
-            label,
-            image: color.image || null
-          };
-        })
-        .filter(variant => variant.id && variant.label);
-    }
-    return [];
-  }
-}));
+  }));
+});
