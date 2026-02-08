@@ -96,6 +96,11 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.related-products:not(.cross-sell-products) .products-scroll {
+  padding-right: 1.5rem;
+  scroll-padding-right: 1.5rem;
+}
+
 .products-scroll > div {
   flex: 0 0 clamp(220px, 26%, 260px);
   scroll-snap-align: start;
