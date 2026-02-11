@@ -28,15 +28,7 @@ document.addEventListener('alpine:init', () => {
     Alpine.effect(() => {
         const isLoading = this.$store.products.isLoading;
         if (!isLoading) {
-            this.product = this.$store.products.getProductById(productId) || {
-                id: 1,
-                name: { id: "Produk Mock", en: "Mock Product" },
-                description: { id: "Deskripsi Mock", en: "Mock Description" },
-                price: 50000,
-                image_url: "img/coming-soon.jpg",
-                category: "benih",
-                characteristics: { id: "Karakteristik 1\nKarakteristik 2", en: "Char 1\nChar 2" }
-            };
+            this.product = this.$store.products.getProductById(productId);
             if (this.product) {
                 this.setupProductData();
                 this.refreshProductSuggestions();
@@ -48,11 +40,12 @@ document.addEventListener('alpine:init', () => {
 
   setupProductData() {
     const lang = this.$store.i18n.lang;
-    this.productName = this.getLocalizedValue(this.product.name, lang, 'Produk tanpa nama');
-    this.productDescription = this.getLocalizedValue(this.product.description, lang, '');
+    this.productName = window.getLocalized(this.product.name, lang) || 'Produk tanpa nama';
+    this.productDescription = window.getLocalized(this.product.description, lang) || '';
 
     // Process specifications: split by newline and wrap in <li>
-    const specs = this.getLocalizedValue(this.product.char, lang, '');
+    // Fixed: changed from this.product.char to this.product.characteristics
+    const specs = window.getLocalized(this.product.characteristics, lang) || '';
     this.productSpecsList = specs
       .replace(/<br\s*\/?>/gi, '\n')
       .split('\n')
@@ -226,51 +219,16 @@ document.addEventListener('alpine:init', () => {
   },
 
   renderProductCard(item) {
-    const { finalPrice, percentOff, originalPrice } = window.calculateDiscount(item);
-    const isPromo = percentOff > 0;
-    const lang = this.$store.i18n.lang;
-    const itemName = (item.name && item.name[lang]) ? item.name[lang] : ((item.name && item.name['id']) ? item.name['id'] : 'Unnamed Product');
-
-
-    const ribbonHtml = isPromo ? `
-      <div class="discount-ribbon"><span>${percentOff}% OFF</span></div>
-    ` : '';
-
-    const priceHtml = isPromo ? `
-      <div class="price-container">
-        <div class="price-original">${window.formatRupiah(originalPrice)}</div>
-        <div class="price-discounted">${window.formatRupiah(finalPrice)}</div>
-      </div>
-    ` : `<div class="price">${window.formatRupiah(originalPrice)}</div>`;
-
-    return `
-      <a href="product-details.html?id=${item.id}" class="product-link">
-        <article class="product-card">
-          ${ribbonHtml}
-          <figure class="product-media">
-            <img src="${item.image_url ? item.image_url : 'img/coming-soon.jpg'}" alt="${itemName}" />
-          </figure>
-          <div class="product-body">
-            <h3 class="product-title">${itemName}</h3>
-            <div class="product-meta">
-              ${priceHtml}
-              <button class="btn-sm add-cart" @click.prevent.stop="$store.cart.add(${item.id})">
-                <i data-feather="shopping-bag"></i> Add
-              </button>
-            </div>
-          </div>
-        </article>
-      </a>
-    `;
+    return window.renderProductCard(item, true);
   },
 
   getProductImages(product) {
     const images = [];
     if (product.image_url) {
-      images.push(product.image_url);
+      images.push(window.fixImagePath(product.image_url));
     }
     if (Array.isArray(product.images)) {
-      images.push(...product.images.filter(Boolean));
+      images.push(...product.images.filter(Boolean).map(img => window.fixImagePath(img)));
     }
     if (typeof product.gallery === 'string') {
       images.push(
@@ -278,6 +236,7 @@ document.addEventListener('alpine:init', () => {
           .split(',')
           .map(item => item.trim())
           .filter(Boolean)
+          .map(img => window.fixImagePath(img))
       );
     }
     return [...new Set(images)];

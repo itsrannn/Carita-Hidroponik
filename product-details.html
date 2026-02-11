@@ -324,26 +324,24 @@
 
           <p x-show="!crossSellLoading && crossSellProducts.length === 0" class="muted" style="text-align: center;" x-text="$store.i18n.t('productDetail.relatedEmpty')"></p>
         </section>
+      <div
+        class="cart-toast"
+        x-show="showCartToast"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 translate-y-8"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 translate-y-0"
+        x-transition:leave-end="opacity-0 translate-y-8"
+        x-cloak
+        aria-live="polite"
+      >
+        <div class="toast-icon">
+          <i data-feather="check"></i>
+        </div>
+        <div class="toast-text" x-text="$store.i18n.t('cart.addedToCart')">Ditambahkan ke keranjang</div>
       </div>
     </main>
-
-    <div
-      class="cart-toast"
-      x-show="showCartToast"
-      x-transition:enter="transition ease-out duration-300"
-      x-transition:enter-start="opacity-0 translate-y-8"
-      x-transition:enter-end="opacity-100 translate-y-0"
-      x-transition:leave="transition ease-in duration-200"
-      x-transition:leave-start="opacity-100 translate-y-0"
-      x-transition:leave-end="opacity-0 translate-y-8"
-      x-cloak
-      aria-live="polite"
-    >
-      <div class="toast-icon">
-        <i data-feather="check"></i>
-      </div>
-      <div class="toast-text" x-text="$store.i18n.t('cart.addedToCart')">Ditambahkan ke keranjang</div>
-    </div>
 
     <div id="footer-include"></div>
 

@@ -108,7 +108,7 @@
                   <span x-text="formattedDate"></span>
                 </div>
                 <div class="news-hero">
-                  <img :src="newsItem.image_url || 'img/coming-soon.jpg'" :alt="newsTitle" />
+                  <img :src="window.fixImagePath(newsItem.image_url) || 'img/coming-soon.jpg'" :alt="newsTitle" />
                 </div>
                 <div class="news-body" x-html="newsContent"></div>
                 <div class="share-buttons">
@@ -138,9 +138,9 @@
                     <template x-if="relatedProducts.length > 0">
                       <template x-for="product in relatedProducts" :key="product.id">
                         <a :href="'product-details.html?id=' + product.id" class="related-product-item">
-                          <img :src="product.image_url || 'img/coming-soon.jpg'" :alt="product.name[$store.i18n.lang] || product.name.id" />
+                          <img :src="window.fixImagePath(product.image_url) || 'img/coming-soon.jpg'" :alt="window.getLocalized(product.name, $store.i18n.lang)" />
                           <div class="related-product-details">
-                            <p class="name" x-text="product.name[$store.i18n.lang] || product.name.id"></p>
+                            <p class="name" x-text="window.getLocalized(product.name, $store.i18n.lang)"></p>
                             <p class="price" x-text="formatRupiah(product.price)"></p>
                           </div>
                         </a>
@@ -178,7 +178,7 @@
                       <template x-for="item in latestNews" :key="item.id">
                         <li>
                           <a :href="'news-detail.html?id=' + item.id">
-                            <span x-text="item.title[$store.i18n.lang] || item.title.id"></span>
+                            <span x-text="window.getLocalized(item.title, $store.i18n.lang)"></span>
                             <small x-text="new Date(item.created_at).toLocaleDateString($store.i18n.lang, { year: 'numeric', month: 'short', day: 'numeric' })"></small>
                           </a>
                         </li>

@@ -44,6 +44,80 @@ window.formatRupiah = (number) => {
   }).format(number);
 };
 
+/**
+ * Robust helper for localized text that handles both strings and JSON objects.
+ * @param {string|object} field - The bilingual field.
+ * @param {string} lang - The desired language code.
+ * @returns {string}
+ */
+window.getLocalized = (field, lang) => {
+  if (!field) return "";
+  if (typeof field === "string") return field;
+  if (typeof field === "object") {
+    return field[lang] || field["id"] || Object.values(field)[0] || "";
+  }
+  return "";
+};
+
+/**
+ * Fixes image paths by replacing spaces with hyphens to match the file system.
+ * @param {string} path - The original image path.
+ * @returns {string}
+ */
+window.fixImagePath = (path) => {
+  if (!path) return "img/coming-soon.jpg";
+  return path.replace(/ /g, "-");
+};
+
+/**
+ * Canonical product card renderer.
+ * @param {object} item - The product item.
+ * @param {boolean} showAddButton - Whether to show the "Add to Cart" button.
+ * @returns {string}
+ */
+window.renderProductCard = (item, showAddButton = false) => {
+  const { finalPrice, percentOff, originalPrice } = window.calculateDiscount(item);
+  const isPromo = percentOff > 0;
+  const lang = (window.Alpine && Alpine.store("i18n")) ? Alpine.store("i18n").lang : "id";
+  const itemName = window.getLocalized(item.name, lang) || "Unnamed Product";
+  const imageUrl = window.fixImagePath(item.image_url);
+
+  const ribbonHtml = isPromo ? `
+    <div class="discount-ribbon"><span>${percentOff}% OFF</span></div>
+  ` : "";
+
+  const priceHtml = isPromo ? `
+    <div class="price-container">
+      <div class="price-original">${window.formatRupiah(originalPrice)}</div>
+      <div class="price-discounted">${window.formatRupiah(finalPrice)}</div>
+    </div>
+  ` : `<div class="price">${window.formatRupiah(originalPrice)}</div>`;
+
+  const addButtonHtml = showAddButton ? `
+    <button class="btn-sm add-cart" @click.prevent.stop="Alpine.store('cart').add(${item.id})">
+      <i data-feather="shopping-bag"></i> Add
+    </button>
+  ` : "";
+
+  return `
+    <a href="product-details.html?id=${item.id}" class="product-link">
+      <article class="product-card">
+        ${ribbonHtml}
+        <figure class="product-media">
+          <img src="${imageUrl}" alt="${itemName}" />
+        </figure>
+        <div class="product-body">
+          <h3 class="product-title">${itemName}</h3>
+          <div class="product-meta">
+            ${priceHtml}
+            ${addButtonHtml}
+          </div>
+        </div>
+      </article>
+    </a>
+  `;
+};
+
 window.handleSearch = (searchTerm) => {
   if (searchTerm.trim() !== '') {
     window.location.href = `index.html?s=${encodeURIComponent(searchTerm.trim())}`;
@@ -260,7 +334,7 @@ document.addEventListener("alpine:init", () => {
 
           const { finalPrice, percentOff } = window.calculateDiscount(product);
           const lang = Alpine.store('i18n').lang;
-          const safeName = (product.name && product.name[lang]) ? product.name[lang] : ((product.name && product.name['id']) ? product.name['id'] : "Unnamed Product");
+          const safeName = window.getLocalized(product.name, lang);
 
           return {
             ...product,
@@ -270,7 +344,7 @@ document.addEventListener("alpine:init", () => {
             productId: resolvedProductId,
             variantId: resolvedVariantId || null,
             variantLabel: item.variantLabel || null,
-            img: product.image_url,
+            img: window.fixImagePath(product.image_url),
             price: product.price,
             finalPrice: finalPrice,
             percentOff: percentOff,
@@ -304,39 +378,7 @@ document.addEventListener("alpine:init", () => {
     },
 
     renderProductCard(item) {
-      const { finalPrice, percentOff, originalPrice } = window.calculateDiscount(item);
-      const isPromo = percentOff > 0;
-      const lang = this.$store.i18n.lang;
-      const itemName = (item.name && item.name[lang]) ? item.name[lang] : ((item.name && item.name['id']) ? item.name['id'] : 'Unnamed Product');
-
-
-      const ribbonHtml = isPromo ? `
-        <div class="discount-ribbon"><span>${percentOff}% OFF</span></div>
-      ` : '';
-
-      const priceHtml = isPromo ? `
-        <div class="price-container">
-          <div class="price-original">${window.formatRupiah(originalPrice)}</div>
-          <div class="price-discounted">${window.formatRupiah(finalPrice)}</div>
-        </div>
-      ` : `<div class="price">${window.formatRupiah(originalPrice)}</div>`;
-
-      return `
-        <a href="product-details.html?id=${item.id}" class="product-link">
-          <article class="product-card">
-            ${ribbonHtml}
-            <figure class="product-media">
-              <img src="${item.image_url ? item.image_url : 'img/coming-soon.jpg'}" alt="${itemName}" />
-            </figure>
-            <div class="product-body">
-              <h3 class="product-title">${itemName}</h3>
-              <div class="product-meta">
-                ${priceHtml}
-              </div>
-            </div>
-          </article>
-        </a>
-      `;
+      return window.renderProductCard(item, false);
     },
 
     processedItems() {
@@ -346,11 +388,9 @@ document.addEventListener("alpine:init", () => {
       if (this.searchTerm.trim()) {
         const query = this.searchTerm.toLowerCase();
         items = items.filter(item => {
-            const name = (item.name && item.name[lang]) ? item.name[lang] : ((item.name && item.name['id']) ? item.name['id'] : '');
-            const description = (item.description && item.description[lang]) ? item.description[lang] : ((item.description && item.description['id']) ? item.description['id'] : '');
-            const nameMatch = name.toLowerCase().includes(query);
-            const descriptionMatch = description.toLowerCase().includes(query);
-            return nameMatch || descriptionMatch;
+            const name = window.getLocalized(item.name, lang).toLowerCase();
+            const description = window.getLocalized(item.description, lang).toLowerCase();
+            return name.includes(query) || description.includes(query);
         });
       }
 
@@ -428,7 +468,7 @@ document.addEventListener("alpine:init", () => {
         const lang = this.$store.i18n.lang;
 
         return this.products.filter(p => {
-            const productName = (p.name && p.name[lang]) ? p.name[lang].toLowerCase() : ((p.name && p.name['id']) ? p.name['id'].toLowerCase() : '');
+            const productName = window.getLocalized(p.name, lang).toLowerCase();
             return productName.includes(q) || p.category.toLowerCase().includes(q);
         });
     },
@@ -436,9 +476,11 @@ document.addEventListener("alpine:init", () => {
     get filteredNews() {
       if (!this.searchQuery.news) return this.news;
       const q = this.searchQuery.news.toLowerCase();
+      const lang = this.$store.i18n.lang;
+
       return this.news.filter(n =>
-        n.title.toLowerCase().includes(q) ||
-        n.excerpt.toLowerCase().includes(q)
+        window.getLocalized(n.title, lang).toLowerCase().includes(q) ||
+        window.getLocalized(n.excerpt, lang).toLowerCase().includes(q)
       );
     },
 

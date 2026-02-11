@@ -229,12 +229,12 @@
           <a :href="`news-detail.html?id=${newsItem.id}`" class="news-card-link">
             <article class="news-card">
               <div class="news-card-image-wrapper">
-                <img :src="newsItem.image_url || 'img/coming-soon.jpg'" :alt="newsItem.title[$store.i18n.lang] || newsItem.title['id']" />
+                <img :src="window.fixImagePath(newsItem.image_url) || 'img/coming-soon.jpg'" :alt="window.getLocalized(newsItem.title, $store.i18n.lang)" />
               </div>
               <div class="news-card-content">
                 <p class="news-card-meta" x-text="formatDate(newsItem.created_at)"></p>
-                <h3 x-text="newsItem.title[$store.i18n.lang] || newsItem.title['id']"></h3>
-                <p class="news-card-excerpt" x-text="newsItem.excerpt[$store.i18n.lang] || newsItem.excerpt['id']"></p>
+                <h3 x-text="window.getLocalized(newsItem.title, $store.i18n.lang)"></h3>
+                <p class="news-card-excerpt" x-text="window.getLocalized(newsItem.excerpt, $store.i18n.lang)"></p>
               </div>
             </article>
           </a>
