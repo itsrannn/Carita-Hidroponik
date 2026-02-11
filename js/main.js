@@ -229,7 +229,6 @@ document.addEventListener("alpine:init", () => {
         });
       }
       this.save();
-      window.showNotification('Item added to cart');
     },
     remove(productId, force = false) {
       const parsed = this.parseCartKey(productId);
@@ -327,7 +326,7 @@ document.addEventListener("alpine:init", () => {
           <article class="product-card">
             ${ribbonHtml}
             <figure class="product-media">
-              <img src="${item.image_url ? item.image_url : 'img/coming soon.jpg'}" alt="${itemName}" />
+              <img src="${item.image_url ? item.image_url : 'img/coming-soon.jpg'}" alt="${itemName}" />
             </figure>
             <div class="product-body">
               <h3 class="product-title">${itemName}</h3>

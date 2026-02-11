@@ -17,6 +17,8 @@ document.addEventListener('alpine:init', () => {
     variantOptions: [],
     selectedVariant: null,
     activeTab: 'detail',
+    showCartToast: false,
+    cartToastTimeout: null,
 
   // Methods
   init() {
@@ -52,7 +54,7 @@ document.addEventListener('alpine:init', () => {
 
     this.priceInfo = this.calculateDiscount(this.product);
     this.productImages = this.getProductImages(this.product);
-    this.mainImage = this.productImages[0] || 'img/coming soon.jpg';
+    this.mainImage = this.productImages[0] || 'img/coming-soon.jpg';
     this.variantOptions = this.getVariantOptions(this.product);
     this.selectedVariant = null;
     this.ready = true;
@@ -151,7 +153,7 @@ document.addEventListener('alpine:init', () => {
   addToCart() {
     if (this.product && this.ensureVariantSelected()) {
       this.$store.cart.add(this.product.id, this.quantity, this.selectedVariant);
-      // Optional: Show a confirmation toast/message
+      this.showAddToCartToast();
     }
   },
 
@@ -160,6 +162,16 @@ document.addEventListener('alpine:init', () => {
       this.$store.cart.add(this.product.id, this.quantity, this.selectedVariant);
       window.location.href = 'my-cart.html';
     }
+  },
+
+  showAddToCartToast() {
+    this.showCartToast = true;
+    if (this.cartToastTimeout) {
+      clearTimeout(this.cartToastTimeout);
+    }
+    this.cartToastTimeout = setTimeout(() => {
+      this.showCartToast = false;
+    }, 2200);
   },
 
   // Utility Methods (assuming they might not be globally available on this page)
@@ -225,7 +237,7 @@ document.addEventListener('alpine:init', () => {
         <article class="product-card">
           ${ribbonHtml}
           <figure class="product-media">
-            <img src="${item.image_url ? item.image_url : 'img/coming soon.jpg'}" alt="${itemName}" />
+            <img src="${item.image_url ? item.image_url : 'img/coming-soon.jpg'}" alt="${itemName}" />
           </figure>
           <div class="product-body">
             <h3 class="product-title">${itemName}</h3>

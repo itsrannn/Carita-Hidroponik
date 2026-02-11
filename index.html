@@ -63,7 +63,7 @@
         <!-- REFACTORED HERO SLIDER -->
         <div id="hero-slider" class="hero-slider" x-data="heroSlider()">
           <div class="slide-item" :class="{ 'active': currentIndex === 0 }">
-            <img src="img/Flyer 1.jpg" alt="12.12 Sale Promo" class="hero-img" />
+            <img src="img/Flyer-1.jpg" alt="12.12 Sale Promo" class="hero-img" />
             <div class="hero-content">
               <h1 class="hero-title" x-text="$store.i18n.t('hero.title1')">12.12 Big Sale!</h1>
               <p class="hero-subtitle" x-text="$store.i18n.t('hero.subtitle1')">Get up to 50% off on selected items.</p>
@@ -71,7 +71,7 @@
             </div>
           </div>
           <div class="slide-item" :class="{ 'active': currentIndex === 1 }">
-            <img src="img/Flyer 2.jpg" alt="New A-B Mix Nutrition" class="hero-img" />
+            <img src="img/Flyer-2.jpg" alt="New A-B Mix Nutrition" class="hero-img" />
             <div class="hero-content">
               <h1 class="hero-title" x-text="$store.i18n.t('hero.title2')">New A-B Mix Nutrition</h1>
               <p class="hero-subtitle" x-text="$store.i18n.t('hero.subtitle2')">The perfect formula for your hydroponic plants.</p>
@@ -79,7 +79,7 @@
             </div>
           </div>
           <div class="slide-item" :class="{ 'active': currentIndex === 2 }">
-            <img src="img/Flyer 3.jpg" alt="Starter Kit for Beginners" class="hero-img" />
+            <img src="img/Flyer-3.jpg" alt="Starter Kit for Beginners" class="hero-img" />
             <div class="hero-content">
               <h1 class="hero-title" x-text="$store.i18n.t('hero.title3')">Starter Kit for Beginners</h1>
               <p class="hero-subtitle" x-text="$store.i18n.t('hero.subtitle3')">Everything you need to start your hydroponic journey.</p>
@@ -229,7 +229,7 @@
           <a :href="`news-detail.html?id=${newsItem.id}`" class="news-card-link">
             <article class="news-card">
               <div class="news-card-image-wrapper">
-                <img :src="newsItem.image_url || 'img/coming soon.jpg'" :alt="newsItem.title[$store.i18n.lang] || newsItem.title['id']" />
+                <img :src="newsItem.image_url || 'img/coming-soon.jpg'" :alt="newsItem.title[$store.i18n.lang] || newsItem.title['id']" />
               </div>
               <div class="news-card-content">
                 <p class="news-card-meta" x-text="formatDate(newsItem.created_at)"></p>

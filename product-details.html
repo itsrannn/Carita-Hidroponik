@@ -100,6 +100,32 @@
       .cta-actions .add-cart-main span {
         line-height: 1;
       }
+
+      .cart-toast {
+        position: fixed;
+        right: 1.5rem;
+        bottom: 1.5rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.8rem 1rem;
+        border-radius: 14px;
+        background: #fff;
+        color: #183127;
+        box-shadow: 0 12px 30px rgba(16, 24, 40, 0.14);
+        font-weight: 600;
+        font-size: 0.93rem;
+        z-index: 1200;
+        pointer-events: none;
+      }
+      .cart-toast .toast-icon {
+        color: var(--green);
+        font-size: 1rem;
+        line-height: 1;
+      }
+      .cart-toast .toast-text {
+        text-align: center;
+      }
     </style>
 
     <link
@@ -288,6 +314,17 @@
         </section>
       </div>
     </main>
+
+    <div
+      class="cart-toast"
+      x-show="showCartToast"
+      x-transition.opacity.duration.200ms
+      x-cloak
+      aria-live="polite"
+    >
+      <span class="toast-icon">✔</span>
+      <span class="toast-text">Ditambahkan ke keranjang</span>
+    </div>
 
     <div id="footer-include"></div>
 
