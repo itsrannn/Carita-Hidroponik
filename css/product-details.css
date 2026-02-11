@@ -110,8 +110,43 @@
   height: 100%;
 }
 
+/* Scoped override for product-details.html related-product carousels */
+.product-detail-container .related-products .products-scroll {
+  --related-card-width: clamp(220px, 26%, 260px);
+  --related-first-card-offset: calc(var(--related-card-width) * 0.75);
+  margin: 0;
+  padding: 0 1rem 0.5rem var(--related-first-card-offset);
+  scroll-padding-inline: var(--related-first-card-offset) 1rem;
+  box-sizing: border-box;
+}
+
+.product-detail-container .related-products .products-scroll > div {
+  scroll-margin-inline-start: var(--related-first-card-offset);
+}
+
+.product-detail-container .related-products .product-card .add-cart {
+  display: none !important;
+}
+
+.product-detail-container .related-products .product-card .product-meta {
+  justify-content: flex-start;
+}
+
 .cross-sell-products {
   margin-top: 2.5rem;
+}
+
+@media (max-width: 768px) {
+  .product-detail-container .related-products .products-scroll {
+    --related-card-width: 160px;
+    --related-first-card-offset: calc(var(--related-card-width) * 0.75);
+    padding: 0 0.75rem 0.5rem var(--related-first-card-offset);
+    scroll-padding-inline: var(--related-first-card-offset) 0.75rem;
+  }
+
+  .product-detail-container .related-products .products-scroll > div {
+    scroll-margin-inline-start: var(--related-first-card-offset);
+  }
 }
 
 .breadcrumb {
