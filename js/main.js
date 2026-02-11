@@ -563,7 +563,7 @@ document.addEventListener("alpine:init", () => {
                         document.title = "Carita Hidroponik | " + productName;
 
                         this.setupMockData();
-                        this.mainImage = this.product.image_url || 'img/general/default.jpg';
+                        this.mainImage = this.product.image_url || 'img/coming-soon.jpg';
 
                         this.fetchRelatedProducts();
                     }
@@ -574,15 +574,15 @@ document.addEventListener("alpine:init", () => {
 
         setupMockData() {
             this.mockImages = [
-                this.product.image_url || 'img/general/default.jpg',
-                'img/products/cabe-keriting-2.webp',
-                'img/products/cabe-keriting-3.webp',
-                'img/products/cabe-keriting-4.webp',
+                this.product.image_url || 'img/coming-soon.jpg',
+                'img/general/Cabai-Jalapeno.png',
+                'img/general/Cabai-Thai-Chili.png',
+                'img/general/Cabai-Orange-Drop.png',
             ];
             this.mockColors = [
-                { name: 'Red', value: '#FF0000', image: this.product.image_url || 'img/general/default.jpg' },
-                { name: 'Green', value: '#008000', image: 'img/products/cabe-hijau.webp' },
-                { name: 'Yellow', value: '#FFFF00', image: 'img/products/cabe-kuning.webp' }
+                { name: 'Red', value: '#FF0000', image: this.product.image_url || 'img/coming-soon.jpg' },
+                { name: 'Green', value: '#008000', image: 'img/general/Cabai-Thai-Chili.png' },
+                { name: 'Yellow', value: '#FFFF00', image: 'img/general/Cabai-Orange-Drop.png' }
             ];
             this.selectedColor = this.mockColors[0].name;
         },
