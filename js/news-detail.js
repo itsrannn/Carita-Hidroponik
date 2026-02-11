@@ -123,24 +123,13 @@ document.addEventListener('alpine:init', () => {
         },
 
         get newsTitle() {
-            if (!this.newsItem || !this.newsItem.title) return ''; // Guard clause
-
-            const lang = this.$store.i18n.lang;
-            const title = this.newsItem.title;
-
-            // Return title for the active language, with fallback to 'id', then to an empty string.
-            return (title && title[lang]) || (title && title.id) || '';
+            if (!this.newsItem || !this.newsItem.title) return '';
+            return window.getLocalized(this.newsItem.title, this.$store.i18n.lang);
         },
 
         get newsContent() {
-            if (!this.newsItem) return ''; // Guard clause
-
-            const lang = this.$store.i18n.lang;
-            const content = this.newsItem.content;
-
-            // Return content for the active language, with fallback to 'id', then to an empty string.
-            // This handles cases where content is null or not a multilingual object.
-            return (content && content[lang]) || (content && content.id) || '';
+            if (!this.newsItem) return '';
+            return window.getLocalized(this.newsItem.content, this.$store.i18n.lang);
         },
 
         get formattedDate() {

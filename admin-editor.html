@@ -103,7 +103,7 @@
                         <div class="form-group">
                             <label for="product-image_url" x-text="$store.i18n.t('admin.productEditor.imageUrl')">Image URL</label>
                             <input id="product-image_url" type="text" x-model="item.image_url" @input="imagePreviewUrl = item.image_url">
-                            <img :src="imagePreviewUrl" x-show="imagePreviewUrl" alt="Image Preview" style="max-width: 200px; margin-top: 1rem; border-radius: 8px;">
+                            <img :src="window.fixImagePath(imagePreviewUrl)" x-show="imagePreviewUrl" alt="Image Preview" style="max-width: 200px; margin-top: 1rem; border-radius: 8px;">
                         </div>
                         <div class="form-group grid-col-span-2"><label for="product-char_en" x-text="$store.i18n.t('admin.productEditor.characteristicsEn')">Characteristics (English)</label><textarea id="product-char_en" x-model="item.char_en" x-bind:placeholder="$store.i18n.t('admin.productEditor.characteristicsEnPlaceholder')"></textarea></div>
                         <div class="form-group grid-col-span-2"><label for="product-char_id" x-text="$store.i18n.t('admin.productEditor.characteristicsId')">Characteristics (Bahasa Indonesia)</label><textarea id="product-char_id" x-model="item.char_id" x-bind:placeholder="$store.i18n.t('admin.productEditor.characteristicsIdPlaceholder')"></textarea></div>

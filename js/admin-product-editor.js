@@ -107,6 +107,7 @@ document.addEventListener('alpine:init', () => {
             const dataToSubmit = {
                 name: { en: this.item.name_en, id: this.item.name_id },
                 description: { en: this.item.description_en, id: this.item.description_id },
+                characteristics: { en: this.item.char_en, id: this.item.char_id },
                 category: this.item.category,
                 price: this.item.price,
                 image_url: this.item.image_url,
