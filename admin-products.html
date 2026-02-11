@@ -112,7 +112,7 @@
                                 <template x-if="!isLoading.products && filteredProducts.length === 0"><tr><td colspan="5" style="text-align: center;" x-text="$store.i18n.t('admin.products.productList.empty')">No matching products found.</td></tr></template>
                                 <template x-for="product in filteredProducts" :key="product.id">
                                     <tr>
-                                        <td data-label="Image"><img :src="product.image_url" :alt="product.name.en" class="item-image"></td>
+                                        <td data-label="Image"><img :src="window.fixImagePath(product.image_url)" :alt="product.name.en" class="item-image"></td>
                                         <td data-label="Product" class="item-name">
                                             <span x-text="product.name[$store.i18n.lang] || product.name.en"></span>
                                             <template x-if="(product.discount_percent && product.discount_percent > 0) || (product.discount_price && product.discount_price > 0)">
@@ -161,7 +161,7 @@
                                 <template x-if="!isLoading.news && filteredNews.length === 0"><tr><td colspan="4" style="text-align: center;" x-text="$store.i18n.t('admin.products.newsList.empty')">No matching news found.</td></tr></template>
                                 <template x-for="item in filteredNews" :key="item.id">
                                     <tr>
-                                        <td data-label="Image"><img :src="item.image_url" :alt="item.title.en" class="item-image"></td>
+                                        <td data-label="Image"><img :src="window.fixImagePath(item.image_url)" :alt="item.title.en" class="item-image"></td>
                                         <td data-label="Title" class="item-name" x-text="item.title[$store.i18n.lang] || item.title.en"></td>
                                         <td data-label="Excerpt" x-text="item.excerpt[$store.i18n.lang] || item.excerpt.en"></td>
                                         <td data-label="Actions">

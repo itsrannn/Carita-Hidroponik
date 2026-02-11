@@ -51,6 +51,17 @@ window.handleSearch = (searchTerm) => {
 };
 
 /**
+ * Normalizes image paths by replacing spaces with hyphens.
+ * @param {string} path - The original image path.
+ * @returns {string} The normalized image path.
+ */
+window.fixImagePath = (path) => {
+  if (!path) return path;
+  // Replace spaces with hyphens globally
+  return String(path).replace(/ /g, '-');
+};
+
+/**
  * Calculates the final price and discount percentage for a product.
  * @param {object} product - The product object.
  * @returns {{finalPrice: number, percentOff: number, originalPrice: number}}
@@ -270,7 +281,7 @@ document.addEventListener("alpine:init", () => {
             productId: resolvedProductId,
             variantId: resolvedVariantId || null,
             variantLabel: item.variantLabel || null,
-            img: product.image_url,
+            img: window.fixImagePath(product.image_url),
             price: product.price,
             finalPrice: finalPrice,
             percentOff: percentOff,
@@ -326,7 +337,7 @@ document.addEventListener("alpine:init", () => {
           <article class="product-card">
             ${ribbonHtml}
             <figure class="product-media">
-              <img src="${item.image_url ? item.image_url : 'img/coming-soon.jpg'}" alt="${itemName}" />
+              <img src="${item.image_url ? window.fixImagePath(item.image_url) : 'img/coming-soon.jpg'}" alt="${itemName}" />
             </figure>
             <div class="product-body">
               <h3 class="product-title">${itemName}</h3>
@@ -563,7 +574,7 @@ document.addEventListener("alpine:init", () => {
                         document.title = "Carita Hidroponik | " + productName;
 
                         this.setupMockData();
-                        this.mainImage = this.product.image_url || 'img/coming-soon.jpg';
+                        this.mainImage = window.fixImagePath(this.product.image_url) || 'img/coming-soon.jpg';
 
                         this.fetchRelatedProducts();
                     }
@@ -574,13 +585,13 @@ document.addEventListener("alpine:init", () => {
 
         setupMockData() {
             this.mockImages = [
-                this.product.image_url || 'img/coming-soon.jpg',
+                window.fixImagePath(this.product.image_url) || 'img/coming-soon.jpg',
                 'img/general/Cabai-Jalapeno.png',
                 'img/general/Cabai-Thai-Chili.png',
                 'img/general/Cabai-Orange-Drop.png',
             ];
             this.mockColors = [
-                { name: 'Red', value: '#FF0000', image: this.product.image_url || 'img/coming-soon.jpg' },
+                { name: 'Red', value: '#FF0000', image: window.fixImagePath(this.product.image_url) || 'img/coming-soon.jpg' },
                 { name: 'Green', value: '#008000', image: 'img/general/Cabai-Thai-Chili.png' },
                 { name: 'Yellow', value: '#FFFF00', image: 'img/general/Cabai-Orange-Drop.png' }
             ];
