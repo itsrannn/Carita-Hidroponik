@@ -287,3 +287,58 @@ body {
     position: static;
   }
 }
+
+
+.cart-summary .btn {
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 0.92rem;
+  padding: 0.72rem 1.1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.cart-summary .btn:focus-visible {
+  outline: 3px solid rgba(46, 125, 50, 0.25);
+  outline-offset: 2px;
+}
+
+.cart-summary .btn-secondary {
+  background: #ecffeb;
+  color: #2e7d32;
+  border: 1px solid #cce8ce;
+}
+
+.cart-summary .btn-secondary:hover {
+  background: #dff7de;
+  transform: translateY(-1px);
+}
+
+.cart-summary .btn-primary {
+  background: #2e7d32;
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(46, 125, 50, 0.22);
+}
+
+.cart-summary .btn-primary:hover:not(:disabled) {
+  background: #276b2b;
+  transform: translateY(-1px);
+}
+
+.cart-summary .btn-primary:active:not(:disabled),
+.cart-summary .btn-secondary:active {
+  transform: translateY(0);
+}
+
+.cart-summary .btn-block {
+  width: 100%;
+  margin-top: 0.9rem;
+}
+
+.cart-summary .btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
