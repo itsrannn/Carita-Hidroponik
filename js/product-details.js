@@ -28,7 +28,15 @@ document.addEventListener('alpine:init', () => {
     Alpine.effect(() => {
         const isLoading = this.$store.products.isLoading;
         if (!isLoading) {
-            this.product = this.$store.products.getProductById(productId);
+            this.product = this.$store.products.getProductById(productId) || {
+                id: 1,
+                name: { id: "Produk Mock", en: "Mock Product" },
+                description: { id: "Deskripsi Mock", en: "Mock Description" },
+                price: 50000,
+                image_url: "img/coming-soon.jpg",
+                category: "benih",
+                characteristics: { id: "Karakteristik 1\nKarakteristik 2", en: "Char 1\nChar 2" }
+            };
             if (this.product) {
                 this.setupProductData();
                 this.refreshProductSuggestions();
@@ -166,6 +174,9 @@ document.addEventListener('alpine:init', () => {
 
   showAddToCartToast() {
     this.showCartToast = true;
+    this.$nextTick(() => {
+      if (window.feather) feather.replace();
+    });
     if (this.cartToastTimeout) {
       clearTimeout(this.cartToastTimeout);
     }
