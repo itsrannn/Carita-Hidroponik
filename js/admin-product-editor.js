@@ -78,7 +78,7 @@ document.addEventListener('alpine:init', () => {
             this.item.category = data.category;
             this.item.price = data.price;
             this.item.image_url = data.image_url;
-            this.imagePreviewUrl = data.image_url;
+            this.imagePreviewUrl = window.fixImagePath(data.image_url);
 
             // Handle discount logic
             if (data.discount < 0) {

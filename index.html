@@ -311,7 +311,10 @@
                 .order('created_at', { ascending: false })
                 .limit(3);
               if (error) throw error;
-              this.newsItems = data || [];
+              this.newsItems = (data || []).map(item => ({
+                ...item,
+                image_url: window.fixImagePath(item.image_url)
+              }));
             } catch (error) {
               console.error("Gagal memuat berita:", error);
             } finally {

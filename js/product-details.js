@@ -61,7 +61,7 @@ document.addEventListener('alpine:init', () => {
       .join('');
 
     this.priceInfo = this.calculateDiscount(this.product);
-    this.productImages = this.getProductImages(this.product);
+    this.productImages = this.getProductImages(this.product).map(img => window.fixImagePath(img));
     this.mainImage = this.productImages[0] || 'img/coming-soon.jpg';
     this.variantOptions = this.getVariantOptions(this.product);
     this.selectedVariant = null;
@@ -133,7 +133,7 @@ document.addEventListener('alpine:init', () => {
     if (!variant) return;
     this.selectedVariant = variant;
     if (variant.image) {
-      this.mainImage = variant.image;
+        this.mainImage = window.fixImagePath(variant.image);
     }
   },
 
@@ -248,7 +248,7 @@ document.addEventListener('alpine:init', () => {
         <article class="product-card">
           ${ribbonHtml}
           <figure class="product-media">
-            <img src="${item.image_url ? item.image_url : 'img/coming-soon.jpg'}" alt="${itemName}" />
+            <img src="${item.image_url ? window.fixImagePath(item.image_url) : 'img/coming-soon.jpg'}" alt="${itemName}" />
           </figure>
           <div class="product-body">
             <h3 class="product-title">${itemName}</h3>
@@ -293,7 +293,7 @@ document.addEventListener('alpine:init', () => {
             return {
               id,
               label,
-              image: variant.image || null
+              image: variant.image ? window.fixImagePath(variant.image) : null
             };
           })
           .filter(variant => variant.id && variant.label);
@@ -306,7 +306,7 @@ document.addEventListener('alpine:init', () => {
             return {
               id,
               label,
-              image: color.image || null
+              image: color.image ? window.fixImagePath(color.image) : null
             };
           })
           .filter(variant => variant.id && variant.label);

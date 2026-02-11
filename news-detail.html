@@ -108,7 +108,7 @@
                   <span x-text="formattedDate"></span>
                 </div>
                 <div class="news-hero">
-                  <img :src="newsItem.image_url || 'img/coming-soon.jpg'" :alt="newsTitle" />
+                  <img :src="window.fixImagePath(newsItem.image_url) || 'img/coming-soon.jpg'" :alt="newsTitle" />
                 </div>
                 <div class="news-body" x-html="newsContent"></div>
                 <div class="share-buttons">
@@ -138,7 +138,7 @@
                     <template x-if="relatedProducts.length > 0">
                       <template x-for="product in relatedProducts" :key="product.id">
                         <a :href="'product-details.html?id=' + product.id" class="related-product-item">
-                          <img :src="product.image_url || 'img/coming-soon.jpg'" :alt="product.name[$store.i18n.lang] || product.name.id" />
+                          <img :src="window.fixImagePath(product.image_url) || 'img/coming-soon.jpg'" :alt="product.name[$store.i18n.lang] || product.name.id" />
                           <div class="related-product-details">
                             <p class="name" x-text="product.name[$store.i18n.lang] || product.name.id"></p>
                             <p class="price" x-text="formatRupiah(product.price)"></p>
