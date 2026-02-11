@@ -111,8 +111,10 @@
     "header": {
       "product": "Product",
       "quantity": "Quantity",
-      "total": "Total"
+      "total": "Total",
+      "remove": "Remove"
     },
+    "addedToCart": "Added to cart",
     "emptyMessage": "Your shopping cart is empty.",
     "continueShopping": "Continue Shopping",
     "summary": {

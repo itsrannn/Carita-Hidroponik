@@ -111,8 +111,10 @@
     "header": {
       "product": "Produk",
       "quantity": "Kuantitas",
-      "total": "Total"
+      "total": "Total",
+      "remove": "Hapus"
     },
+    "addedToCart": "Ditambahkan ke keranjang",
     "emptyMessage": "Keranjang belanja Anda kosong.",
     "continueShopping": "Lanjutkan Belanja",
     "summary": {
