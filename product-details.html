@@ -11,15 +11,94 @@
     <style>
       .quantity-input {
         display: inline-flex;
+        align-items: center;
         width: max-content;
         max-width: 100%;
+        border: 1.5px solid var(--green);
+        border-radius: 0.85rem;
+        overflow: hidden;
+        background: #fff;
+        transition: box-shadow 0.25s ease, border-color 0.25s ease,
+          transform 0.2s ease;
+      }
+      .quantity-input:hover {
+        border-color: color-mix(in srgb, var(--green) 80%, #ffffff);
+        box-shadow: 0 8px 20px rgba(58, 114, 79, 0.12);
       }
       .quantity-input button {
         width: 2.5rem;
+        height: 2.5rem;
         padding: 0;
+        border: none;
+        background: #f4fbf7;
+        color: var(--green);
+        font-size: 1.15rem;
+        font-weight: 700;
+        line-height: 1;
+        cursor: pointer;
+        transition: background-color 0.2s ease, color 0.2s ease;
+      }
+      .quantity-input button:hover {
+        background: var(--green);
+        color: #fff;
       }
       .quantity-input input {
-        width: 3rem;
+        width: 3.3rem;
+        height: 2.5rem;
+        border: none;
+        background: #fff;
+        color: var(--black);
+        font-weight: 700;
+        text-align: center;
+      }
+      .quantity-input input:focus {
+        outline: none;
+      }
+      .tab-ui .tab-header {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.35rem;
+        border: 1px solid rgba(58, 114, 79, 0.22);
+        border-radius: 999px;
+        background: #f7fbf8;
+      }
+      .tab-ui .tab-link {
+        border: none;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--green);
+        font-weight: 600;
+        line-height: 1.2;
+        padding: 0.68rem 1.3rem;
+        cursor: pointer;
+        transition: background-color 0.25s ease, color 0.25s ease,
+          box-shadow 0.25s ease;
+      }
+      .tab-ui .tab-link:hover {
+        background: rgba(58, 114, 79, 0.12);
+      }
+      .tab-ui .tab-link.active {
+        background: var(--green);
+        color: #fff;
+        box-shadow: 0 8px 18px rgba(58, 114, 79, 0.24);
+      }
+      .cta-actions .add-cart-main {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.6rem;
+      }
+      .cta-actions .add-cart-main i,
+      .cta-actions .add-cart-main svg {
+        width: 1.02rem;
+        height: 1.02rem;
+        stroke-width: 2.25;
+        flex-shrink: 0;
+        vertical-align: middle;
+      }
+      .cta-actions .add-cart-main span {
+        line-height: 1;
       }
     </style>
 
