@@ -106,19 +106,30 @@
         right: 1.5rem;
         bottom: 1.5rem;
         display: inline-flex;
+        flex-direction: column;
         align-items: center;
-        gap: 0.55rem;
-        padding: 0.8rem 1rem;
+        justify-content: center;
+        gap: 0.4rem;
+        min-width: 180px;
+        padding: 0.95rem 1.15rem;
         border-radius: 14px;
         background: #fff;
         color: #183127;
-        box-shadow: 0 12px 30px rgba(16, 24, 40, 0.14);
+        border: 1px solid #e5efe8;
+        box-shadow: 0 14px 30px rgba(16, 24, 40, 0.14);
         font-weight: 600;
         font-size: 0.93rem;
         z-index: 1200;
         pointer-events: none;
       }
       .cart-toast .toast-icon {
+        width: 1.8rem;
+        height: 1.8rem;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #e9f8ea;
         color: var(--green);
         font-size: 1rem;
         line-height: 1;
@@ -318,7 +329,12 @@
     <div
       class="cart-toast"
       x-show="showCartToast"
-      x-transition.opacity.duration.200ms
+      x-transition:enter="transition ease-out duration-200"
+      x-transition:enter-start="opacity-0 scale-95"
+      x-transition:enter-end="opacity-100 scale-100"
+      x-transition:leave="transition ease-in duration-180"
+      x-transition:leave-start="opacity-100 scale-100"
+      x-transition:leave-end="opacity-0 scale-95"
       x-cloak
       aria-live="polite"
     >
