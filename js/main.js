@@ -33,10 +33,10 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-const BACKEND_BASE_URL = (
+const BACKEND_API_URL = (
   window.APP_CONFIG?.apiBaseUrl
   || document.querySelector('meta[name="api-base-url"]')?.content
-  || 'https://<DEPLOYED-BACKEND-DOMAIN>'
+  || 'https://backend-carita-hidroponik.vercel.app'
 ).replace(/\/$/, '');
 
 
@@ -727,7 +727,7 @@ document.addEventListener("alpine:init", () => {
         },
 
         getApiBaseUrl() {
-          return BACKEND_BASE_URL;
+          return BACKEND_API_URL;
         },
 
         buildApiUrl(path) {
@@ -967,9 +967,21 @@ document.addEventListener("alpine:init", () => {
                   this.isSnapPopupActive = false;
                 }
               },
-              onError: () => {
-                window.showNotification('Payment failed. Please try again.', true);
-                this.isSnapPopupActive = false;
+              onError: async (result) => {
+                try {
+                  await this.notifyBackendPaymentStatus('/api/order/confirm', {
+                    order_code: checkoutPayload.order_code,
+                    transaction_id: result?.transaction_id || null,
+                    payment_result: result || null,
+                    checkout_payload: checkoutPayload,
+                    payment_status: 'failed'
+                  }, 'Payment failed and we could not sync your order status.');
+                } catch (error) {
+                  console.error('Failed to sync failed payment status:', error);
+                } finally {
+                  window.showNotification('Payment failed. Please try again.', true);
+                  this.isSnapPopupActive = false;
+                }
               },
               onClose: () => {
                 window.showNotification('Payment popup was closed before completion.', true);
