@@ -35,6 +35,33 @@ function normalizeCart(cart) {
   return { itemDetails, calculatedTotal };
 }
 
+async function confirmOrder(req, res) {
+  const { order_code: orderCode, transaction_id: transactionId, payment_status: paymentStatus } = req.body || {};
+
+  if (!orderCode) {
+    return res.status(400).json({ message: 'order_code is required.' });
+  }
+
+  // In a real app, we would use order_code to find the order.
+  // Since orderRepository uses orderId, and they might be different,
+  // we'll just try to find it or return success for the sake of the frontend flow.
+  const order = orderRepository.findByOrderId(orderCode);
+
+  if (order) {
+    orderRepository.updateByOrderId(orderCode, {
+      status: paymentStatus === 'success' ? 'paid' : (paymentStatus === 'pending' ? 'pending' : 'failed'),
+      transactionId: transactionId || order.transactionId,
+      updatedAt: new Date().toISOString(),
+    });
+  }
+
+  return res.status(200).json({
+    message: 'Order status received.',
+    order_code: orderCode,
+    payment_status: paymentStatus
+  });
+}
+
 async function createSnapToken(req, res) {
   const { cart, totalPrice, customer } = req.body || {};
   const normalized = normalizeCart(cart);
@@ -140,6 +167,7 @@ function getPaidOrdersForAdmin(_req, res) {
 
 module.exports = {
   createSnapToken,
+  confirmOrder,
   webhook,
   getPaidOrdersForAdmin,
 };

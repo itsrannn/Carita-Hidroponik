@@ -784,17 +784,32 @@ document.addEventListener("alpine:init", () => {
         },
 
         async notifyBackendPaymentStatus(endpoint, payload, fallbackMessage) {
-          const response = await fetch(this.buildApiUrl(endpoint), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
+          try {
+            const apiUrl = this.buildApiUrl(endpoint);
+            const response = await fetch(apiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
 
-          if (!response.ok) {
-            throw new Error(await this.parseApiError(response, fallbackMessage));
+            if (!response.ok) {
+              const errorDetail = await this.parseApiError(response, fallbackMessage);
+              console.error(`Backend notification failed [${response.status}]:`, {
+                endpoint,
+                apiUrl,
+                errorDetail
+              });
+              throw new Error(errorDetail);
+            }
+
+            return response;
+          } catch (error) {
+            console.error('Network error during backend notification:', {
+              endpoint,
+              error: error.message || error
+            });
+            throw error;
           }
-
-          return response;
         },
 
         getMidtransClientKey(preferredKey = null) {
@@ -944,14 +959,25 @@ document.addEventListener("alpine:init", () => {
 
           try {
             const paymentApiUrl = this.buildApiUrl('/api/payment/create-snap-token');
+            console.log('Initiating checkout payment request...', { url: paymentApiUrl });
+
             const tokenResponse = await fetch(paymentApiUrl, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
               body: JSON.stringify(transactionPayload)
             });
 
             if (!tokenResponse.ok) {
-              throw new Error(await this.parseApiError(tokenResponse, 'Unable to create Midtrans payment token.'));
+              const apiError = await this.parseApiError(tokenResponse, 'Unable to create Midtrans payment token.');
+              console.error('Payment API returned error:', {
+                status: tokenResponse.status,
+                statusText: tokenResponse.statusText,
+                error: apiError
+              });
+              throw new Error(apiError);
             }
 
             const tokenData = await tokenResponse.json();
@@ -1023,12 +1049,21 @@ document.addEventListener("alpine:init", () => {
               }
             });
           } catch (error) {
+            const isNetworkError = error instanceof TypeError && error.message.includes('fetch');
             console.error('Checkout payment request failed:', {
-              error,
+              name: error.name,
+              message: error.message,
+              isNetworkError,
               apiUrl: this.buildApiUrl('/api/payment/create-snap-token'),
               payload: transactionPayload
             });
-            window.showNotification(error.message || 'Checkout failed. Please try again.', true);
+
+            let displayMessage = error.message || 'Checkout failed. Please try again.';
+            if (isNetworkError) {
+              displayMessage = 'Connection to payment server failed. Please check your internet or contact support.';
+            }
+
+            window.showNotification(displayMessage, true);
           } finally {
             this.isCheckoutLoading = false;
           }
