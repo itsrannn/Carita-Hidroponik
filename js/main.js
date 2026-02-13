@@ -33,6 +33,12 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
+const BACKEND_BASE_URL = (
+  window.APP_CONFIG?.apiBaseUrl
+  || document.querySelector('meta[name="api-base-url"]')?.content
+  || 'https://<DEPLOYED-BACKEND-DOMAIN>'
+).replace(/\/$/, '');
+
 
 // Global currency formatter
 window.formatRupiah = (number) => {
@@ -721,14 +727,56 @@ document.addEventListener("alpine:init", () => {
         },
 
         getApiBaseUrl() {
-          const configBaseUrl = window.APP_CONFIG?.apiBaseUrl || document.querySelector('meta[name="api-base-url"]')?.content;
-          return (configBaseUrl || '').replace(/\/$/, '');
+          return BACKEND_BASE_URL;
         },
 
         buildApiUrl(path) {
           const normalizedPath = path.startsWith('/') ? path : `/${path}`;
           const baseUrl = this.getApiBaseUrl();
-          return baseUrl ? `${baseUrl}${normalizedPath}` : normalizedPath;
+          if (!baseUrl || baseUrl.includes('<DEPLOYED-BACKEND-DOMAIN>')) {
+            throw new Error('Backend API URL is not configured. Please contact support.');
+          }
+          return `${baseUrl}${normalizedPath}`;
+        },
+
+        async parseApiError(response, fallbackMessage) {
+          let data;
+          try {
+            data = await response.clone().json();
+          } catch (_) {
+            try {
+              data = await response.text();
+            } catch (__unused) {
+              data = null;
+            }
+          }
+
+          if (data && typeof data === 'object') {
+            return data.message || data.error || fallbackMessage;
+          }
+
+          if (typeof data === 'string') {
+            const cleaned = data.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+            if (cleaned && !/<!doctype|<html/i.test(data)) {
+              return cleaned;
+            }
+          }
+
+          return fallbackMessage;
+        },
+
+        async notifyBackendPaymentStatus(endpoint, payload, fallbackMessage) {
+          const response = await fetch(this.buildApiUrl(endpoint), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            throw new Error(await this.parseApiError(response, fallbackMessage));
+          }
+
+          return response;
         },
 
         getMidtransClientKey(preferredKey = null) {
@@ -869,8 +917,7 @@ document.addEventListener("alpine:init", () => {
             });
 
             if (!tokenResponse.ok) {
-              const errorBody = await tokenResponse.text();
-              throw new Error(errorBody || 'Unable to create Midtrans payment token.');
+              throw new Error(await this.parseApiError(tokenResponse, 'Unable to create Midtrans payment token.'));
             }
 
             const tokenData = await tokenResponse.json();
@@ -888,21 +935,13 @@ document.addEventListener("alpine:init", () => {
             window.snap.pay(snapToken, {
               onSuccess: async (result) => {
                 try {
-                  const confirmResponse = await fetch(this.buildApiUrl('/api/order/confirm'), {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      order_code: checkoutPayload.order_code,
-                      transaction_id: result.transaction_id,
-                      payment_result: result,
-                      checkout_payload: checkoutPayload
-                    })
-                  });
-
-                  if (!confirmResponse.ok) {
-                    const confirmError = await confirmResponse.text();
-                    throw new Error(confirmError || 'Payment succeeded but order confirmation failed.');
-                  }
+                  await this.notifyBackendPaymentStatus('/api/order/confirm', {
+                    order_code: checkoutPayload.order_code,
+                    transaction_id: result.transaction_id,
+                    payment_result: result,
+                    checkout_payload: checkoutPayload,
+                    payment_status: 'success'
+                  }, 'Payment succeeded but order confirmation failed.');
 
                   this.$store.cart.clear();
                   window.showNotification(`Payment successful. Your order code is ${checkoutPayload.order_code}.`);
@@ -912,9 +951,21 @@ document.addEventListener("alpine:init", () => {
                   this.isSnapPopupActive = false;
                 }
               },
-              onPending: () => {
-                window.showNotification('Payment is pending. Please complete your payment from Midtrans.');
-                this.isSnapPopupActive = false;
+              onPending: async (result) => {
+                try {
+                  await this.notifyBackendPaymentStatus('/api/order/confirm', {
+                    order_code: checkoutPayload.order_code,
+                    transaction_id: result?.transaction_id || null,
+                    payment_result: result,
+                    checkout_payload: checkoutPayload,
+                    payment_status: 'pending'
+                  }, 'Payment is pending, but we could not sync your order status.');
+                  window.showNotification('Payment is pending. Please complete your payment from Midtrans.');
+                } catch (error) {
+                  window.showNotification(error.message || 'Payment is pending, but backend sync failed.', true);
+                } finally {
+                  this.isSnapPopupActive = false;
+                }
               },
               onError: () => {
                 window.showNotification('Payment failed. Please try again.', true);
