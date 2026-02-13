@@ -104,8 +104,8 @@
               <button
                 @click="handleCheckout()"
                 class="btn btn-primary btn-block"
-                :disabled="$store.cart.items.length === 0"
-                x-text="$store.i18n.t('cart.summary.checkoutButton')"
+                :disabled="$store.cart.items.length === 0 || isCheckoutLoading || isSnapPopupActive"
+                x-text="checkoutButtonText()"
               >
                 Proceed to Checkout
               </button>
@@ -205,6 +205,7 @@
             <button
               @click="confirmAndProcessCheckout()"
               class="btn btn-primary"
+              :disabled="isCheckoutLoading || isSnapPopupActive"
               x-text="$store.i18n.t('cart.modal.confirmOrder.confirmButton')"
             >
               Confirm & Order

@@ -710,9 +710,80 @@ document.addEventListener("alpine:init", () => {
         isProfileModalOpen: false,
         isLoginModalOpen: false,
         isConfirmModalOpen: false,
+        isCheckoutLoading: false,
+        isSnapPopupActive: false,
         userProfile: null,
 
+        checkoutButtonText() {
+          if (this.isCheckoutLoading) return 'Preparing Payment...';
+          if (this.isSnapPopupActive) return 'Payment In Progress...';
+          return this.$store.i18n.t('cart.summary.checkoutButton');
+        },
+
+        getApiBaseUrl() {
+          const configBaseUrl = window.APP_CONFIG?.apiBaseUrl || document.querySelector('meta[name="api-base-url"]')?.content;
+          return (configBaseUrl || '').replace(/\/$/, '');
+        },
+
+        buildApiUrl(path) {
+          const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+          const baseUrl = this.getApiBaseUrl();
+          return baseUrl ? `${baseUrl}${normalizedPath}` : normalizedPath;
+        },
+
+        getMidtransClientKey(preferredKey = null) {
+          return preferredKey
+            || window.APP_CONFIG?.midtransClientKey
+            || document.querySelector('meta[name="midtrans-client-key"]')?.content
+            || '';
+        },
+
+        getCartPayload() {
+          return this.$store.cart.details.map(item => ({
+            product_id: item.productId || item.id,
+            variant_id: item.variantId || null,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            total: item.subtotal
+          }));
+        },
+
+        async loadSnapScript(clientKey) {
+          if (!clientKey) {
+            throw new Error('Midtrans client key is not configured.');
+          }
+
+          if (window.snap?.pay) return;
+
+          const existingScript = document.getElementById('midtrans-snap-script');
+          if (existingScript) {
+            await new Promise((resolve, reject) => {
+              if (window.snap?.pay) {
+                resolve();
+                return;
+              }
+
+              existingScript.addEventListener('load', resolve, { once: true });
+              existingScript.addEventListener('error', () => reject(new Error('Failed to load Midtrans Snap.')), { once: true });
+            });
+            return;
+          }
+
+          await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.id = 'midtrans-snap-script';
+            script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+            script.setAttribute('data-client-key', clientKey);
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error('Failed to load Midtrans Snap.'));
+            document.head.appendChild(script);
+          });
+        },
+
         async handleCheckout() {
+          if (this.isCheckoutLoading || this.isSnapPopupActive) return;
+
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) {
             this.isLoginModalOpen = true;
@@ -729,6 +800,8 @@ document.addEventListener("alpine:init", () => {
         },
 
         async confirmAndProcessCheckout() {
+          if (this.isCheckoutLoading || this.isSnapPopupActive) return;
+
           if (this.userProfile) {
             await this.processCheckout(this.userProfile);
           } else {
@@ -777,39 +850,86 @@ document.addEventListener("alpine:init", () => {
             return;
           }
 
-          const orderCode = this.generateOrderCode();
-          const orderDetails = this.$store.cart.details.map(item => ({
-            product_id: item.productId || item.id,
-            variant_id: item.variantId || null,
-            variant_label: item.variantLabel || null,
-            name: item.name,
-            quantity: item.quantity,
-            price: item.price,
-            subtotal: item.subtotal
-          }));
+          this.isCheckoutLoading = true;
 
-          const { error } = await supabase.from('orders').insert({
+          const checkoutPayload = {
+            order_code: this.generateOrderCode(),
             user_id: user.id,
-            order_code: orderCode,
-            order_details: orderDetails,
+            email: user.email,
             shipping_address: { ...profile },
-            total_amount: this.$store.cart.total,
-            status: 'Menunggu Konfirmasi'
-          });
+            items: this.getCartPayload(),
+            total_amount: this.$store.cart.total
+          };
 
-          if (error) {
-            window.showNotification(`An error occurred: ${error.message}`, true);
-            return;
-          }
+          try {
+            const tokenResponse = await fetch(this.buildApiUrl('/api/payment/create-snap-token'), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(checkoutPayload)
+            });
 
-          this.$store.cart.clear(); // Use the store's method
-          window.showNotification(`Your order with code ${orderCode} has been placed successfully!`);
-
-          setTimeout(() => {
-            if (typeof showOrderHistorySection === 'function') {
-              showOrderHistorySection();
+            if (!tokenResponse.ok) {
+              const errorBody = await tokenResponse.text();
+              throw new Error(errorBody || 'Unable to create Midtrans payment token.');
             }
-          }, 1500);
+
+            const tokenData = await tokenResponse.json();
+            const snapToken = tokenData.token || tokenData.snap_token;
+
+            if (!snapToken) {
+              throw new Error('Snap token is missing from backend response.');
+            }
+
+            await this.loadSnapScript(this.getMidtransClientKey(tokenData.client_key || tokenData.clientKey));
+
+            this.isConfirmModalOpen = false;
+            this.isSnapPopupActive = true;
+
+            window.snap.pay(snapToken, {
+              onSuccess: async (result) => {
+                try {
+                  const confirmResponse = await fetch(this.buildApiUrl('/api/order/confirm'), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      order_code: checkoutPayload.order_code,
+                      transaction_id: result.transaction_id,
+                      payment_result: result,
+                      checkout_payload: checkoutPayload
+                    })
+                  });
+
+                  if (!confirmResponse.ok) {
+                    const confirmError = await confirmResponse.text();
+                    throw new Error(confirmError || 'Payment succeeded but order confirmation failed.');
+                  }
+
+                  this.$store.cart.clear();
+                  window.showNotification(`Payment successful. Your order code is ${checkoutPayload.order_code}.`);
+                } catch (error) {
+                  window.showNotification(error.message || 'Payment confirmed but order sync failed.', true);
+                } finally {
+                  this.isSnapPopupActive = false;
+                }
+              },
+              onPending: () => {
+                window.showNotification('Payment is pending. Please complete your payment from Midtrans.');
+                this.isSnapPopupActive = false;
+              },
+              onError: () => {
+                window.showNotification('Payment failed. Please try again.', true);
+                this.isSnapPopupActive = false;
+              },
+              onClose: () => {
+                window.showNotification('Payment popup was closed before completion.', true);
+                this.isSnapPopupActive = false;
+              }
+            });
+          } catch (error) {
+            window.showNotification(error.message || 'Checkout failed. Please try again.', true);
+          } finally {
+            this.isCheckoutLoading = false;
+          }
         },
 
         generateOrderCode() {
