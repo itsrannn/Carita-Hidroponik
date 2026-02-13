@@ -33,11 +33,29 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-const BACKEND_API_URL = (
-  window.APP_CONFIG?.apiBaseUrl
-  || document.querySelector('meta[name="api-base-url"]')?.content
-  || 'https://backend-carita-hidroponik.vercel.app'
-).replace(/\/$/, '');
+const DEFAULT_BACKEND_API_URL = 'https://backend-carita-hidroponik.vercel.app';
+
+function resolveBackendApiUrl() {
+  const configuredUrl = (
+    window.APP_CONFIG?.apiBaseUrl
+    || document.querySelector('meta[name="api-base-url"]')?.content
+    || DEFAULT_BACKEND_API_URL
+  ).trim();
+
+  try {
+    // Force absolute URL so GitHub Pages does not accidentally call its own origin.
+    const resolvedUrl = new URL(configuredUrl, DEFAULT_BACKEND_API_URL);
+    if (!['http:', 'https:'].includes(resolvedUrl.protocol)) {
+      throw new Error('Backend API URL must use http or https protocol.');
+    }
+    return resolvedUrl.toString().replace(/\/$/, '');
+  } catch (error) {
+    console.error('Invalid backend API URL configuration:', configuredUrl, error);
+    return DEFAULT_BACKEND_API_URL;
+  }
+}
+
+const BACKEND_API_URL = resolveBackendApiUrl();
 
 
 // Global currency formatter
@@ -909,11 +927,27 @@ document.addEventListener("alpine:init", () => {
             total_amount: this.$store.cart.total
           };
 
+          const transactionPayload = {
+            cart: this.$store.cart.details.map(item => ({
+              id: item.productId || item.id,
+              name: item.name,
+              quantity: item.quantity,
+              price: Math.round(Number(item.price) || 0)
+            })),
+            totalPrice: Math.round(Number(this.$store.cart.total) || 0),
+            customer: {
+              firstName: profile?.full_name || user.user_metadata?.full_name || user.email,
+              email: user.email,
+              phone: profile?.phone_number || ''
+            }
+          };
+
           try {
-            const tokenResponse = await fetch(this.buildApiUrl('/api/payment/create-snap-token'), {
+            const paymentApiUrl = this.buildApiUrl('/api/payment/create-snap-token');
+            const tokenResponse = await fetch(paymentApiUrl, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(checkoutPayload)
+              body: JSON.stringify(transactionPayload)
             });
 
             if (!tokenResponse.ok) {
@@ -921,7 +955,7 @@ document.addEventListener("alpine:init", () => {
             }
 
             const tokenData = await tokenResponse.json();
-            const snapToken = tokenData.token || tokenData.snap_token;
+            const snapToken = tokenData.token || tokenData.snap_token || tokenData.snapToken;
 
             if (!snapToken) {
               throw new Error('Snap token is missing from backend response.');
@@ -989,6 +1023,11 @@ document.addEventListener("alpine:init", () => {
               }
             });
           } catch (error) {
+            console.error('Checkout payment request failed:', {
+              error,
+              apiUrl: this.buildApiUrl('/api/payment/create-snap-token'),
+              payload: transactionPayload
+            });
             window.showNotification(error.message || 'Checkout failed. Please try again.', true);
           } finally {
             this.isCheckoutLoading = false;
