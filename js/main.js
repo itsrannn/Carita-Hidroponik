@@ -1,6 +1,9 @@
 
+const API_BASE_URL = 'https://backend-carita-hidroponik.vercel.app';
+
 document.addEventListener("DOMContentLoaded", function () {
-  const loadComponent = (id, url) => {
+  const loadComponent = (id, path) => {
+    const url = new URL(path, window.location.href).href;
     fetch(url)
       .then((response) => response.text())
       .then((html) => {
@@ -33,29 +36,6 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 
-const DEFAULT_BACKEND_API_URL = 'https://backend-carita-hidroponik.vercel.app';
-
-function resolveBackendApiUrl() {
-  const configuredUrl = (
-    window.APP_CONFIG?.apiBaseUrl
-    || document.querySelector('meta[name="api-base-url"]')?.content
-    || DEFAULT_BACKEND_API_URL
-  ).trim();
-
-  try {
-    // Force absolute URL so GitHub Pages does not accidentally call its own origin.
-    const resolvedUrl = new URL(configuredUrl, DEFAULT_BACKEND_API_URL);
-    if (!['http:', 'https:'].includes(resolvedUrl.protocol)) {
-      throw new Error('Backend API URL must use http or https protocol.');
-    }
-    return resolvedUrl.toString().replace(/\/$/, '');
-  } catch (error) {
-    console.error('Invalid backend API URL configuration:', configuredUrl, error);
-    return DEFAULT_BACKEND_API_URL;
-  }
-}
-
-const BACKEND_API_URL = resolveBackendApiUrl();
 
 
 // Global currency formatter
@@ -149,7 +129,8 @@ document.addEventListener("alpine:init", () => {
 
     async load() {
         try {
-            const response = await fetch(`locales/${this.lang}.json?v=${new Date().getTime()}`);
+            const localeUrl = new URL(`locales/${this.lang}.json?v=${new Date().getTime()}`, window.location.href).href;
+            const response = await fetch(localeUrl);
             if (!response.ok) throw new Error('Translations file not found');
             this.translations = await response.json();
         } catch (error) {
@@ -745,7 +726,7 @@ document.addEventListener("alpine:init", () => {
         },
 
         getApiBaseUrl() {
-          return BACKEND_API_URL;
+          return API_BASE_URL;
         },
 
         buildApiUrl(path) {
@@ -785,7 +766,7 @@ document.addEventListener("alpine:init", () => {
 
         async notifyBackendPaymentStatus(endpoint, payload, fallbackMessage) {
           try {
-            const apiUrl = this.buildApiUrl(endpoint);
+            const apiUrl = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
             const response = await fetch(apiUrl, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -958,8 +939,8 @@ document.addEventListener("alpine:init", () => {
           };
 
           try {
-            const paymentApiUrl = this.buildApiUrl('/api/payment/create-snap-token');
-            console.log('Initiating checkout payment request...', { url: paymentApiUrl });
+            const paymentApiUrl = `${API_BASE_URL}/api/payment/create-snap-token`;
+            console.log('Requesting snap token...');
 
             const tokenResponse = await fetch(paymentApiUrl, {
               method: 'POST',
@@ -971,28 +952,27 @@ document.addEventListener("alpine:init", () => {
             });
 
             if (!tokenResponse.ok) {
-              const apiError = await this.parseApiError(tokenResponse, 'Unable to create Midtrans payment token.');
-              console.error('Payment API returned error:', {
-                status: tokenResponse.status,
-                statusText: tokenResponse.statusText,
-                error: apiError
-              });
-              throw new Error(apiError);
+              throw new Error('Backend unreachable');
             }
 
             const tokenData = await tokenResponse.json();
-            const snapToken = tokenData.token || tokenData.snap_token || tokenData.snapToken;
+            console.log('Snap token received:', tokenData.snapToken);
 
-            if (!snapToken) {
-              throw new Error('Snap token is missing from backend response.');
+            if (!tokenData.snapToken) {
+              throw new Error('Snap token missing');
             }
 
             await this.loadSnapScript(this.getMidtransClientKey(tokenData.client_key || tokenData.clientKey));
 
+            if (!window.snap) {
+              alert('Snap.js not loaded');
+              return;
+            }
+
             this.isConfirmModalOpen = false;
             this.isSnapPopupActive = true;
 
-            window.snap.pay(snapToken, {
+            window.snap.pay(tokenData.snapToken, {
               onSuccess: async (result) => {
                 try {
                   await this.notifyBackendPaymentStatus('/api/order/confirm', {
@@ -1049,21 +1029,7 @@ document.addEventListener("alpine:init", () => {
               }
             });
           } catch (error) {
-            const isNetworkError = error instanceof TypeError && error.message.includes('fetch');
-            console.error('Checkout payment request failed:', {
-              name: error.name,
-              message: error.message,
-              isNetworkError,
-              apiUrl: this.buildApiUrl('/api/payment/create-snap-token'),
-              payload: transactionPayload
-            });
-
-            let displayMessage = error.message || 'Checkout failed. Please try again.';
-            if (isNetworkError) {
-              displayMessage = 'Connection to payment server failed. Please check your internet or contact support.';
-            }
-
-            window.showNotification(displayMessage, true);
+            console.error('PAYMENT ERROR:', error);
           } finally {
             this.isCheckoutLoading = false;
           }
