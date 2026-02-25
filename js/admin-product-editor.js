@@ -13,6 +13,8 @@ document.addEventListener('alpine:init', () => {
             char_en: '',
             char_id: '',
         },
+        allNews: [],
+        relatedNewsIds: [],
         discount_type: 'percent', // 'percent' or 'price'
         discount_value: null,
         title: 'admin.productEditor.loading',
@@ -27,6 +29,7 @@ document.addEventListener('alpine:init', () => {
 
             if (this.id) {
                 this.title = 'admin.productEditor.editTitle';
+                await this.fetchAllNews();
                 await this.fetchData();
             } else {
                 // This page is only for editing, so show an error if no ID is provided.
@@ -34,6 +37,21 @@ document.addEventListener('alpine:init', () => {
                 this.isError = true;
                 this.isLoading = false;
             }
+        },
+
+        async fetchAllNews() {
+            const { data, error } = await supabase
+                .from('news')
+                .select('id, title, created_at')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Failed to fetch news list:', error);
+                this.allNews = [];
+                return;
+            }
+
+            this.allNews = data || [];
         },
 
         async fetchData() {
@@ -80,6 +98,18 @@ document.addEventListener('alpine:init', () => {
             this.item.image_url = data.image_url;
             this.imagePreviewUrl = window.fixImagePath(data.image_url);
 
+            const { data: linksData, error: linksError } = await supabase
+                .from('news_related_products')
+                .select('news_id')
+                .eq('product_id', this.id);
+
+            if (linksError) {
+                console.error('Failed to fetch related news links:', linksError);
+                this.relatedNewsIds = [];
+            } else {
+                this.relatedNewsIds = (linksData || []).map((link) => link.news_id);
+            }
+
             // Handle discount logic
             if (data.discount < 0) {
                 this.discount_type = 'price';
@@ -120,6 +150,40 @@ document.addEventListener('alpine:init', () => {
             if (error) {
                 window.showNotification(`Failed to save data: ${error.message}`, true);
             } else {
+                // Data relation note:
+                // The admin chooses which news are related to this product.
+                // We persist that relation in the `news_related_products` pivot table
+                // (news_id <-> product_id), then the news detail page reads it by active news_id.
+                const { error: deleteRelationError } = await supabase
+                    .from('news_related_products')
+                    .delete()
+                    .eq('product_id', this.id);
+
+                if (deleteRelationError) {
+                    window.showNotification(`Failed to update related news: ${deleteRelationError.message}`, true);
+                    this.isLoading = false;
+                    this.submitButtonText = 'admin.productEditor.submit';
+                    return;
+                }
+
+                if (this.relatedNewsIds.length > 0) {
+                    const relations = this.relatedNewsIds.map((newsId) => ({
+                        news_id: newsId,
+                        product_id: this.id,
+                    }));
+
+                    const { error: relationError } = await supabase
+                        .from('news_related_products')
+                        .insert(relations);
+
+                    if (relationError) {
+                        window.showNotification(`Failed to save related news: ${relationError.message}`, true);
+                        this.isLoading = false;
+                        this.submitButtonText = 'admin.productEditor.submit';
+                        return;
+                    }
+                }
+
                 window.showNotification('Data saved successfully!', false);
                 // As per requirement, stay on the page.
                 // Optionally, refetch data to confirm it's updated.
