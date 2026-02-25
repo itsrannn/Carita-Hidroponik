@@ -17,13 +17,12 @@
     <div id="header-include"></div>
 
     <main class="main-content news-detail-page" x-data="newsDetail">
-      <div class="container">
-        <section class="news-layout" aria-live="polite">
+      <section class="news-detail-container news-layout" aria-live="polite">
           <p x-show="isLoading" class="news-status" x-text="$store.i18n.t('news.loading')">Memuat berita...</p>
           <p x-show="!isLoading && notFound" class="news-status" x-text="$store.i18n.t('news.notFound')">Berita tidak ditemukan.</p>
 
           <template x-if="newsItem && !isLoading && !notFound">
-            <div class="news-content-grid">
+            <div class="news-content-grid news-detail-head">
               <article class="news-article" aria-label="News detail">
                 <header class="news-header">
                   <h1 class="news-title" x-text="newsTitle"></h1>
@@ -94,7 +93,6 @@
             </div>
           </template>
         </section>
-      </div>
     </main>
 
     <div id="notification" class="notification"></div>
