@@ -144,6 +144,12 @@
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
 }
 
+.share-buttons .share-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
 .btn-share-facebook {
   background: #1877f2;
 }

@@ -18,84 +18,202 @@
 
     <main class="main-content news-detail-page" x-data="newsDetail">
       <section class="news-detail-container news-layout" aria-live="polite">
-          <p x-show="isLoading" class="news-status" x-text="$store.i18n.t('news.loading')">Memuat berita...</p>
-          <p x-show="!isLoading && notFound" class="news-status" x-text="$store.i18n.t('news.notFound')">Berita tidak ditemukan.</p>
+        <p
+          x-show="isLoading"
+          class="news-status"
+          x-text="$store.i18n.t('news.loading')"
+        >
+          Memuat berita...
+        </p>
 
-          <template x-if="newsItem && !isLoading && !notFound">
-            <div class="news-content-grid news-detail-head">
-              <article class="news-article" aria-label="News detail">
-                <header class="news-header">
-                  <h1 class="news-title" x-text="newsTitle"></h1>
-                  <div class="news-meta">
-                    <span>
-                      <span x-text="$store.i18n.t('newsDetail.by')">By</span>
-                      <strong x-text="$store.i18n.t('newsDetail.author')">Editorial Team</strong>
-                    </span>
-                    <span class="news-meta-separator">•</span>
-                    <time x-text="formattedDate"></time>
-                  </div>
-                </header>
+        <p
+          x-show="!isLoading && notFound"
+          class="news-status"
+          x-text="$store.i18n.t('news.notFound')"
+        >
+          Berita tidak ditemukan.
+        </p>
 
-                <figure class="news-hero">
-                  <img :src="window.fixImagePath(newsItem.image_url) || 'img/coming-soon.jpg'" :alt="newsTitle" />
-                </figure>
+        <template x-if="newsItem && !isLoading && !notFound">
+          <div class="news-content-grid news-detail-head">
+            <article class="news-article" aria-label="News detail">
+              <header class="news-header">
+                <h1 class="news-title" x-text="newsTitle"></h1>
 
-                <section class="news-body" x-html="newsContent"></section>
+                <div class="news-meta">
+                  <span>
+                    <span x-text="$store.i18n.t('newsDetail.by')">By</span>
+                    <strong x-text="$store.i18n.t('newsDetail.author')">
+                      Editorial Team
+                    </strong>
+                  </span>
+                  <span class="news-meta-separator">•</span>
+                  <time x-text="formattedDate"></time>
+                </div>
+              </header>
 
-                <section class="share-buttons" aria-label="Share article">
-                  <h4 x-text="$store.i18n.t('newsDetail.share')">Share This Article:</h4>
-                  <a x-bind:href="facebookShareUrl" target="_blank" rel="noopener noreferrer" class="btn btn-icon-only btn-share-facebook" aria-label="Share on Facebook">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
-                    <span>Facebook</span>
-                  </a>
-                  <a x-bind:href="twitterShareUrl" target="_blank" rel="noopener noreferrer" class="btn btn-icon-only btn-share-twitter" aria-label="Share on X">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M18.901 2H21l-4.588 5.244L21.81 22h-4.228l-3.31-4.318L10.49 22H8.39l4.906-5.61L2 2h4.335l2.992 3.9L12.69 2h2.1L10.88 6.47l6.02 7.853L18.901 2Z"></path></svg>
-                    <span>X</span>
-                  </a>
-                  <a x-bind:href="emailShareUrl" class="btn btn-icon-only btn-share-email" aria-label="Share via Email">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zM20 6l-8 5-8-5h16zm0 12H4V8l8 5 8-5v10z"></path></svg>
-                    <span>Email</span>
-                  </a>
-                </section>
-              </article>
+              <figure class="news-hero">
+                <img
+                  :src="window.fixImagePath(newsItem.image_url) || 'img/coming-soon.jpg'"
+                  :alt="newsTitle"
+                />
+              </figure>
 
-              <aside class="news-sidebar" aria-label="News sidebar">
-                <section class="sidebar-widget" x-show="showRelatedProductsWidget">
-                  <h4 x-text="$store.i18n.t('productDetail.relatedProducts')">Related Products</h4>
+              <section class="news-body" x-html="newsContent"></section>
 
-                  <div class="related-products-list" x-show="relatedProducts.length > 0">
-                    <template x-for="product in relatedProducts" :key="product.id">
-                      <a :href="'product-details.html?id=' + product.id" class="related-product-item">
-                        <img :src="window.fixImagePath(product.image_url) || 'img/coming-soon.jpg'" :alt="productName(product)" />
-                        <div class="related-product-details">
-                          <p class="name" x-text="productName(product)"></p>
-                          <p class="price" x-text="formatRupiah(product.price)"></p>
-                        </div>
+              <section class="share-buttons" aria-label="Share article">
+                <h4 x-text="$store.i18n.t('newsDetail.share')">
+                  Share This Article:
+                </h4>
+
+                <a
+                  :href="facebookShareUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="btn btn-icon-only btn-share-facebook"
+                  aria-label="Share on Facebook"
+                >
+                  <svg
+                    class="share-icon"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"
+                    />
+                  </svg>
+                  <span>Facebook</span>
+                </a>
+
+                <a
+                  :href="twitterShareUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="btn btn-icon-only btn-share-twitter"
+                  aria-label="Share on X"
+                >
+                  <svg
+                    class="share-icon"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M18.901 1.153h3.68l-8.04 9.188L24 22.847h-7.406l-5.8-7.584-6.637 7.584H.477l8.6-9.83L0 1.153h7.594l5.243 6.932 6.064-6.932Zm-1.29 19.498h2.039L6.486 3.234H4.298L17.61 20.651Z"
+                    />
+                  </svg>
+                  <span>X</span>
+                </a>
+
+                <a
+                  :href="emailShareUrl"
+                  class="btn btn-icon-only btn-share-email"
+                  aria-label="Share via Email"
+                >
+                  <svg
+                    class="share-icon"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <rect x="3" y="5" width="18" height="14" rx="2" ry="2" />
+                    <polyline points="3 7 12 13 21 7" />
+                  </svg>
+                  <span>Email</span>
+                </a>
+              </section>
+            </article>
+
+            <aside class="news-sidebar" aria-label="News sidebar">
+              <section
+                class="sidebar-widget"
+                x-show="showRelatedProductsWidget"
+              >
+                <h4 x-text="$store.i18n.t('productDetail.relatedProducts')">
+                  Related Products
+                </h4>
+
+                <div
+                  class="related-products-list"
+                  x-show="relatedProducts.length > 0"
+                >
+                  <template
+                    x-for="product in relatedProducts"
+                    :key="product.id"
+                  >
+                    <a
+                      :href="'product-details.html?id=' + product.id"
+                      class="related-product-item"
+                    >
+                      <img
+                        :src="window.fixImagePath(product.image_url) || 'img/coming-soon.jpg'"
+                        :alt="productName(product)"
+                      />
+                      <div class="related-product-details">
+                        <p class="name" x-text="productName(product)"></p>
+                        <p
+                          class="price"
+                          x-text="formatRupiah(product.price)"
+                        ></p>
+                      </div>
+                    </a>
+                  </template>
+                </div>
+
+                <p
+                  class="sidebar-empty"
+                  x-show="relatedProducts.length === 0"
+                  x-text="$store.i18n.t('newsDetail.noRelatedProducts') || 'Belum ada produk terkait'"
+                >
+                  Belum ada produk terkait
+                </p>
+              </section>
+
+              <section
+                class="sidebar-widget"
+                x-show="showLatestNewsWidget"
+              >
+                <h4 x-text="$store.i18n.t('news.latest')">Latest News</h4>
+
+                <ul
+                  class="sidebar-news-list"
+                  x-show="latestNews.length > 0"
+                >
+                  <template x-for="item in latestNews" :key="item.id">
+                    <li>
+                      <a :href="'news-detail.html?id=' + item.id">
+                        <span x-text="newsListTitle(item)"></span>
+                        <small
+                          x-text="new Date(item.created_at).toLocaleDateString(
+                            $store.i18n.lang,
+                            { year: 'numeric', month: 'short', day: 'numeric' }
+                          )"
+                        ></small>
                       </a>
-                    </template>
-                  </div>
+                    </li>
+                  </template>
+                </ul>
 
-                  <p class="sidebar-empty" x-show="relatedProducts.length === 0" x-text="$store.i18n.t('newsDetail.noRelatedProducts') || 'Belum ada produk terkait'">Belum ada produk terkait</p>
-                </section>
-
-                <section class="sidebar-widget" x-show="showLatestNewsWidget">
-                  <h4 x-text="$store.i18n.t('news.latest')">Latest News</h4>
-                  <ul class="sidebar-news-list" x-show="latestNews.length > 0">
-                    <template x-for="item in latestNews" :key="item.id">
-                      <li>
-                        <a :href="'news-detail.html?id=' + item.id">
-                          <span x-text="newsListTitle(item)"></span>
-                          <small x-text="new Date(item.created_at).toLocaleDateString($store.i18n.lang, { year: 'numeric', month: 'short', day: 'numeric' })"></small>
-                        </a>
-                      </li>
-                    </template>
-                  </ul>
-                  <p class="sidebar-empty" x-show="latestNews.length === 0" x-text="$store.i18n.t('news.notFound')">Belum ada berita terbaru.</p>
-                </section>
-              </aside>
-            </div>
-          </template>
-        </section>
+                <p
+                  class="sidebar-empty"
+                  x-show="latestNews.length === 0"
+                  x-text="$store.i18n.t('news.notFound')"
+                >
+                  Belum ada berita terbaru.
+                </p>
+              </section>
+            </aside>
+          </div>
+        </template>
+      </section>
     </main>
 
     <div id="notification" class="notification"></div>
@@ -104,7 +222,10 @@
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-client.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js" defer></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js"
+      defer
+    ></script>
     <script src="js/main.js"></script>
     <script src="js/news-detail.js"></script>
   </body>
