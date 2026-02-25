@@ -125,20 +125,35 @@
 }
 
 .share-buttons .btn-icon-only {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
+  min-height: 38px;
+  border-radius: 999px;
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  background: var(--accent, #2e7d32);
+  gap: 0.42rem;
+  padding: 0.45rem 0.9rem;
+  border: 1px solid transparent;
   color: #fff;
-  transition: transform 0.2s ease, background-color 0.2s ease;
+  font-size: 0.84rem;
+  font-weight: 700;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .share-buttons .btn-icon-only:hover {
   transform: translateY(-2px);
-  background: #1f6a24;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+.btn-share-facebook {
+  background: #1877f2;
+}
+
+.btn-share-twitter {
+  background: #111111;
+}
+
+.btn-share-email {
+  background: #0f766e;
 }
 
 .news-sidebar {
