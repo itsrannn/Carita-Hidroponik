@@ -6,6 +6,7 @@ document.addEventListener('alpine:init', () => {
         latestNews: [],
         relatedProducts: [],
         newsId: null,
+        latestLimit: 5,
 
         init() {
             // This watcher is the gate. It ensures fetchNewsData only runs when i18n is ready.
@@ -95,7 +96,10 @@ document.addEventListener('alpine:init', () => {
                     console.error('Error fetching related products:', productsError);
                     this.relatedProducts = [];
                 } else {
-                    this.relatedProducts = productsData;
+                    const orderedProducts = productIds
+                        .map((id) => productsData.find((product) => product.id === id))
+                        .filter(Boolean);
+                    this.relatedProducts = orderedProducts;
                 }
             } else {
                 this.relatedProducts = [];
@@ -109,12 +113,43 @@ document.addEventListener('alpine:init', () => {
                     .select('id, title, created_at')
                     .neq('id', this.newsId)
                     .order('created_at', { ascending: false })
-                    .limit(5);
+                    .limit(this.latestLimit);
                 if (error) throw error;
                 this.latestNews = data;
             } catch (error) {
                 console.error("Failed to load latest news:", error);
+                this.latestNews = [];
             }
+        },
+
+        productName(product) {
+            if (!product || !product.name) return '';
+            const lang = this.$store.i18n.lang;
+
+            if (typeof product.name === 'object') {
+                return product.name[lang] || product.name.id || product.name.en || '';
+            }
+
+            return product.name;
+        },
+
+        newsListTitle(item) {
+            if (!item || !item.title) return '';
+            const lang = this.$store.i18n.lang;
+
+            if (typeof item.title === 'object') {
+                return item.title[lang] || item.title.id || item.title.en || '';
+            }
+
+            return item.title;
+        },
+
+        get showRelatedProductsWidget() {
+            return this.isLoading || this.relatedProducts.length > 0 || !this.notFound;
+        },
+
+        get showLatestNewsWidget() {
+            return this.isLoading || this.latestNews.length > 0 || !this.notFound;
         },
 
         updateDocumentTitle() {
