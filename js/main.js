@@ -1,5 +1,6 @@
 
 const API_BASE_URL = 'https://backend-carita-hidroponik.vercel.app';
+const SNAP_TOKEN_ENDPOINT = 'https://backend-carita-hidroponik.vercel.app/api/payment/create-snap-token';
 
 document.addEventListener("DOMContentLoaded", function () {
   const loadComponent = (id, path) => {
@@ -820,6 +821,7 @@ document.addEventListener("alpine:init", () => {
 
           const existingScript = document.getElementById('midtrans-snap-script');
           if (existingScript) {
+            existingScript.setAttribute('data-client-key', clientKey);
             await new Promise((resolve, reject) => {
               if (window.snap?.pay) {
                 resolve();
@@ -939,23 +941,24 @@ document.addEventListener("alpine:init", () => {
           };
 
           try {
-            const paymentApiUrl = `${API_BASE_URL}/api/payment/create-snap-token`;
+            const orderData = transactionPayload;
             console.log('Requesting snap token...');
 
-            const tokenResponse = await fetch(paymentApiUrl, {
+            const tokenResponse = await fetch(SNAP_TOKEN_ENDPOINT, {
               method: 'POST',
               headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Content-Type': 'application/json'
               },
-              body: JSON.stringify(transactionPayload)
+              body: JSON.stringify(orderData)
             });
 
             if (!tokenResponse.ok) {
-              let backendMessage = 'Backend unreachable';
+              let backendMessage = 'Payment request failed';
               try {
                 const errorPayload = await tokenResponse.json();
-                backendMessage = errorPayload?.message || backendMessage;
+                if (errorPayload?.message) {
+                  backendMessage = `${backendMessage}: ${errorPayload.message}`;
+                }
               } catch (_parseError) {
                 // ignore invalid JSON and keep default message
               }
@@ -971,9 +974,8 @@ document.addEventListener("alpine:init", () => {
 
             await this.loadSnapScript(this.getMidtransClientKey(tokenData.client_key || tokenData.clientKey));
 
-            if (!window.snap) {
-              alert('Snap.js not loaded');
-              return;
+            if (!window.snap?.pay) {
+              throw new Error('Snap.js not loaded');
             }
 
             this.isConfirmModalOpen = false;
