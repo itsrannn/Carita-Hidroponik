@@ -952,7 +952,14 @@ document.addEventListener("alpine:init", () => {
             });
 
             if (!tokenResponse.ok) {
-              throw new Error('Backend unreachable');
+              let backendMessage = 'Backend unreachable';
+              try {
+                const errorPayload = await tokenResponse.json();
+                backendMessage = errorPayload?.message || backendMessage;
+              } catch (_parseError) {
+                // ignore invalid JSON and keep default message
+              }
+              throw new Error(backendMessage);
             }
 
             const tokenData = await tokenResponse.json();
@@ -1030,6 +1037,7 @@ document.addEventListener("alpine:init", () => {
             });
           } catch (error) {
             console.error('PAYMENT ERROR:', error);
+            window.showNotification(error.message || 'Unable to start payment. Please try again.', true);
           } finally {
             this.isCheckoutLoading = false;
           }
