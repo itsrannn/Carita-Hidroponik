@@ -292,12 +292,17 @@ document.addEventListener("alpine:init", () => {
             finalPrice: finalPrice,
             percentOff: percentOff,
             subtotal: finalPrice * item.quantity,
+            weight: product.weight || 0,
+            totalWeight: (product.weight || 0) * item.quantity,
           };
         })
         .filter(Boolean);
     },
     get total() {
       return this.details.reduce((total, item) => total + item.subtotal, 0);
+    },
+    get totalWeight() {
+      return this.details.reduce((total, item) => total + item.totalWeight, 0);
     },
     get quantity() {
       return this.items.reduce((total, item) => total + item.quantity, 0);
@@ -719,6 +724,103 @@ document.addEventListener("alpine:init", () => {
         isCheckoutLoading: false,
         isSnapPopupActive: false,
         userProfile: null,
+        regions: {
+          provinces: [],
+          cities: [],
+          services: []
+        },
+        shipping: {
+          province: '',
+          city: '',
+          courier: 'jne',
+          service: '',
+          cost: 0,
+          details: null
+        },
+
+        async init() {
+          await this.fetchProvinces();
+        },
+
+        async fetchProvinces() {
+          try {
+            const response = await fetch(`${API_BASE_URL}/api/shipping/provinces`);
+            if (!response.ok) throw new Error('Failed to fetch provinces');
+            this.regions.provinces = await response.json();
+          } catch (error) {
+            console.error(error);
+          }
+        },
+
+        async fetchCities() {
+          if (!this.shipping.province) {
+            this.regions.cities = [];
+            return;
+          }
+          try {
+            const response = await fetch(`${API_BASE_URL}/api/shipping/cities/${this.shipping.province}`);
+            if (!response.ok) throw new Error('Failed to fetch cities');
+            this.regions.cities = await response.json();
+            this.shipping.city = '';
+            this.regions.services = [];
+            this.shipping.cost = 0;
+          } catch (error) {
+            console.error(error);
+          }
+        },
+
+        async calculateShipping() {
+          if (!this.shipping.city || !this.shipping.courier || this.$store.cart.items.length === 0) {
+            this.regions.services = [];
+            this.shipping.cost = 0;
+            return;
+          }
+
+          try {
+            const response = await fetch(`${API_BASE_URL}/api/shipping/cost`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                destination: this.shipping.city,
+                weight: this.$store.cart.totalWeight,
+                courier: this.shipping.courier
+              })
+            });
+            if (!response.ok) throw new Error('Failed to calculate shipping cost');
+            const data = await response.json();
+            this.regions.services = data.costs;
+
+            // Auto-select first service if available
+            if (this.regions.services.length > 0) {
+              this.shipping.service = JSON.stringify(this.regions.services[0]);
+              this.updateShippingCost();
+            } else {
+              this.shipping.cost = 0;
+              this.shipping.service = '';
+            }
+          } catch (error) {
+            console.error(error);
+            window.showNotification('Failed to get shipping services.', true);
+          }
+        },
+
+        updateShippingCost() {
+          if (this.shipping.service) {
+            const serviceObj = JSON.parse(this.shipping.service);
+            this.shipping.cost = serviceObj.cost[0].value;
+            this.shipping.details = serviceObj;
+          } else {
+            this.shipping.cost = 0;
+            this.shipping.details = null;
+          }
+        },
+
+        calculateGrandTotal() {
+          const subtotal = this.$store.cart.total;
+          const tax = subtotal * 0.11;
+          const shipping = this.shipping.cost;
+          return subtotal + tax + shipping;
+        },
 
         checkoutButtonText() {
           if (this.isCheckoutLoading) return 'Preparing Payment...';
@@ -916,23 +1018,58 @@ document.addEventListener("alpine:init", () => {
 
           this.isCheckoutLoading = true;
 
+          const subtotal = this.$store.cart.total;
+          const tax = Math.round(subtotal * 0.11);
+          const shippingCost = Math.round(this.shipping.cost);
+          const grandTotal = subtotal + tax + shippingCost;
+
           const checkoutPayload = {
             order_code: this.generateOrderCode(),
             user_id: user.id,
             email: user.email,
-            shipping_address: { ...profile },
+            shipping_address: {
+              ...profile,
+              rajaongkir_city_id: this.shipping.city,
+              courier: this.shipping.courier,
+              shipping_service: this.shipping.details?.service,
+              shipping_cost: shippingCost
+            },
             items: this.getCartPayload(),
-            total_amount: this.$store.cart.total
+            subtotal: subtotal,
+            tax: tax,
+            shipping_cost: shippingCost,
+            total_amount: grandTotal
           };
 
+          const cartDetails = this.$store.cart.details.map(item => ({
+            id: item.productId || item.id,
+            name: item.name,
+            quantity: item.quantity,
+            price: Math.round(Number(item.finalPrice) || 0)
+          }));
+
+          // Add tax and shipping as line items for Midtrans
+          if (tax > 0) {
+            cartDetails.push({
+              id: 'TAX-PPN-11',
+              name: 'PPN 11%',
+              quantity: 1,
+              price: tax
+            });
+          }
+
+          if (shippingCost > 0) {
+            cartDetails.push({
+              id: 'SHIPPING-COST',
+              name: `Shipping (${this.shipping.courier.toUpperCase()} ${this.shipping.details?.service || ''})`,
+              quantity: 1,
+              price: shippingCost
+            });
+          }
+
           const transactionPayload = {
-            cart: this.$store.cart.details.map(item => ({
-              id: item.productId || item.id,
-              name: item.name,
-              quantity: item.quantity,
-              price: Math.round(Number(item.price) || 0)
-            })),
-            totalPrice: Math.round(Number(this.$store.cart.total) || 0),
+            cart: cartDetails,
+            totalPrice: grandTotal,
             customer: {
               firstName: profile?.full_name || user.user_metadata?.full_name || user.email,
               email: user.email,
