@@ -122,9 +122,15 @@
       "couponPlaceholder": "Masukkan Kode Kupon",
       "applyButton": "Terapkan",
       "subtotal": "Subtotal",
+      "tax": "Pajak (PPN 11%)",
       "shipping": "Pengiriman",
       "total": "Total",
-      "checkoutButton": "Lanjutkan ke Pembayaran"
+      "checkoutButton": "Lanjutkan ke Pembayaran",
+      "province": "Pilih Provinsi",
+      "city": "Pilih Kota/Kabupaten",
+      "courier": "Pilih Kurir",
+      "service": "Pilih Layanan",
+      "weight": "Total Berat"
     },
     "modal": {
       "profileIncomplete": {

@@ -248,6 +248,50 @@ body {
   color: #1b5e20;
 }
 
+.shipping-form {
+  border-top: 1px solid #e6ece8;
+  padding-top: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.shipping-form h4 {
+  font-size: 0.95rem;
+  color: #5f7468;
+  margin-bottom: 0.8rem;
+}
+
+.form-group {
+  margin-bottom: 0.8rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.8rem;
+  color: #6a7d73;
+  margin-bottom: 0.3rem;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.65rem 0.8rem;
+  border: 1.5px solid #eef3f0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  background: #fdfdfd;
+  color: #213029;
+  outline: none;
+}
+
+.form-control:focus {
+  border-color: #1b5e20;
+  box-shadow: 0 0 0 3px rgba(27, 94, 32, 0.05);
+}
+
+.form-control:disabled {
+  background: #f1f7f3;
+  cursor: not-allowed;
+}
+
 .coupon-form {
   display: flex;
   align-items: center;

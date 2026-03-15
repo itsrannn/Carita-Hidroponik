@@ -122,9 +122,15 @@
       "couponPlaceholder": "Enter Coupon Code",
       "applyButton": "Apply",
       "subtotal": "Subtotal",
+      "tax": "Tax (PPN 11%)",
       "shipping": "Shipping",
       "total": "Total",
-      "checkoutButton": "Proceed to Checkout"
+      "checkoutButton": "Proceed to Checkout",
+      "province": "Select Province",
+      "city": "Select City/Regency",
+      "courier": "Select Courier",
+      "service": "Select Service",
+      "weight": "Total Weight"
     },
     "modal": {
       "profileIncomplete": {

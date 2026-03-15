@@ -1,5 +1,6 @@
 const express = require('express');
 const paymentRoutes = require('./routes/payment.routes');
+const shippingRoutes = require('./routes/shipping.routes');
 
 const app = express();
 
@@ -36,6 +37,7 @@ app.use((req, res, next) => {
 
 app.use('/api/payment', paymentRoutes);
 app.use('/api/order', paymentRoutes);
+app.use('/api/shipping', shippingRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'Carita Hidroponik API is running.' });
