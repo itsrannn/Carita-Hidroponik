@@ -1,34 +1,148 @@
 <style>
-    .dashboard-header { padding: 1.5rem; background-color: white; border-bottom: 1px solid #dee2e6; margin-bottom: 1.5rem; }
-    .order-management-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; margin-bottom: 5rem; }
-    .admin-order-card { background-color: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.08); display: flex; flex-direction: column; }
-    .admin-order-card .order-header { padding: 1rem 1.25rem; border-bottom: 1px solid #eee; }
-    .admin-order-card .order-body { padding: 1.25rem; flex-grow: 1; }
-    .admin-order-card .order-footer { padding: 1rem 1.25rem; background-color: #f8f9fa; border-top: 1px solid #eee; }
-    .info-group { margin-bottom: 1rem; }
-    .info-group label { display: block; font-size: 0.8rem; color: #666; font-weight: 600; margin-bottom: 0.25rem; }
-    .info-group p { margin: 0; }
-    .action-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
-    .btn-admin { border: none; padding: 0.6rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+    .dashboard-header {
+        padding: var(--spacing-lg);
+        background-color: #fff;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .dashboard-header .page-title,
+    .dashboard-header p {
+        margin: 0;
+    }
+
+    .dashboard-header p {
+        margin-top: var(--spacing-xs);
+        color: #6c757d;
+    }
+
+    .order-management-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: var(--spacing-md);
+    }
+
+    .admin-order-card {
+        background-color: #fff;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0,0,0,0.08);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .admin-order-card .order-header {
+        padding: var(--spacing-md);
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+
+    .admin-order-card .order-header h3 {
+        margin: 0;
+    }
+
+    .admin-order-card .order-body {
+        padding: var(--spacing-md);
+        flex-grow: 1;
+    }
+
+    .admin-order-card .order-footer {
+        padding: var(--spacing-md);
+        background-color: #f8f9fa;
+        border-top: 1px solid #eee;
+    }
+
+    .info-group {
+        margin-bottom: var(--spacing-sm);
+    }
+
+    .info-group:last-child {
+        margin-bottom: 0;
+    }
+
+    .info-group label {
+        display: block;
+        font-size: 0.8rem;
+        color: #666;
+        font-weight: 600;
+        margin-bottom: var(--spacing-xs);
+    }
+
+    .info-group p,
+    .info-group ul {
+        margin: 0;
+    }
+
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-xs);
+        align-items: center;
+    }
+
+    .btn-admin {
+        border: none;
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
     .btn-admin-approve { background-color: var(--accent); color: white; }
     .btn-admin-approve:hover { background-color: var(--green); transform: translateY(-2px); }
     .btn-admin-reject { background-color: #fce8e6; color: #c5221f; }
     .btn-admin-reject:hover { background-color: #f7d5d2; transform: translateY(-2px); }
-    .status-badge { font-weight: 600; padding: 0.3rem 0.8rem; border-radius: 50px; font-size: 0.85em; color: #fff; text-transform: capitalize; }
-    .filter-container { background-color: #fff; padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.06); display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
-    .filter-group { display: flex; flex-direction: column; }
-    .filter-group label { font-size: 0.8rem; color: #666; font-weight: 600; margin-bottom: 0.4rem; }
-    .filter-select { padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid #ccc; background-color: #f8f9fa; font-weight: 500; min-width: 200px; }
+
+    .status-badge {
+        font-weight: 600;
+        padding: 0.3rem 0.8rem;
+        border-radius: 50px;
+        font-size: 0.85em;
+        color: #fff;
+        text-transform: capitalize;
+    }
+
+    .filter-container {
+        background-color: #fff;
+        padding: var(--spacing-md);
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-xs);
+    }
+
+    .filter-group label {
+        font-size: 0.8rem;
+        color: #666;
+        font-weight: 600;
+    }
+
+    .filter-select {
+        padding: 0.6rem 1rem;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        background-color: #f8f9fa;
+        font-weight: 500;
+        min-width: 200px;
+    }
 </style>
-<div class="container">
-    <div class="dashboard-header">
-        <h1 class="page-title" x-text="$store.i18n.t('admin.orders.title')">Order Management</h1>
+<div class="container content-wrapper">
+    <div class="dashboard-header section">
+        <h1 class="page-title section-title" x-text="$store.i18n.t('admin.orders.title')">Order Management</h1>
         <p x-text="$store.i18n.t('admin.orders.description')">Manage and update the status of incoming orders.</p>
     </div>
 
-    <div id="admin-message-container" class="message-container" style="display: none;"></div>
+    <div id="admin-message-container" class="message-container section" style="display: none;"></div>
 
-    <div class="filter-container">
+    <div class="filter-container filter-bar section">
         <div class="filter-group">
             <label for="sort-time" x-text="$store.i18n.t('admin.orders.filter.sortByTime')">Sort by Time</label>
             <select id="sort-time" class="filter-select">
@@ -49,7 +163,7 @@
         </div>
     </div>
 
-    <div id="orders-grid" class="order-management-grid"></div>
+    <div id="orders-grid" class="order-management-grid card-container section"></div>
 
     <p id="loading-message" x-text="$store.i18n.t('admin.orders.loading')">Loading orders...</p>
 </div>

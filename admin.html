@@ -20,6 +20,11 @@
             --card-border: #e6ebf2;
             --headline: #111827;
             --subtle: #6b7280;
+            --spacing-xs: 8px;
+            --spacing-sm: 12px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --spacing-xl: 32px;
         }
 
         * {
@@ -122,8 +127,50 @@
             height: 100vh;
             overflow-y: auto;
             overflow-x: hidden;
-            padding: 28px;
+            padding: var(--spacing-lg) var(--spacing-xl);
             background: var(--content-bg);
+        }
+
+        .content-wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .section-title {
+            margin: 0 0 var(--spacing-md);
+        }
+
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--spacing-md);
+        }
+
+        .card {
+            padding: var(--spacing-md);
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .card-content {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
         }
 
         #content-container {
@@ -145,24 +192,7 @@
         }
 
         #content-container .container {
-            max-width: 1280px;
-            margin: 0 auto;
             padding: 0;
-        }
-
-        #content-container .dashboard-header,
-        #content-container .filter-container,
-        #content-container .content-card,
-        #content-container .kpi-card,
-        #content-container .chart-container,
-        #content-container .admin-order-card {
-            border-radius: 8px;
-            box-shadow: var(--card-shadow);
-            border: 1px solid var(--card-border);
-        }
-
-        #content-container .dashboard-header {
-            margin-bottom: 24px;
         }
 
         #content-container .dashboard-header h1,
@@ -178,19 +208,6 @@
             margin-top: 8px;
             color: var(--subtle);
             font-size: 0.95rem;
-        }
-
-        #content-container .kpi-grid,
-        #content-container .order-management-grid,
-        #content-container .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-        }
-
-        #content-container .kpi-grid,
-        #content-container .order-management-grid {
-            margin-bottom: 24px;
         }
 
         #content-container .kpi-card .value {
@@ -217,7 +234,7 @@
                 height: auto;
                 min-height: 100vh;
                 overflow: visible;
-                padding: 20px 16px;
+                padding: var(--spacing-md);
             }
 
             #content-container .dashboard-header h1,
