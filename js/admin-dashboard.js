@@ -29,7 +29,7 @@ window.AdminDashboardPage = (() => {
         const productChartTypeFilter = document.getElementById('product-chart-type');
         const productPeriodFilter = document.getElementById('product-period-filter');
         const productMonthFilter = document.getElementById('product-month-filter');
-        const productSalesChartWrapper = document.querySelector('#sales-chart .chart-canvas-wrapper');
+        const productSalesChartWrapper = document.querySelector('#product-sales-chart-container .chart-canvas-wrapper');
         const transactionsBody = document.getElementById('recent-transactions-body');
         const loadingTransactionsEl = document.getElementById('loading-transactions');
 
