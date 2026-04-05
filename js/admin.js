@@ -82,7 +82,7 @@ window.AdminOrdersPage = (() => {
 
         orders.forEach(order => {
             const card = document.createElement('div');
-            card.className = 'admin-order-card';
+            card.className = 'admin-order-card card';
             card.id = `order-${order.id}`;
 
             let itemsList = `<li>${t('admin.orders.card.noItems')}</li>`;
@@ -104,19 +104,17 @@ window.AdminOrdersPage = (() => {
             const orderDate = new Date(order.created_at).toLocaleDateString('en-US', { day: '2-digit', month: 'long', year: 'numeric' });
 
             card.innerHTML = `
-                <div class="admin-order-card">
-                    <div class="order-header">
-                        <h3>${t('admin.orders.orderIdLabel')} #${order.order_code || order.id}</h3>
-                        <span class="status-badge status-${(order.status || '').toLowerCase().replace(/\s+/g, '-')}">${window.translateStatus(order.status)}</span>
-                    </div>
-                    <div class="order-body">
-                        <div class="info-group"><label>${t('admin.dashboard.transactions.date')}</label><p>${orderDate}</p></div>
-                        <div class="info-group"><label>${t('admin.dashboard.transactions.customer')}</label><p>${customerInfo}</p></div>
-                        <div class="info-group"><label>${t('admin.orders.card.shippingAddress')}</label><p>${addressInfo}</p></div>
-                        <div class="info-group"><label>${t('admin.orders.card.orderSummary')}</label><ul>${itemsList}</ul></div>
-                    </div>
-                    <div class="order-footer action-buttons"></div>
+                <div class="order-header">
+                    <h3>${t('admin.orders.orderIdLabel')} #${order.order_code || order.id}</h3>
+                    <span class="status-badge status-${(order.status || '').toLowerCase().replace(/\s+/g, '-')}">${window.translateStatus(order.status)}</span>
                 </div>
+                <div class="order-body card-content">
+                    <div class="info-group"><label>${t('admin.dashboard.transactions.date')}</label><p>${orderDate}</p></div>
+                    <div class="info-group"><label>${t('admin.dashboard.transactions.customer')}</label><p>${customerInfo}</p></div>
+                    <div class="info-group"><label>${t('admin.orders.card.shippingAddress')}</label><p>${addressInfo}</p></div>
+                    <div class="info-group"><label>${t('admin.orders.card.orderSummary')}</label><ul>${itemsList}</ul></div>
+                </div>
+                <div class="order-footer action-buttons"></div>
             `;
 
             const actionsContainer = card.querySelector('.action-buttons');
