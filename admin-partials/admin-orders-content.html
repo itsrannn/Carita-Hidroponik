@@ -1,0 +1,55 @@
+<style>
+    .dashboard-header { padding: 1.5rem; background-color: white; border-bottom: 1px solid #dee2e6; margin-bottom: 1.5rem; }
+    .order-management-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; margin-bottom: 5rem; }
+    .admin-order-card { background-color: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.08); display: flex; flex-direction: column; }
+    .admin-order-card .order-header { padding: 1rem 1.25rem; border-bottom: 1px solid #eee; }
+    .admin-order-card .order-body { padding: 1.25rem; flex-grow: 1; }
+    .admin-order-card .order-footer { padding: 1rem 1.25rem; background-color: #f8f9fa; border-top: 1px solid #eee; }
+    .info-group { margin-bottom: 1rem; }
+    .info-group label { display: block; font-size: 0.8rem; color: #666; font-weight: 600; margin-bottom: 0.25rem; }
+    .info-group p { margin: 0; }
+    .action-buttons { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+    .btn-admin { border: none; padding: 0.6rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s ease; }
+    .btn-admin-approve { background-color: var(--accent); color: white; }
+    .btn-admin-approve:hover { background-color: var(--green); transform: translateY(-2px); }
+    .btn-admin-reject { background-color: #fce8e6; color: #c5221f; }
+    .btn-admin-reject:hover { background-color: #f7d5d2; transform: translateY(-2px); }
+    .status-badge { font-weight: 600; padding: 0.3rem 0.8rem; border-radius: 50px; font-size: 0.85em; color: #fff; text-transform: capitalize; }
+    .filter-container { background-color: #fff; padding: 1rem 1.5rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.06); display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; }
+    .filter-group { display: flex; flex-direction: column; }
+    .filter-group label { font-size: 0.8rem; color: #666; font-weight: 600; margin-bottom: 0.4rem; }
+    .filter-select { padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid #ccc; background-color: #f8f9fa; font-weight: 500; min-width: 200px; }
+</style>
+<div class="container">
+    <div class="dashboard-header">
+        <h1 class="page-title" x-text="$store.i18n.t('admin.orders.title')">Order Management</h1>
+        <p x-text="$store.i18n.t('admin.orders.description')">Manage and update the status of incoming orders.</p>
+    </div>
+
+    <div id="admin-message-container" class="message-container" style="display: none;"></div>
+
+    <div class="filter-container">
+        <div class="filter-group">
+            <label for="sort-time" x-text="$store.i18n.t('admin.orders.filter.sortByTime')">Sort by Time</label>
+            <select id="sort-time" class="filter-select">
+                <option value="newest" x-text="$store.i18n.t('admin.orders.filter.newest')">Newest</option>
+                <option value="oldest" x-text="$store.i18n.t('admin.orders.filter.oldest')">Oldest</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label for="filter-status" x-text="$store.i18n.t('admin.orders.filter.filterByStatus')">Filter by Status</label>
+            <select id="filter-status" class="filter-select">
+                <option value="all" x-text="$store.i18n.t('admin.orders.filter.allStatuses')">All Statuses</option>
+                <option value="Menunggu Konfirmasi" x-text="$store.i18n.t('admin.orders.filter.status.awaiting')">Awaiting Confirmation</option>
+                <option value="Diproses" x-text="$store.i18n.t('admin.orders.filter.status.processing')">Processing</option>
+                <option value="Dalam Pengiriman" x-text="$store.i18n.t('admin.orders.filter.status.shipped')">Shipped</option>
+                <option value="Selesai" x-text="$store.i18n.t('admin.orders.filter.status.completed')">Completed</option>
+                <option value="Ditolak" x-text="$store.i18n.t('admin.orders.filter.status.rejected')">Rejected</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="orders-grid" class="order-management-grid"></div>
+
+    <p id="loading-message" x-text="$store.i18n.t('admin.orders.loading')">Loading orders...</p>
+</div>
