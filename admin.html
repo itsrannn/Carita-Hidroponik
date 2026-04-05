@@ -8,76 +8,102 @@
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/mobile.css" media="(max-width: 768px)" />
     <style>
+        :root {
+            --sidebar-bg: #1b5e20;
+            --sidebar-bg-alt: #245f2f;
+            --sidebar-text: #e8f5e9;
+            --sidebar-muted: #c9dfcc;
+            --sidebar-active-bg: #2e7d32;
+            --content-bg: #f5f7fa;
+            --card-bg: #ffffff;
+            --card-shadow: 0 8px 24px rgba(15, 23, 42, 0.07);
+            --card-border: #e6ebf2;
+            --headline: #111827;
+            --subtle: #6b7280;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+        }
+
         body {
             margin: 0;
-            background: #f5f7fa;
-            color: #1f2937;
+            overflow: hidden;
+            color: var(--headline);
             font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--content-bg);
         }
 
         .dashboard {
             min-height: 100vh;
-            display: flex;
-            background: #f5f7fa;
+            background: var(--content-bg);
         }
 
         .sidebar {
-            width: 260px;
-            position: sticky;
+            width: 20vw;
+            min-width: 220px;
+            max-width: 280px;
+            position: fixed;
             top: 0;
+            left: 0;
             height: 100vh;
-            background: linear-gradient(180deg, #1b5e20 0%, #2e7d32 100%);
-            color: #e8f5e9;
+            background: linear-gradient(180deg, var(--sidebar-bg) 0%, var(--sidebar-bg-alt) 100%);
+            color: var(--sidebar-text);
+            padding: 20px 16px;
             display: flex;
             flex-direction: column;
-            padding: 1.25rem 1rem;
-            box-shadow: 6px 0 24px rgba(0, 0, 0, 0.15);
+            gap: 20px;
             z-index: 20;
         }
 
         .sidebar-brand {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            padding: 0.6rem 0.75rem 1.2rem 0.75rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-            margin-bottom: 1.25rem;
+            gap: 12px;
+            padding: 4px 4px 18px;
+            border-bottom: 1px solid rgba(232, 245, 233, 0.2);
         }
 
         .sidebar-brand img {
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             object-fit: cover;
         }
 
         .sidebar-brand strong {
             display: block;
-            font-size: 0.95rem;
+            font-size: 1rem;
             color: #ffffff;
+            font-weight: 700;
         }
 
         .sidebar-brand span {
             display: block;
-            font-size: 0.8rem;
-            color: #c8e6c9;
+            font-size: 0.82rem;
+            color: var(--sidebar-muted);
         }
 
         .sidebar-nav {
             display: flex;
             flex-direction: column;
-            gap: 0.45rem;
+            gap: 8px;
         }
 
         .sidebar-link {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            color: #e8f5e9;
+            gap: 10px;
+            padding: 12px 10px;
+            color: var(--sidebar-text);
             text-decoration: none;
-            padding: 0.75rem 0.8rem;
-            font-weight: 500;
-            border: 1px solid transparent;
-            transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: background-color 0.2s ease, color 0.2s ease;
             cursor: pointer;
         }
 
@@ -87,57 +113,21 @@
         }
 
         .sidebar-link.active {
-            background: #66bb6a;
-            border-color: #81c784;
-            color: #0b3d0b;
-            font-weight: 700;
-        }
-
-        .content-shell {
-            flex: 1;
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .topbar {
-            position: sticky;
-            top: 0;
-            z-index: 15;
-            background: #ffffff;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 1rem 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-        }
-
-        .topbar h2 {
-            margin: 0;
-            font-size: 1rem;
-            font-weight: 700;
-        }
-
-        .menu-toggle {
-            border: 1px solid #d1d5db;
-            background: #ffffff;
-            color: #111827;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
+            background: var(--sidebar-active-bg);
+            color: #ffffff;
         }
 
         .main-content {
-            padding: 1.5rem;
-            width: 100%;
+            margin-left: clamp(220px, 20vw, 280px);
+            height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 28px;
+            background: var(--content-bg);
         }
 
         #content-container {
-            min-height: 360px;
+            min-height: calc(100vh - 56px);
             transition: opacity 0.2s ease;
         }
 
@@ -146,38 +136,93 @@
         }
 
         .loading-indicator {
-            background: #fff;
-            border: 1px solid #e5e7eb;
-            padding: 1rem;
-            margin-bottom: 1rem;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            padding: 16px;
+            color: var(--subtle);
         }
 
-        @media (max-width: 900px) {
-            .menu-toggle {
-                display: inline-flex;
+        #content-container .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0;
+        }
+
+        #content-container .dashboard-header,
+        #content-container .filter-container,
+        #content-container .content-card,
+        #content-container .kpi-card,
+        #content-container .chart-container,
+        #content-container .admin-order-card {
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--card-border);
+        }
+
+        #content-container .dashboard-header {
+            margin-bottom: 24px;
+        }
+
+        #content-container .dashboard-header h1,
+        #content-container .dashboard-header .page-title {
+            font-size: 1.7rem;
+            line-height: 1.25;
+            margin: 0;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        #content-container .dashboard-header p {
+            margin-top: 8px;
+            color: var(--subtle);
+            font-size: 0.95rem;
+        }
+
+        #content-container .kpi-grid,
+        #content-container .order-management-grid,
+        #content-container .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        #content-container .kpi-grid,
+        #content-container .order-management-grid {
+            margin-bottom: 24px;
+        }
+
+        #content-container .kpi-card .value {
+            font-size: 1.9rem;
+        }
+
+        #content-container .table-header,
+        #content-container .chart-header-controls {
+            gap: 16px;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                overflow: auto;
             }
 
             .sidebar {
-                position: fixed;
-                left: -270px;
-                transition: left 0.25s ease;
+                display: none;
             }
 
-            .dashboard.sidebar-open .sidebar {
-                left: 0;
-            }
-
-            .dashboard.sidebar-open::after {
-                content: "";
-                position: fixed;
-                inset: 0;
-                background: rgba(17, 24, 39, 0.35);
-                z-index: 10;
-            }
-
-            .topbar,
             .main-content {
-                padding: 1rem;
+                margin-left: 0;
+                height: auto;
+                min-height: 100vh;
+                overflow: visible;
+                padding: 20px 16px;
+            }
+
+            #content-container .dashboard-header h1,
+            #content-container .dashboard-header .page-title {
+                font-size: 1.35rem;
             }
         }
     </style>
@@ -192,15 +237,11 @@
                 <img src="img/Logo.jpg" alt="Carita Hidroponik">
                 <div>
                     <strong>Carita Admin</strong>
-                    <span>E-commerce Panel</span>
+                    <span>Operations Dashboard</span>
                 </div>
             </div>
             <nav class="sidebar-nav">
-                <a class="sidebar-link active" data-page="admin-dashboard" data-source="admin-partials/admin-dashboard-content.html">
-                    <i data-feather="bar-chart-2"></i>
-                    <span x-text="$store.i18n.t('admin.hub.analyticsCard.title')">Analytics</span>
-                </a>
-                <a class="sidebar-link" data-page="admin-orders" data-source="admin-partials/admin-orders-content.html">
+                <a class="sidebar-link active" data-page="admin-orders" data-source="admin-partials/admin-orders-content.html">
                     <i data-feather="package"></i>
                     <span x-text="$store.i18n.t('admin.hub.orderCard.title')">Order Management</span>
                 </a>
@@ -208,17 +249,14 @@
                     <i data-feather="edit"></i>
                     <span x-text="$store.i18n.t('admin.hub.contentCard.title')">Content Management</span>
                 </a>
+                <a class="sidebar-link" data-page="admin-dashboard" data-source="admin-partials/admin-dashboard-content.html">
+                    <i data-feather="bar-chart-2"></i>
+                    <span x-text="$store.i18n.t('admin.hub.analyticsCard.title')">Analytics Dashboard</span>
+                </a>
             </nav>
         </aside>
 
         <main class="main-content">
-            <header class="topbar">
-                <button class="menu-toggle" id="menu-toggle-btn" type="button" aria-label="Toggle navigation">
-                    <i data-feather="menu"></i>
-                </button>
-                <h2 x-text="$store.i18n.t('admin.hub.title')">Admin Center</h2>
-            </header>
-
             <div id="content-container"></div>
         </main>
     </div>
@@ -236,7 +274,6 @@
     <script src="js/admin-dashboard.js"></script>
     <script>
         const contentContainer = document.getElementById('content-container');
-        const dashboardShell = document.getElementById('admin-dashboard-shell');
 
         function setActiveMenu(activeLink) {
             document.querySelectorAll('.sidebar-link').forEach((link) => {
@@ -286,18 +323,10 @@
                 })
                 .finally(() => {
                     contentContainer.classList.remove('is-loading');
-                    dashboardShell.classList.remove('sidebar-open');
                 });
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            const toggleButton = document.getElementById('menu-toggle-btn');
-            if (toggleButton) {
-                toggleButton.addEventListener('click', () => {
-                    dashboardShell.classList.toggle('sidebar-open');
-                });
-            }
-
             document.querySelectorAll('.sidebar-link').forEach((link) => {
                 link.addEventListener('click', () => {
                     loadContent(link.dataset.page, link.dataset.source, link);
