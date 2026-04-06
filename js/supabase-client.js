@@ -38,7 +38,8 @@ if (!window.supabase || typeof window.supabase.createClient !== 'function') {
         const request = args[0];
         const url = request instanceof Request ? request.url : String(request);
         console.info('[SupabaseFetch] Request:', url);
-        return fetch(...args)
+        const debugFetch = typeof window.fetchWithDebug === 'function' ? window.fetchWithDebug : fetch;
+        return debugFetch(...args)
           .then((response) => {
             console.info('[SupabaseFetch] Response:', {
               url,
