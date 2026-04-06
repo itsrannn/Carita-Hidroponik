@@ -4,6 +4,24 @@
 -- Perintah berikut memperbaiki relasi antara tabel 'orders' dan 'profiles'.
 -- Ini akan menyelesaikan error "Could not find a relationship" di halaman admin.
 
+-- =====================================================================================
+-- KRITIS: Pastikan user bisa update data alamatnya sendiri di tabel profiles
+-- =====================================================================================
+ALTER TABLE IF EXISTS public.profiles ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view their own profile" ON public.profiles;
+CREATE POLICY "Users can view their own profile"
+ON public.profiles
+FOR SELECT
+USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "Users can update their own data" ON public.profiles;
+CREATE POLICY "Users can update their own data"
+ON public.profiles
+FOR UPDATE
+USING (auth.uid() = id)
+WITH CHECK (auth.uid() = id);
+
 -- 1. Hapus foreign key lama (yang menunjuk ke auth.users)
 -- CATATAN: Nama constraint bisa berbeda di database Anda.
 ALTER TABLE public.orders DROP CONSTRAINT IF EXISTS orders_user_id_fkey;
