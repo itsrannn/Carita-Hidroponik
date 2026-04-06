@@ -4,29 +4,10 @@ const shippingRoutes = require('./routes/shipping.routes');
 
 const app = express();
 
-const allowedOrigins = [
-  'https://itsrannn.github.io',
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-  process.env.FRONTEND_URL,
-].filter(Boolean);
-
-function resolveAllowedOrigin(origin = '') {
-  if (!origin) return '';
-  return allowedOrigins.includes(origin) ? origin : '';
-}
-
 function applyCorsHeaders(req, res) {
-  const requestOrigin = req.headers.origin || '';
-  const allowOrigin = resolveAllowedOrigin(requestOrigin);
-
-  if (allowOrigin) {
-    res.header('Access-Control-Allow-Origin', allowOrigin);
-  }
-
-  res.header('Vary', 'Origin');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.header('Access-Control-Max-Age', '86400');
 }
 
@@ -38,7 +19,7 @@ app.use((req, res, next) => {
 
   // Handle Preflight
   if (req.method === 'OPTIONS') {
-    return res.status(204).end();
+    return res.status(200).json({ ok: true });
   }
   next();
 });

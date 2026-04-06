@@ -66,63 +66,94 @@ function parseBodyForLogging(body) {
 }
 
 window.fetchWithDebug = async (input, init = {}) => {
-  const request = input instanceof Request ? input : new Request(input, init);
+  const {
+    timeoutMs = 12000,
+    retries = 0,
+    retryDelayMs = 500,
+    ...requestInit
+  } = init || {};
+
+  const attemptFetch = async (attempt = 0) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(new Error('Request timeout')), timeoutMs);
+    const mergedInit = {
+      ...requestInit,
+      signal: controller.signal
+    };
+    const request = input instanceof Request ? input : new Request(input, mergedInit);
   const startAt = performance.now();
   const sanitizedHeaders = sanitizeHeaders(request.headers);
-  const parsedBody = parseBodyForLogging(init?.body);
+    const parsedBody = parseBodyForLogging(requestInit?.body);
 
-  console.info(`[Fetch] BEFORE ${request.method} ${request.url}`, {
-    url: request.url,
-    method: request.method,
-    mode: request.mode,
-    credentials: request.credentials,
-    headers: sanitizedHeaders,
-    payload: parsedBody
-  });
-
-  try {
-    const response = await fetch(request);
-    const duration = Math.round(performance.now() - startAt);
-
-    const responseHeaders = {};
-    response.headers.forEach((value, key) => {
-      responseHeaders[key] = value;
+    console.info(`[Fetch] BEFORE ${request.method} ${request.url}`, {
+      url: request.url,
+      method: request.method,
+      mode: request.mode,
+      credentials: request.credentials,
+      timeoutMs,
+      retries,
+      attempt,
+      headers: sanitizedHeaders,
+      payload: parsedBody
     });
 
-    let responseBodyPreview = null;
     try {
-      const cloned = response.clone();
-      const responseText = await cloned.text();
-      responseBodyPreview = responseText ? responseText.slice(0, 1000) : '';
-    } catch (_unused) {
-      responseBodyPreview = '[unavailable]';
-    }
+      const response = await fetch(request);
+      clearTimeout(timeoutId);
+      const duration = Math.round(performance.now() - startAt);
 
-    console.info(`[Fetch] AFTER ${request.method} ${request.url} (${duration}ms)`, {
-      status: response.status,
-      ok: response.ok,
-      headers: responseHeaders,
-      bodyPreview: responseBodyPreview
-    });
+      const responseHeaders = {};
+      response.headers.forEach((value, key) => {
+        responseHeaders[key] = value;
+      });
 
-    if (!response.ok) {
-      console.warn('[Fetch] Non-2xx response detected.', {
-        url: request.url,
+      let responseBodyPreview = null;
+      try {
+        const cloned = response.clone();
+        const responseText = await cloned.text();
+        responseBodyPreview = responseText ? responseText.slice(0, 1000) : '';
+      } catch (_unused) {
+        responseBodyPreview = '[unavailable]';
+      }
+
+      console.info(`[Fetch] AFTER ${request.method} ${request.url} (${duration}ms)`, {
         status: response.status,
+        ok: response.ok,
+        headers: responseHeaders,
         bodyPreview: responseBodyPreview
       });
-    }
 
-    return response;
-  } catch (error) {
-    const duration = Math.round(performance.now() - startAt);
-    console.error(`[Fetch] FAILED ${request.method} ${request.url} (${duration}ms)`, {
-      message: error?.message || String(error),
-      name: error?.name,
-      stack: error?.stack || null
-    });
-    throw error;
-  }
+      if (!response.ok) {
+        console.warn('[Fetch] Non-2xx response detected.', {
+          url: request.url,
+          status: response.status,
+          bodyPreview: responseBodyPreview
+        });
+      }
+
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      const duration = Math.round(performance.now() - startAt);
+      const canRetry = attempt < retries;
+      console.error(`[Fetch] FAILED ${request.method} ${request.url} (${duration}ms)`, {
+        message: error?.message || String(error),
+        name: error?.name,
+        attempt,
+        canRetry,
+        stack: error?.stack || null
+      });
+
+      if (canRetry) {
+        await new Promise((resolve) => setTimeout(resolve, retryDelayMs * (attempt + 1)));
+        return attemptFetch(attempt + 1);
+      }
+
+      throw error;
+    }
+  };
+
+  return attemptFetch(0);
 };
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -908,6 +939,8 @@ document.addEventListener("alpine:init", () => {
 
             const response = await window.fetchWithDebug(`${API_BASE_URL}/api/shipping/cost`, {
               method: 'POST',
+              timeoutMs: 15000,
+              retries: 1,
               headers: {
                 'Content-Type': 'application/json',
                 Authorization: `Bearer ${session.access_token}`
@@ -917,6 +950,16 @@ document.addEventListener("alpine:init", () => {
                 courier: this.shipping.courier
               })
             });
+            const parseResponseBody = async () => {
+              const raw = await response.text();
+              if (!raw) return null;
+              try {
+                return JSON.parse(raw);
+              } catch (_unused) {
+                return { message: raw };
+              }
+            };
+
             if (response.status === 401) {
               this.isLoginModalOpen = true;
               this.regions.services = [];
@@ -929,8 +972,15 @@ document.addEventListener("alpine:init", () => {
               this.shipping.cost = 0;
               return;
             }
-            if (!response.ok) throw new Error('Failed to calculate shipping cost');
-            const data = await response.json();
+            if (!response.ok) {
+              const errorBody = await parseResponseBody();
+              throw new Error(errorBody?.message || `Failed to calculate shipping cost (${response.status})`);
+            }
+
+            const data = await parseResponseBody();
+            if (!data || !Array.isArray(data.costs)) {
+              throw new Error('Shipping API returned invalid response format.');
+            }
             this.regions.services = data.costs;
             this.shipping.destinationCityId = data.destination_city_id || '';
 
@@ -945,7 +995,10 @@ document.addEventListener("alpine:init", () => {
             }
           } catch (error) {
             console.error(error);
-            window.showNotification('Failed to get shipping services.', true);
+            const message = error?.name === 'AbortError'
+              ? 'Shipping request timed out. Please try again.'
+              : `Failed to get shipping services: ${error?.message || 'Unknown error'}`;
+            window.showNotification(message, true);
           }
         },
 
@@ -1667,32 +1720,47 @@ document.addEventListener("alpine:init", () => {
             return null;
         },
 
-        async saveProfileWithUpsert(payload, mode = 'profile') {
+        async saveProfileWithUpdate(payload, mode = 'profile') {
             const validationError = this.validateProfilePayload(payload, mode);
             if (validationError) {
                 throw new Error(validationError);
             }
 
-            const rowToSave = {
-                id: this.user.id,
+            const rowToUpdate = {
                 ...payload,
                 updated_at: new Date().toISOString()
             };
 
-            console.info('[Profile] Upsert request mode:', mode);
-            console.info('[Profile] Upsert payload:', rowToSave);
+            console.info('[Profile] Update request mode:', mode);
+            console.info('[Profile] Update payload:', rowToUpdate);
 
             const { data, error } = await supabase
                 .from('profiles')
-                .upsert(rowToSave, { onConflict: 'id' })
+                .update(rowToUpdate)
+                .eq('id', this.user.id)
+                .select()
+                .maybeSingle();
+
+            console.info('[Profile] Update response data:', data);
+            console.info('[Profile] Update response error:', error);
+
+            if (error) throw error;
+            if (data) return data;
+
+            const rowToInsert = {
+                id: this.user.id,
+                ...rowToUpdate
+            };
+            console.info('[Profile] No existing row found. Inserting profile row:', rowToInsert);
+
+            const { data: insertedData, error: insertError } = await supabase
+                .from('profiles')
+                .insert(rowToInsert)
                 .select()
                 .single();
 
-            console.info('[Profile] Upsert response data:', data);
-            console.info('[Profile] Upsert response error:', error);
-
-            if (error) throw error;
-            return data;
+            if (insertError) throw insertError;
+            return insertedData;
         },
 
         async saveProfileWithRpc(payload, mode = 'profile') {
@@ -1728,7 +1796,7 @@ document.addEventListener("alpine:init", () => {
                     phone_number: this.profile.phone_number
                 };
 
-                const profileData = await this.saveProfileWithUpsert(payload, 'profile');
+                const profileData = await this.saveProfileWithUpdate(payload, 'profile');
 
                 if (profileData) {
                     this.profile = { ...this.profile, ...profileData };
@@ -1766,7 +1834,7 @@ document.addEventListener("alpine:init", () => {
                 console.info('[Profile] Updating address user id:', this.user?.id);
                 console.info('[Profile] Updating address payload:', payload);
 
-                const addressData = await this.saveProfileWithUpsert(payload, 'address');
+                const addressData = await this.saveProfileWithUpdate(payload, 'address');
 
                 if (addressData) {
                     this.profile = { ...this.profile, ...addressData };
