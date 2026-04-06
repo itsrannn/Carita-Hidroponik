@@ -189,7 +189,8 @@
 
                 <template x-if="processedItems().length === 0">
                   <div class="no-products-message" style="text-align: center; padding: 2rem; width: 100%;">
-                    <p x-text="$store.i18n.t('products.noneFound')">No products found.</p>
+                    <p x-show="!$store.products.errorMessage" x-text="$store.i18n.t('products.noneFound')">No products found.</p>
+                    <p x-show="$store.products.errorMessage" x-text="$store.products.errorMessage">Products are temporarily unavailable.</p>
                   </div>
                 </template>
               </section>
@@ -302,7 +303,7 @@
             this.isLoading = true;
             try {
               if (!window.supabase) {
-                console.error("Supabase client not loaded.");
+                console.warn("[News] Supabase client not loaded.");
                 return;
               }
               const { data, error } = await window.supabase
@@ -315,6 +316,9 @@
                 ...item,
                 image_url: window.fixImagePath(item.image_url)
               }));
+              if (!this.newsItems.length) {
+                console.warn('[News] No published records returned by query.');
+              }
             } catch (error) {
               console.error("Gagal memuat berita:", error);
             } finally {
