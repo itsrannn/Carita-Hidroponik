@@ -22,6 +22,12 @@ FOR UPDATE
 USING (auth.uid() = id)
 WITH CHECK (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can insert their own profile" ON public.profiles;
+CREATE POLICY "Users can insert their own profile"
+ON public.profiles
+FOR INSERT
+WITH CHECK (auth.uid() = id);
+
 -- 1. Hapus foreign key lama (yang menunjuk ke auth.users)
 -- CATATAN: Nama constraint bisa berbeda di database Anda.
 ALTER TABLE public.orders DROP CONSTRAINT IF EXISTS orders_user_id_fkey;
