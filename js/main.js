@@ -16,8 +16,18 @@ window.toAppPath = (relativePath = '') => {
 };
 window.toAppUrl = (relativePath = '') => new URL(window.toAppPath(relativePath), window.location.origin).href;
 
+window.onerror = function onGlobalError(message, source, lineno, colno, error) {
+  console.error('[GlobalError] window.onerror:', {
+    message,
+    source,
+    line: lineno,
+    column: colno,
+    stack: error?.stack || null
+  });
+};
+
 window.addEventListener('error', (event) => {
-  console.error('[GlobalError] Unhandled runtime error:', {
+  console.error('[GlobalError] addEventListener("error"):', {
     message: event.message,
     source: event.filename,
     line: event.lineno,
@@ -30,18 +40,87 @@ window.addEventListener('unhandledrejection', (event) => {
   console.error('[GlobalError] Unhandled promise rejection:', event.reason);
 });
 
+function sanitizeHeaders(headersInput = {}) {
+  const headers = new Headers(headersInput);
+  const headerObject = {};
+  headers.forEach((value, key) => {
+    if (key.toLowerCase() === 'authorization') {
+      headerObject[key] = value ? 'Bearer ***redacted***' : '';
+      return;
+    }
+    headerObject[key] = value;
+  });
+  return headerObject;
+}
+
+function parseBodyForLogging(body) {
+  if (!body) return null;
+  if (typeof body === 'string') {
+    try {
+      return JSON.parse(body);
+    } catch (_unused) {
+      return body;
+    }
+  }
+  return body;
+}
+
 window.fetchWithDebug = async (input, init = {}) => {
   const request = input instanceof Request ? input : new Request(input, init);
   const startAt = performance.now();
-  console.info(`[Fetch] ${request.method} ${request.url}`, { init });
+  const sanitizedHeaders = sanitizeHeaders(request.headers);
+  const parsedBody = parseBodyForLogging(init?.body);
+
+  console.info(`[Fetch] BEFORE ${request.method} ${request.url}`, {
+    url: request.url,
+    method: request.method,
+    mode: request.mode,
+    credentials: request.credentials,
+    headers: sanitizedHeaders,
+    payload: parsedBody
+  });
+
   try {
     const response = await fetch(request);
     const duration = Math.round(performance.now() - startAt);
-    console.info(`[Fetch] ${response.status} ${request.url} (${duration}ms)`, { ok: response.ok });
+
+    const responseHeaders = {};
+    response.headers.forEach((value, key) => {
+      responseHeaders[key] = value;
+    });
+
+    let responseBodyPreview = null;
+    try {
+      const cloned = response.clone();
+      const responseText = await cloned.text();
+      responseBodyPreview = responseText ? responseText.slice(0, 1000) : '';
+    } catch (_unused) {
+      responseBodyPreview = '[unavailable]';
+    }
+
+    console.info(`[Fetch] AFTER ${request.method} ${request.url} (${duration}ms)`, {
+      status: response.status,
+      ok: response.ok,
+      headers: responseHeaders,
+      bodyPreview: responseBodyPreview
+    });
+
+    if (!response.ok) {
+      console.warn('[Fetch] Non-2xx response detected.', {
+        url: request.url,
+        status: response.status,
+        bodyPreview: responseBodyPreview
+      });
+    }
+
     return response;
   } catch (error) {
     const duration = Math.round(performance.now() - startAt);
-    console.error(`[Fetch] FAILED ${request.url} (${duration}ms)`, error);
+    console.error(`[Fetch] FAILED ${request.method} ${request.url} (${duration}ms)`, {
+      message: error?.message || String(error),
+      name: error?.name,
+      stack: error?.stack || null
+    });
     throw error;
   }
 };
@@ -1609,35 +1688,32 @@ document.addEventListener("alpine:init", () => {
                     updated_at: new Date().toISOString()
                 };
 
-                const { data: authData, error: authError } = await supabase.auth.getUser();
-                if (authError) {
-                    throw authError;
+                const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+                if (sessionError) throw sessionError;
+                const session = sessionData?.session;
+                if (!session?.access_token || !session?.user?.id) {
+                    throw new Error('Missing active Supabase session. Please log in again.');
                 }
 
-                const currentUser = authData?.user;
-                console.log('USER:', currentUser);
-
-                if (!currentUser) {
-                    throw new Error('USER NOT AUTHENTICATED');
-                }
-
-                console.log('Updating user:', currentUser.id);
+                console.info('[Profile] Updating address payload:', payload);
+                console.info('[Profile] Updating address user id:', session.user.id);
 
                 const { data: addressData, error: addressError } = await supabase
-                    .from('users')
+                    .from('profiles')
                     .update(payload)
-                    .eq('id', currentUser.id)
+                    .eq('id', session.user.id)
                     .select()
                     .single();
 
                 if (addressError) {
-                    console.error('Supabase users update error object:', addressError);
+                    console.error('Supabase profiles update error object:', addressError);
                     throw addressError;
                 }
 
                 if (addressData) {
                     this.profile = { ...this.profile, ...addressData };
-                    this.user = currentUser;
+                    this.user = session.user;
+                    console.info('[Profile] Address update success:', addressData);
                     window.showNotification('Address updated successfully!');
                     this.editAddressMode = false;
                 }
