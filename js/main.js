@@ -1534,16 +1534,9 @@ document.addEventListener("alpine:init", () => {
             const villageName = this.villages.find(v => v.id === this.selectedVillage)?.name || '';
 
             try {
-                const { data: authData, error: authError } = await supabase.auth.getUser();
-                if (authError) {
-                    throw authError;
-                }
-
-                const currentUser = authData?.user;
-                if (!currentUser?.id) {
-                    throw new Error('You must be logged in to update address.');
-                }
-
+                const supabaseUrl = window.__SUPABASE_CONFIG?.url || 'MISSING_SUPABASE_URL';
+                const supabaseAnonKey = window.__SUPABASE_CONFIG?.anonKey || '';
+                const isHttps = window.location.protocol === 'https:';
                 const payload = {
                     address: this.profile.address,
                     postal_code: this.profile.postal_code,
@@ -1556,31 +1549,80 @@ document.addEventListener("alpine:init", () => {
                     updated_at: new Date().toISOString()
                 };
 
+                console.log('SUPABASE URL:', supabaseUrl);
+                console.log('PAYLOAD:', payload);
+                console.log('PAGE PROTOCOL:', window.location.protocol);
+
+                if (!isHttps && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+                    throw new Error('FRONTEND MUST USE HTTPS');
+                }
+
+                if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/i.test(supabaseUrl)) {
+                    throw new Error(`INVALID SUPABASE URL: ${supabaseUrl}`);
+                }
+
+                if (/localhost|127\.0\.0\.1|:\d+/i.test(supabaseUrl)) {
+                    throw new Error(`INVALID SUPABASE URL HOST/PORT: ${supabaseUrl}`);
+                }
+
+                const networkProbeResponse = await fetch(`${supabaseUrl}/rest/v1/users`, {
+                    method: 'GET',
+                    headers: {
+                        apikey: supabaseAnonKey,
+                    },
+                });
+
+                console.log('NETWORK PROBE STATUS:', networkProbeResponse.status);
+                if (!networkProbeResponse.ok) {
+                    const networkProbeText = await networkProbeResponse.text();
+                    console.log('NETWORK PROBE BODY:', networkProbeText);
+                    throw new Error(`NETWORK PROBE FAILED WITH STATUS ${networkProbeResponse.status}`);
+                }
+
+                const { data: authData, error: authError } = await supabase.auth.getUser();
+                if (authError) {
+                    throw authError;
+                }
+
+                const currentUser = authData?.user;
+                console.log('USER:', currentUser);
+
+                if (!currentUser) {
+                    throw new Error('USER NOT AUTHENTICATED');
+                }
+
                 const { data, error } = await supabase
+                    .from('users')
+                    .update({ city: 'test' })
+                    .eq('id', currentUser.id)
+                    .select()
+                    .single();
+
+                if (error) {
+                    console.error('Supabase minimal update error object:', error);
+                    throw error;
+                }
+
+                const { data: addressData, error: addressError } = await supabase
                     .from('profiles')
                     .update(payload)
                     .eq('id', currentUser.id)
                     .select()
                     .single();
 
-                if (error) {
-                    console.error('Supabase updateAddress error:', {
-                        message: error.message,
-                        code: error.code,
-                        details: error.details,
-                        hint: error.hint
-                    });
-                    throw error;
+                if (addressError) {
+                    console.error('Supabase profile update error object:', addressError);
+                    throw addressError;
                 }
 
-                if (data) {
-                    this.profile = { ...this.profile, ...data };
+                if (addressData) {
+                    this.profile = { ...this.profile, ...addressData };
                     this.user = currentUser;
                     window.showNotification('Address updated successfully!');
                     this.editAddressMode = false;
                 }
             } catch (error) {
-                console.error('updateAddress request failed:', error);
+                console.error('updateAddress request failed (full object):', error);
 
                 let userMessage = error?.message || 'Unknown error while updating address.';
                 if (error instanceof TypeError && String(error.message).toLowerCase().includes('fetch')) {
