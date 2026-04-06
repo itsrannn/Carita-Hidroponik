@@ -1534,7 +1534,17 @@ document.addEventListener("alpine:init", () => {
             const villageName = this.villages.find(v => v.id === this.selectedVillage)?.name || '';
 
             try {
-                const { data, error } = await supabase.from('profiles').update({
+                const { data: authData, error: authError } = await supabase.auth.getUser();
+                if (authError) {
+                    throw authError;
+                }
+
+                const currentUser = authData?.user;
+                if (!currentUser?.id) {
+                    throw new Error('You must be logged in to update address.');
+                }
+
+                const payload = {
                     address: this.profile.address,
                     postal_code: this.profile.postal_code,
                     province: provinceName,
@@ -1543,18 +1553,41 @@ document.addEventListener("alpine:init", () => {
                     village: villageName,
                     latitude: this.profile.latitude,
                     longitude: this.profile.longitude,
-                    updated_at: new Date()
-                }).eq('id', this.user.id).select().single();
+                    updated_at: new Date().toISOString()
+                };
 
-                if (error) throw error;
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .update(payload)
+                    .eq('id', currentUser.id)
+                    .select()
+                    .single();
+
+                if (error) {
+                    console.error('Supabase updateAddress error:', {
+                        message: error.message,
+                        code: error.code,
+                        details: error.details,
+                        hint: error.hint
+                    });
+                    throw error;
+                }
 
                 if (data) {
                     this.profile = { ...this.profile, ...data };
+                    this.user = currentUser;
                     window.showNotification('Address updated successfully!');
                     this.editAddressMode = false;
                 }
             } catch (error) {
-                window.showNotification('Error updating address: ' + error.message, true);
+                console.error('updateAddress request failed:', error);
+
+                let userMessage = error?.message || 'Unknown error while updating address.';
+                if (error instanceof TypeError && String(error.message).toLowerCase().includes('fetch')) {
+                    userMessage = 'Network request failed. Check Supabase URL, CORS, and internet connection.';
+                }
+
+                window.showNotification('Error updating address: ' + userMessage, true);
             } finally {
                 this.loading = false;
             }
