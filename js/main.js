@@ -2,32 +2,86 @@
 const API_BASE_URL = 'https://backend-carita-hidroponik.vercel.app';
 const SNAP_TOKEN_ENDPOINT = 'https://backend-carita-hidroponik.vercel.app/api/payment/create-snap-token';
 
+const APP_BASE_PATH = (() => {
+  const { hostname, pathname } = window.location;
+  if (!hostname.endsWith('github.io')) return '';
+  const [repoSegment] = pathname.split('/').filter(Boolean);
+  return repoSegment ? `/${repoSegment}` : '';
+})();
+
+window.APP_BASE_PATH = APP_BASE_PATH;
+window.toAppPath = (relativePath = '') => {
+  const normalized = String(relativePath).replace(/^\/+/, '');
+  return `${APP_BASE_PATH}/${normalized}`.replace(/\/{2,}/g, '/');
+};
+window.toAppUrl = (relativePath = '') => new URL(window.toAppPath(relativePath), window.location.origin).href;
+
+window.addEventListener('error', (event) => {
+  console.error('[GlobalError] Unhandled runtime error:', {
+    message: event.message,
+    source: event.filename,
+    line: event.lineno,
+    column: event.colno,
+    stack: event.error?.stack || null
+  });
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('[GlobalError] Unhandled promise rejection:', event.reason);
+});
+
+window.fetchWithDebug = async (input, init = {}) => {
+  const request = input instanceof Request ? input : new Request(input, init);
+  const startAt = performance.now();
+  console.info(`[Fetch] ${request.method} ${request.url}`, { init });
+  try {
+    const response = await fetch(request);
+    const duration = Math.round(performance.now() - startAt);
+    console.info(`[Fetch] ${response.status} ${request.url} (${duration}ms)`, { ok: response.ok });
+    return response;
+  } catch (error) {
+    const duration = Math.round(performance.now() - startAt);
+    console.error(`[Fetch] FAILED ${request.url} (${duration}ms)`, error);
+    throw error;
+  }
+};
+
 document.addEventListener("DOMContentLoaded", function () {
-  const loadComponent = (id, path) => {
-    const url = new URL(path, window.location.href).href;
-    fetch(url)
-      .then((response) => response.text())
-      .then((html) => {
-        document.getElementById(id).innerHTML = html;
-        // Re-evaluate scripts in the loaded component
-        const scripts = document
-          .getElementById(id)
-          .querySelectorAll("script");
-        scripts.forEach((script) => {
-          const newScript = document.createElement("script");
-          newScript.textContent = script.textContent;
-          document.body.appendChild(newScript).remove();
-        });
-         // After all components are loaded and scripts are evaluated
+  const loadComponent = async (id, path) => {
+    const mountNode = document.getElementById(id);
+    if (!mountNode) {
+      console.warn(`[ComponentLoader] Target #${id} not found. Skipping ${path}.`);
+      return;
+    }
+
+    const url = window.toAppUrl(path);
+    try {
+      const response = await window.fetchWithDebug(url, { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`Component request failed with status ${response.status}`);
+      }
+
+      const html = await response.text();
+      mountNode.innerHTML = html;
+
+      const scripts = mountNode.querySelectorAll("script");
+      scripts.forEach((script) => {
+        const newScript = document.createElement("script");
+        newScript.textContent = script.textContent;
+        document.body.appendChild(newScript).remove();
+      });
+
+      if (window.feather?.replace) {
         feather.replace();
-      })
-      .catch((error) =>
-        console.error(`Failed to load component ${url}:`, error)
-      );
+      }
+    } catch (error) {
+      console.error(`[ComponentLoader] Failed to load component "${path}" from ${url}.`, error);
+      mountNode.innerHTML = '<div class="component-fallback" style="padding:1rem;text-align:center;color:#666;">Failed to load page section.</div>';
+    }
   };
 
-  loadComponent("header-include", "components/header.html");
-  loadComponent("footer-include", "components/footer.html");
+  loadComponent("header-include", "/components/header.html");
+  loadComponent("footer-include", "/components/footer.html");
 
   // Force re-initialization of the cart from localStorage when a page is shown from bfcache
   window.addEventListener('pageshow', (event) => {
@@ -130,8 +184,8 @@ document.addEventListener("alpine:init", () => {
 
     async load() {
         try {
-            const localeUrl = new URL(`locales/${this.lang}.json?v=${new Date().getTime()}`, window.location.href).href;
-            const response = await fetch(localeUrl);
+            const localeUrl = window.toAppUrl(`locales/${this.lang}.json?v=${new Date().getTime()}`);
+            const response = await window.fetchWithDebug(localeUrl);
             if (!response.ok) throw new Error('Translations file not found');
             this.translations = await response.json();
         } catch (error) {
@@ -162,17 +216,26 @@ document.addEventListener("alpine:init", () => {
   Alpine.store("products", {
     all: [],
     isLoading: true,
+    errorMessage: '',
     async init() {
       this.isLoading = true;
+      this.errorMessage = '';
       try {
+        if (!window.supabase) {
+          throw new Error('Supabase client is undefined. Check js/supabase-client.js and CDN script loading.');
+        }
         const { data, error } = await window.supabase
           .from("products")
           .select("*")
           .order("id", { ascending: true });
         if (error) throw error;
         this.all = data || [];
+        if (!this.all.length) {
+          console.warn('[Products] Query succeeded but returned zero records.');
+        }
       } catch (err) {
         console.error("Failed to fetch products:", err);
+        this.errorMessage = 'Products are temporarily unavailable.';
         this.all = []; // Ensure data is empty on error
       } finally {
         this.isLoading = false;
@@ -764,7 +827,7 @@ document.addEventListener("alpine:init", () => {
               return;
             }
 
-            const response = await fetch(`${API_BASE_URL}/api/shipping/cost`, {
+            const response = await window.fetchWithDebug(`${API_BASE_URL}/api/shipping/cost`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -873,7 +936,7 @@ document.addEventListener("alpine:init", () => {
         async notifyBackendPaymentStatus(endpoint, payload, fallbackMessage) {
           try {
             const apiUrl = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
-            const response = await fetch(apiUrl, {
+            const response = await window.fetchWithDebug(apiUrl, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(payload)
@@ -1092,7 +1155,7 @@ document.addEventListener("alpine:init", () => {
             const orderData = transactionPayload;
             console.log('Requesting snap token...');
 
-            const tokenResponse = await fetch(SNAP_TOKEN_ENDPOINT, {
+            const tokenResponse = await window.fetchWithDebug(SNAP_TOKEN_ENDPOINT, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
@@ -1339,7 +1402,7 @@ document.addEventListener("alpine:init", () => {
         // --- Regional Data Fetching ---
         async fetchProvinces() {
             try {
-                const response = await fetch('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json');
+                const response = await window.fetchWithDebug('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json');
                 this.provinces = await response.json();
             } catch (error) {
                 console.error("Failed to load provinces:", error);
@@ -1354,7 +1417,7 @@ document.addEventListener("alpine:init", () => {
                 return;
             }
             try {
-                const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${this.selectedProvince}.json`);
+                const response = await window.fetchWithDebug(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${this.selectedProvince}.json`);
                 this.regencies = await response.json();
                 this.districts = [];
                 this.villages = [];
@@ -1370,7 +1433,7 @@ document.addEventListener("alpine:init", () => {
                 return;
             }
             try {
-                const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/${this.selectedRegency}.json`);
+                const response = await window.fetchWithDebug(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/${this.selectedRegency}.json`);
                 this.districts = await response.json();
                 this.villages = [];
             } catch (error) {
@@ -1384,7 +1447,7 @@ document.addEventListener("alpine:init", () => {
                 return;
             }
             try {
-                const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/villages/${this.selectedDistrict}.json`);
+                const response = await window.fetchWithDebug(`https://www.emsifa.com/api-wilayah-indonesia/api/villages/${this.selectedDistrict}.json`);
                 this.villages = await response.json();
             } catch (error) {
                 console.error("Failed to load villages:", error);
@@ -1615,5 +1678,3 @@ window.showNotification = (message, isError = false) => {
     notificationElement.classList.remove('show');
   }, 3000);
 };
-
-di main.js gini 
