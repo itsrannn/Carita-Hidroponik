@@ -99,30 +99,11 @@
 
               <div class="shipping-form" x-show="$store.cart.items.length > 0">
                 <h4 x-text="$store.i18n.t('account.address.title')">Shipping Address</h4>
-
-                <div class="form-group">
-                  <label x-text="$store.i18n.t('cart.summary.province')">Province</label>
-                  <select class="form-control" x-model="shipping.province" @change="fetchCities()">
-                    <option value="" x-text="$store.i18n.t('account.address.provincePlaceholder')">Select Province</option>
-                    <template x-for="p in regions.provinces" :key="p.province_id">
-                      <option :value="p.province_id" x-text="p.province"></option>
-                    </template>
-                  </select>
-                </div>
-
-                <div class="form-group">
-                  <label x-text="$store.i18n.t('cart.summary.city')">City</label>
-                  <select class="form-control" x-model="shipping.city" :disabled="!shipping.province" @change="calculateShipping()">
-                    <option value="" x-text="$store.i18n.t('account.address.regencyPlaceholder')">Select City</option>
-                    <template x-for="c in regions.cities" :key="c.city_id">
-                      <option :value="c.city_id" x-text="`${c.type} ${c.city_name}`"></option>
-                    </template>
-                  </select>
-                </div>
+                <p style="font-size: 0.85rem; margin-bottom: 0.75rem;" x-show="shipping.addressLabel" x-text="shipping.addressLabel"></p>
 
                 <div class="form-group">
                   <label x-text="$store.i18n.t('cart.summary.courier')">Courier</label>
-                  <select class="form-control" x-model="shipping.courier" :disabled="!shipping.city" @change="calculateShipping()">
+                  <select class="form-control" x-model="shipping.courier" @change="calculateShipping()">
                     <option value="jne">JNE</option>
                     <option value="pos">POS Indonesia</option>
                     <option value="tiki">TIKI</option>

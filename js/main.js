@@ -725,70 +725,72 @@ document.addEventListener("alpine:init", () => {
         isSnapPopupActive: false,
         userProfile: null,
         regions: {
-          provinces: [],
-          cities: [],
           services: []
         },
         shipping: {
-          province: '',
-          city: '',
           courier: 'jne',
           service: '',
           cost: 0,
-          details: null
+          details: null,
+          destinationCityId: '',
+          addressLabel: ''
         },
 
         async init() {
-          await this.fetchProvinces();
-        },
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) return;
 
-        async fetchProvinces() {
-          try {
-            const response = await fetch(`${API_BASE_URL}/api/shipping/provinces`);
-            if (!response.ok) throw new Error('Failed to fetch provinces');
-            this.regions.provinces = await response.json();
-          } catch (error) {
-            console.error(error);
-          }
-        },
-
-        async fetchCities() {
-          if (!this.shipping.province) {
-            this.regions.cities = [];
+          const { complete, profile } = await this.isProfileComplete();
+          if (!complete) {
+            this.isProfileModalOpen = true;
             return;
           }
-          try {
-            const response = await fetch(`${API_BASE_URL}/api/shipping/cities/${this.shipping.province}`);
-            if (!response.ok) throw new Error('Failed to fetch cities');
-            this.regions.cities = await response.json();
-            this.shipping.city = '';
-            this.regions.services = [];
-            this.shipping.cost = 0;
-          } catch (error) {
-            console.error(error);
-          }
+          this.userProfile = profile;
+          this.shipping.addressLabel = `${profile.address}, ${profile.district}, ${profile.regency}, ${profile.province}`;
+          await this.calculateShipping();
         },
 
         async calculateShipping() {
-          if (!this.shipping.city || !this.shipping.courier || this.$store.cart.items.length === 0) {
+          if (!this.shipping.courier || this.$store.cart.items.length === 0) {
             this.regions.services = [];
             this.shipping.cost = 0;
             return;
           }
 
           try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session?.access_token) {
+              this.isLoginModalOpen = true;
+              return;
+            }
+
             const response = await fetch(`${API_BASE_URL}/api/shipping/cost`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${session.access_token}`
+              },
               body: JSON.stringify({
-                destination: this.shipping.city,
                 weight: this.$store.cart.totalWeight,
                 courier: this.shipping.courier
               })
             });
+            if (response.status === 401) {
+              this.isLoginModalOpen = true;
+              this.regions.services = [];
+              this.shipping.cost = 0;
+              return;
+            }
+            if (response.status === 409) {
+              this.isProfileModalOpen = true;
+              this.regions.services = [];
+              this.shipping.cost = 0;
+              return;
+            }
             if (!response.ok) throw new Error('Failed to calculate shipping cost');
             const data = await response.json();
             this.regions.services = data.costs;
+            this.shipping.destinationCityId = data.destination_city_id || '';
 
             // Auto-select first service if available
             if (this.regions.services.length > 0) {
@@ -797,6 +799,7 @@ document.addEventListener("alpine:init", () => {
             } else {
               this.shipping.cost = 0;
               this.shipping.service = '';
+              this.shipping.destinationCityId = '';
             }
           } catch (error) {
             console.error(error);
@@ -1010,6 +1013,14 @@ document.addEventListener("alpine:init", () => {
             return;
           }
 
+          if (!this.shipping.details) {
+            await this.calculateShipping();
+            if (!this.shipping.details) {
+              window.showNotification('Shipping service is unavailable. Please verify your profile address and courier.', true);
+              return;
+            }
+          }
+
           const { data: { user } } = await supabase.auth.getUser();
           if (!user) {
             window.showNotification('Session not found. Please log in again.', true);
@@ -1029,7 +1040,7 @@ document.addEventListener("alpine:init", () => {
             email: user.email,
             shipping_address: {
               ...profile,
-              rajaongkir_city_id: this.shipping.city,
+              rajaongkir_city_id: this.shipping.destinationCityId,
               courier: this.shipping.courier,
               shipping_service: this.shipping.details?.service,
               shipping_cost: shippingCost
