@@ -191,3 +191,75 @@ ON public.news
 FOR ALL
 USING (is_admin())
 WITH CHECK (is_admin());
+
+-- =====================================================================================
+-- RPC: PROFILE UPDATE TANPA HTTP PATCH (gunakan POST /rpc/update_profile)
+-- =====================================================================================
+
+CREATE OR REPLACE FUNCTION public.update_profile(
+    user_id uuid,
+    full_name text DEFAULT NULL,
+    phone_number text DEFAULT NULL,
+    address text DEFAULT NULL
+)
+RETURNS TABLE (
+    id uuid,
+    full_name text,
+    phone_number text,
+    address text,
+    postal_code text,
+    province text,
+    regency text,
+    district text,
+    village text,
+    latitude double precision,
+    longitude double precision,
+    updated_at timestamptz
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+    IF auth.uid() IS NULL THEN
+        RAISE EXCEPTION 'Not authenticated';
+    END IF;
+
+    IF auth.uid() <> user_id THEN
+        RAISE EXCEPTION 'You can only update your own profile';
+    END IF;
+
+    RETURN QUERY
+    UPDATE public.profiles p
+    SET
+        full_name = COALESCE(update_profile.full_name, p.full_name),
+        phone_number = COALESCE(update_profile.phone_number, p.phone_number),
+        address = COALESCE(update_profile.address, p.address),
+        updated_at = timezone('utc'::text, now())
+    WHERE p.id = user_id
+    RETURNING
+        p.id,
+        p.full_name,
+        p.phone_number,
+        p.address,
+        p.postal_code,
+        p.province,
+        p.regency,
+        p.district,
+        p.village,
+        p.latitude,
+        p.longitude,
+        p.updated_at;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.update_profile(uuid, text, text, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.update_profile(uuid, text, text, text) TO authenticated;
+
+-- Kebijakan RLS spesifik update profil sendiri (id = auth.uid())
+DROP POLICY IF EXISTS "profiles_update_own" ON public.profiles;
+CREATE POLICY "profiles_update_own"
+ON public.profiles
+FOR UPDATE
+USING (auth.uid() = id)
+WITH CHECK (auth.uid() = id);

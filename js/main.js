@@ -1644,24 +1644,100 @@ document.addEventListener("alpine:init", () => {
             }
         },
 
+        validateProfilePayload(payload, mode = 'profile') {
+            if (!this.user?.id) {
+                return 'Missing authenticated user id.';
+            }
+
+            if (mode === 'profile') {
+                if (!payload.full_name || payload.full_name.trim().length < 2) {
+                    return 'Full name must be at least 2 characters.';
+                }
+                if (!payload.phone_number || payload.phone_number.trim().length < 6) {
+                    return 'Phone number must be at least 6 characters.';
+                }
+            }
+
+            if (mode === 'address') {
+                if (!payload.address || payload.address.trim().length < 8) {
+                    return 'Address must be at least 8 characters.';
+                }
+            }
+
+            return null;
+        },
+
+        async saveProfileWithUpsert(payload, mode = 'profile') {
+            const validationError = this.validateProfilePayload(payload, mode);
+            if (validationError) {
+                throw new Error(validationError);
+            }
+
+            const rowToSave = {
+                id: this.user.id,
+                ...payload,
+                updated_at: new Date().toISOString()
+            };
+
+            console.info('[Profile] Upsert request mode:', mode);
+            console.info('[Profile] Upsert payload:', rowToSave);
+
+            const { data, error } = await supabase
+                .from('profiles')
+                .upsert(rowToSave, { onConflict: 'id' })
+                .select()
+                .single();
+
+            console.info('[Profile] Upsert response data:', data);
+            console.info('[Profile] Upsert response error:', error);
+
+            if (error) throw error;
+            return data;
+        },
+
+        async saveProfileWithRpc(payload, mode = 'profile') {
+            const validationError = this.validateProfilePayload(payload, mode);
+            if (validationError) {
+                throw new Error(validationError);
+            }
+
+            const rpcPayload = {
+                user_id: this.user.id,
+                full_name: payload.full_name ?? null,
+                phone_number: payload.phone_number ?? null,
+                address: payload.address ?? null
+            };
+
+            console.info('[Profile] RPC request mode:', mode);
+            console.info('[Profile] RPC payload:', rpcPayload);
+
+            const { data, error } = await supabase.rpc('update_profile', rpcPayload);
+
+            console.info('[Profile] RPC response data:', data);
+            console.info('[Profile] RPC response error:', error);
+
+            if (error) throw error;
+            return Array.isArray(data) ? data[0] : data;
+        },
+
         async updateProfile() {
             this.loading = true;
             try {
-                const { data, error } = await supabase.from('profiles').update({
+                const payload = {
                     full_name: this.profile.full_name,
-                    phone_number: this.profile.phone_number,
-                    updated_at: new Date()
-                }).eq('id', this.user.id).select().single();
+                    phone_number: this.profile.phone_number
+                };
 
-                if (error) throw error;
+                const profileData = await this.saveProfileWithUpsert(payload, 'profile');
 
-                if (data) {
-                    this.profile = { ...this.profile, ...data };
+                if (profileData) {
+                    this.profile = { ...this.profile, ...profileData };
                     window.showNotification('Profile updated successfully!');
                     this.editProfileMode = false;
                 }
             } catch (error) {
-                window.showNotification('Error updating profile: ' + error.message, true);
+                console.error('[Profile] updateProfile failed:', error);
+                window.showNotification('Error updating profile: ' + (error.message || 'Unknown error'), true);
             } finally {
                 this.loading = false;
             }
@@ -1684,35 +1760,16 @@ document.addEventListener("alpine:init", () => {
                     district: districtName,
                     village: villageName,
                     latitude: this.profile.latitude,
-                    longitude: this.profile.longitude,
-                    updated_at: new Date().toISOString()
+                    longitude: this.profile.longitude
                 };
 
-                const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-                if (sessionError) throw sessionError;
-                const session = sessionData?.session;
-                if (!session?.access_token || !session?.user?.id) {
-                    throw new Error('Missing active Supabase session. Please log in again.');
-                }
-
+                console.info('[Profile] Updating address user id:', this.user?.id);
                 console.info('[Profile] Updating address payload:', payload);
-                console.info('[Profile] Updating address user id:', session.user.id);
 
-                const { data: addressData, error: addressError } = await supabase
-                    .from('profiles')
-                    .update(payload)
-                    .eq('id', session.user.id)
-                    .select()
-                    .single();
-
-                if (addressError) {
-                    console.error('Supabase profiles update error object:', addressError);
-                    throw addressError;
-                }
+                const addressData = await this.saveProfileWithUpsert(payload, 'address');
 
                 if (addressData) {
                     this.profile = { ...this.profile, ...addressData };
-                    this.user = session.user;
                     console.info('[Profile] Address update success:', addressData);
                     window.showNotification('Address updated successfully!');
                     this.editAddressMode = false;
