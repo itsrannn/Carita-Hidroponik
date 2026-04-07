@@ -1,1881 +1,228 @@
-
 const API_BASE_URL = 'https://backend-carita-hidroponik.vercel.app';
-const SNAP_TOKEN_ENDPOINT = 'https://backend-carita-hidroponik.vercel.app/api/payment/create-snap-token';
+const SNAP_TOKEN_ENDPOINT = `${API_BASE_URL}/api/payment/create-snap-token`;
 
 const APP_BASE_PATH = (() => {
-  const { hostname, pathname } = window.location;
-  if (!hostname.endsWith('github.io')) return '';
-  const [repoSegment] = pathname.split('/').filter(Boolean);
-  return repoSegment ? `/${repoSegment}` : '';
+    const { hostname, pathname } = window.location;
+    if (!hostname.endsWith('github.io')) return '';
+    const [repoSegment] = pathname.split('/').filter(Boolean);
+    return repoSegment ? `/${repoSegment}` : '';
 })();
 
 window.APP_BASE_PATH = APP_BASE_PATH;
 window.toAppPath = (relativePath = '') => {
-  const normalized = String(relativePath).replace(/^\/+/, '');
-  return `${APP_BASE_PATH}/${normalized}`.replace(/\/{2,}/g, '/');
+    const normalized = String(relativePath).replace(/^\/+/, '');
+    return `${APP_BASE_PATH}/${normalized}`.replace(/\/{2,}/g, '/');
 };
 window.toAppUrl = (relativePath = '') => new URL(window.toAppPath(relativePath), window.location.origin).href;
 
-window.onerror = function onGlobalError(message, source, lineno, colno, error) {
-  console.error('[GlobalError] window.onerror:', {
-    message,
-    source,
-    line: lineno,
-    column: colno,
-    stack: error?.stack || null
-  });
+// --- GLOBAL ERROR HANDLING ---
+window.onerror = (message, source, lineno, colno, error) => {
+    console.error('[GlobalError]', { message, source, line: lineno, column: colno, stack: error?.stack });
 };
-
-window.addEventListener('error', (event) => {
-  console.error('[GlobalError] addEventListener("error"):', {
-    message: event.message,
-    source: event.filename,
-    line: event.lineno,
-    column: event.colno,
-    stack: event.error?.stack || null
-  });
-});
 
 window.addEventListener('unhandledrejection', (event) => {
-  console.error('[GlobalError] Unhandled promise rejection:', event.reason);
+    console.error('[GlobalError] Unhandled promise rejection:', event.reason);
 });
 
-function sanitizeHeaders(headersInput = {}) {
-  const headers = new Headers(headersInput);
-  const headerObject = {};
-  headers.forEach((value, key) => {
-    if (key.toLowerCase() === 'authorization') {
-      headerObject[key] = value ? 'Bearer ***redacted***' : '';
-      return;
-    }
-    headerObject[key] = value;
-  });
-  return headerObject;
-}
-
-function parseBodyForLogging(body) {
-  if (!body) return null;
-  if (typeof body === 'string') {
-    try {
-      return JSON.parse(body);
-    } catch (_unused) {
-      return body;
-    }
-  }
-  return body;
-}
-
+// --- FETCH ENGINE (FIXED FOR CORS) ---
 window.fetchWithDebug = async (input, init = {}) => {
-  const {
-    timeoutMs = 12000,
-    retries = 0,
-    retryDelayMs = 500,
-    ...requestInit
-  } = init || {};
+    const {
+        timeoutMs = 15000,
+        retries = 1,
+        retryDelayMs = 1000,
+        ...requestInit
+    } = init || {};
 
-  const attemptFetch = async (attempt = 0) => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(new Error('Request timeout')), timeoutMs);
-    const mergedInit = {
-      ...requestInit,
-      signal: controller.signal
-    };
-    const request = input instanceof Request ? input : new Request(input, mergedInit);
-  const startAt = performance.now();
-  const sanitizedHeaders = sanitizeHeaders(request.headers);
-    const parsedBody = parseBodyForLogging(requestInit?.body);
+    const attemptFetch = async (attempt = 0) => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-    console.info(`[Fetch] BEFORE ${request.method} ${request.url}`, {
-      url: request.url,
-      method: request.method,
-      mode: request.mode,
-      credentials: request.credentials,
-      timeoutMs,
-      retries,
-      attempt,
-      headers: sanitizedHeaders,
-      payload: parsedBody
-    });
+        // Pastikan Headers Terstandarisasi
+        const headers = new Headers(requestInit.headers || {});
+        if (!headers.has('Content-Type') && !(requestInit.body instanceof FormData)) {
+            headers.set('Content-Type', 'application/json');
+        }
 
-    try {
-      const response = await fetch(request);
-      clearTimeout(timeoutId);
-      const duration = Math.round(performance.now() - startAt);
+        const mergedInit = {
+            ...requestInit,
+            headers,
+            mode: 'cors', // Paksa mode CORS
+            credentials: 'omit', // Paling aman untuk lintas domain GitHub -> Vercel
+            signal: controller.signal
+        };
 
-      const responseHeaders = {};
-      response.headers.forEach((value, key) => {
-        responseHeaders[key] = value;
-      });
-
-      let responseBodyPreview = null;
-      try {
-        const cloned = response.clone();
-        const responseText = await cloned.text();
-        responseBodyPreview = responseText ? responseText.slice(0, 1000) : '';
-      } catch (_unused) {
-        responseBodyPreview = '[unavailable]';
-      }
-
-      console.info(`[Fetch] AFTER ${request.method} ${request.url} (${duration}ms)`, {
-        status: response.status,
-        ok: response.ok,
-        headers: responseHeaders,
-        bodyPreview: responseBodyPreview
-      });
-
-      if (!response.ok) {
-        console.warn('[Fetch] Non-2xx response detected.', {
-          url: request.url,
-          status: response.status,
-          bodyPreview: responseBodyPreview
-        });
-      }
-
-      return response;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      const duration = Math.round(performance.now() - startAt);
-      const canRetry = attempt < retries;
-      console.error(`[Fetch] FAILED ${request.method} ${request.url} (${duration}ms)`, {
-        message: error?.message || String(error),
-        name: error?.name,
-        attempt,
-        canRetry,
-        stack: error?.stack || null
-      });
-
-      if (canRetry) {
-        await new Promise((resolve) => setTimeout(resolve, retryDelayMs * (attempt + 1)));
-        return attemptFetch(attempt + 1);
-      }
-
-      throw error;
-    }
-  };
-
-  return attemptFetch(0);
-};
-
-document.addEventListener("DOMContentLoaded", function () {
-  const loadComponent = async (id, path) => {
-    const mountNode = document.getElementById(id);
-    if (!mountNode) {
-      console.warn(`[ComponentLoader] Target #${id} not found. Skipping ${path}.`);
-      return;
-    }
-
-    const url = window.toAppUrl(path);
-    try {
-      const response = await window.fetchWithDebug(url, { cache: 'no-store' });
-      if (!response.ok) {
-        throw new Error(`Component request failed with status ${response.status}`);
-      }
-
-      const html = await response.text();
-      mountNode.innerHTML = html;
-
-      const scripts = mountNode.querySelectorAll("script");
-      scripts.forEach((script) => {
-        const newScript = document.createElement("script");
-        newScript.textContent = script.textContent;
-        document.body.appendChild(newScript).remove();
-      });
-
-      if (window.feather?.replace) {
-        feather.replace();
-      }
-    } catch (error) {
-      console.error(`[ComponentLoader] Failed to load component "${path}" from ${url}.`, error);
-      mountNode.innerHTML = '<div class="component-fallback" style="padding:1rem;text-align:center;color:#666;">Failed to load page section.</div>';
-    }
-  };
-
-  loadComponent("header-include", "/components/header.html");
-  loadComponent("footer-include", "/components/footer.html");
-
-  // Force re-initialization of the cart from localStorage when a page is shown from bfcache
-  window.addEventListener('pageshow', (event) => {
-    if (event.persisted && window.Alpine && Alpine.store('cart')) {
-      Alpine.store('cart').init();
-    }
-  });
-});
-
-
-
-// Global currency formatter
-window.formatRupiah = (number) => {
-  if (isNaN(number)) return "Rp 0";
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(number);
-};
-
-window.handleSearch = (searchTerm) => {
-  if (searchTerm.trim() !== '') {
-    window.location.href = `index.html?s=${encodeURIComponent(searchTerm.trim())}`;
-  }
-};
-
-/**
- * Normalizes image paths by replacing spaces with hyphens.
- * @param {string} path - The original image path.
- * @returns {string} The normalized image path.
- */
-window.fixImagePath = (path) => {
-  if (!path) return path;
-  // Replace spaces with hyphens globally
-  return String(path).replace(/ /g, '-');
-};
-
-/**
- * Calculates the final price and discount percentage for a product.
- * @param {object} product - The product object.
- * @returns {{finalPrice: number, percentOff: number, originalPrice: number}}
- */
-window.calculateDiscount = (product) => {
-  const originalPrice = product.price;
-  let finalPrice = originalPrice;
-  let percentOff = 0;
-
-  const hasFixedDiscount = product.discount_price && product.discount_price > 0;
-  const hasPercentDiscount = product.discount_percent && product.discount_percent > 0;
-
-  if (hasFixedDiscount) {
-    finalPrice = product.discount_price;
-    percentOff = Math.floor(((originalPrice - finalPrice) / originalPrice) * 100);
-  } else if (hasPercentDiscount) {
-    percentOff = product.discount_percent;
-    finalPrice = originalPrice - (originalPrice * percentOff / 100);
-  }
-
-  // Clamp price to 0 if discount is too high
-  finalPrice = Math.max(0, finalPrice);
-
-  return { finalPrice, percentOff, originalPrice };
-};
-
-
-// Global status translator
-window.translateStatus = (status) => {
-  const statusMap = {
-    'Menunggu Konfirmasi': 'Awaiting Confirmation',
-    'Diproses': 'Preparing for Shipment',
-    'Dalam Pengiriman': 'On Its Way',
-    'Selesai': 'Completed',
-    'Ditolak': 'Rejected',
-  };
-  return statusMap[status] || status;
-};
-
-document.addEventListener("alpine:init", () => {
-  // --- Centralized Stores ---
-  Alpine.store('i18n', {
-    lang: localStorage.getItem('language') || 'id',
-    ready: false,
-    supportedLangs: {
-        'en': 'English',
-        'id': 'Bahasa Indonesia'
-    },
-    translations: {},
-
-    async init() {
-        // This function is now idempotent
-        if (this.ready) return;
-
-        await this.load();
-        document.documentElement.lang = this.lang;
-
-        // This is the gate. Only set to true after everything is loaded.
-        this.ready = true;
-    },
-
-    async load() {
         try {
-            const localeUrl = window.toAppUrl(`locales/${this.lang}.json?v=${new Date().getTime()}`);
-            const response = await window.fetchWithDebug(localeUrl);
-            if (!response.ok) throw new Error('Translations file not found');
-            this.translations = await response.json();
-        } catch (error) {
-            console.error(`Failed to load translations for ${this.lang}:`, error);
-            this.translations = {};
-        }
-    },
-
-    setLang(newLang) {
-        if (!this.supportedLangs.hasOwnProperty(newLang)) {
-            console.warn(`Unsupported language: ${newLang}`);
-            return;
-        }
-        this.lang = newLang;
-        localStorage.setItem('language', newLang);
-        document.documentElement.lang = this.lang;
-        this.load(); // Reload translations for the new language
-    },
-
-    t(key, fallback = null) {
-        // Traverses nested object keys, e.g., 'header.title'
-        const value = key.split('.').reduce((acc, cur) => acc && acc[cur], this.translations);
-        // Return the found value, a fallback, or the key itself for debugging
-        return value !== undefined && value !== null ? value : (fallback !== null ? fallback : key);
-    }
-  });
-
-  Alpine.store("products", {
-    all: [],
-    isLoading: true,
-    errorMessage: '',
-    async init() {
-      this.isLoading = true;
-      this.errorMessage = '';
-      try {
-        if (!window.supabase) {
-          throw new Error('Supabase client is undefined. Check js/supabase-client.js and CDN script loading.');
-        }
-        const { data, error } = await window.supabase
-          .from("products")
-          .select("*")
-          .order("id", { ascending: true });
-        if (error) throw error;
-        this.all = data || [];
-        if (!this.all.length) {
-          console.warn('[Products] Query succeeded but returned zero records.');
-        }
-      } catch (err) {
-        console.error("Failed to fetch products:", err);
-        this.errorMessage = 'Products are temporarily unavailable.';
-        this.all = []; // Ensure data is empty on error
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    getProductById(id) {
-      return this.all.find(p => String(p.id) === String(id));
-    }
-  });
-
-  Alpine.store('news', {
-    relatedProducts: [],
-    // Future properties for news can be added here
-  });
-
-  Alpine.store("cart", {
-    items: [],
-    parseCartKey(cartKey) {
-      const [productId, variantId] = String(cartKey).split('::');
-      return { productId, variantId: variantId || null };
-    },
-    getCartKey(productId, variantId) {
-      const baseId = String(productId);
-      return variantId ? `${baseId}::${variantId}` : baseId;
-    },
-    normalizeVariant(variant) {
-      if (!variant) return null;
-      if (typeof variant === 'string') {
-        return { id: variant, label: variant };
-      }
-      const id = variant.id || variant.value || variant.name || variant.label;
-      const label = variant.label || variant.name || variant.value || id;
-      return id ? { id, label } : null;
-    },
-    init() {
-      const storedItems = JSON.parse(localStorage.getItem("cart")) || [];
-      this.items = storedItems
-        .map(item => {
-          if (!item) return null;
-          const normalized = { ...item };
-          if (!normalized.productId) {
-            const parsed = this.parseCartKey(normalized.id);
-            normalized.productId = parsed.productId;
-            normalized.variantId = normalized.variantId || parsed.variantId;
-          }
-          if (!normalized.id) {
-            normalized.id = this.getCartKey(normalized.productId, normalized.variantId);
-          }
-          return normalized;
-        })
-        .filter(Boolean);
-    },
-    add(productId, quantity = 1, variant = null) {
-      const safeQuantity = Number.isFinite(Number(quantity)) ? Math.max(1, Number(quantity)) : 1;
-      const normalizedVariant = this.normalizeVariant(variant);
-      const parsed = normalizedVariant ? null : this.parseCartKey(productId);
-      const resolvedProductId = normalizedVariant ? productId : parsed.productId;
-      const resolvedVariantId = normalizedVariant ? normalizedVariant.id : parsed.variantId;
-      const resolvedVariantLabel = normalizedVariant ? normalizedVariant.label : null;
-      const cartKey = this.getCartKey(resolvedProductId, resolvedVariantId);
-      const existing = this.items.find(item => String(item.id) === String(cartKey));
-      if (existing) {
-        existing.quantity += safeQuantity;
-      } else {
-        this.items.push({
-          id: cartKey,
-          productId: resolvedProductId,
-          variantId: resolvedVariantId || null,
-          variantLabel: resolvedVariantLabel || null,
-          quantity: safeQuantity
-        });
-      }
-      this.save();
-    },
-    remove(productId, force = false) {
-      const parsed = this.parseCartKey(productId);
-      const cartKey = this.getCartKey(parsed.productId, parsed.variantId);
-      const itemIndex = this.items.findIndex(item => String(item.id) === String(cartKey));
-      if (itemIndex > -1) {
-        if (force || this.items[itemIndex].quantity === 1) {
-          this.items.splice(itemIndex, 1);
-        } else {
-          this.items[itemIndex].quantity--;
-        }
-      }
-      this.save();
-    },
-    clear() {
-      this.items = [];
-      this.save();
-    },
-    save() {
-      localStorage.setItem("cart", JSON.stringify(this.items));
-    },
-    get details() {
-      return this.items
-        .map(item => {
-          const resolvedProductId = item.productId || this.parseCartKey(item.id).productId;
-          const resolvedVariantId = item.variantId || this.parseCartKey(item.id).variantId;
-          const product = Alpine.store("products").getProductById(resolvedProductId);
-          if (!product) return null;
-
-          const { finalPrice, percentOff } = window.calculateDiscount(product);
-          const lang = Alpine.store('i18n').lang;
-          const safeName = (product.name && product.name[lang]) ? product.name[lang] : ((product.name && product.name['id']) ? product.name['id'] : "Unnamed Product");
-
-          return {
-            ...product,
-            name: safeName,
-            quantity: item.quantity,
-            id: this.getCartKey(resolvedProductId, resolvedVariantId),
-            productId: resolvedProductId,
-            variantId: resolvedVariantId || null,
-            variantLabel: item.variantLabel || null,
-            img: window.fixImagePath(product.image_url),
-            price: product.price,
-            finalPrice: finalPrice,
-            percentOff: percentOff,
-            subtotal: finalPrice * item.quantity,
-            weight: product.weight || 0,
-            totalWeight: (product.weight || 0) * item.quantity,
-          };
-        })
-        .filter(Boolean);
-    },
-    get total() {
-      return this.details.reduce((total, item) => total + item.subtotal, 0);
-    },
-    get totalWeight() {
-      return this.details.reduce((total, item) => total + item.totalWeight, 0);
-    },
-    get quantity() {
-      return this.items.reduce((total, item) => total + item.quantity, 0);
-    }
-  });
-
-  // --- Page Components ---
-  Alpine.data('products', () => ({
-    searchTerm: '',
-    selectedCategory: 'all',
-    sortOption: 'price-asc',
-    currentPage: 1,
-    itemsPerPage: 12,
-
-    toggleSort() {
-      this.sortOption = this.sortOption === 'price-asc' ? 'price-desc' : 'price-asc';
-    },
-
-    promoItems() {
-      return this.$store.products.all.filter(p => p.discount_price || p.discount_percent > 0).slice(0, 4);
-    },
-
-    renderProductCard(item) {
-      const { finalPrice, percentOff, originalPrice } = window.calculateDiscount(item);
-      const isPromo = percentOff > 0;
-      const lang = this.$store.i18n.lang;
-      const itemName = (item.name && item.name[lang]) ? item.name[lang] : ((item.name && item.name['id']) ? item.name['id'] : 'Unnamed Product');
-
-
-      const ribbonHtml = isPromo ? `
-        <div class="discount-ribbon"><span>${percentOff}% OFF</span></div>
-      ` : '';
-
-      const priceHtml = isPromo ? `
-        <div class="price-container">
-          <div class="price-original">${window.formatRupiah(originalPrice)}</div>
-          <div class="price-discounted">${window.formatRupiah(finalPrice)}</div>
-        </div>
-      ` : `<div class="price">${window.formatRupiah(originalPrice)}</div>`;
-
-      return `
-        <a href="product-details.html?id=${item.id}" class="product-link">
-          <article class="product-card">
-            ${ribbonHtml}
-            <figure class="product-media">
-              <img src="${item.image_url ? window.fixImagePath(item.image_url) : 'img/coming-soon.jpg'}" alt="${itemName}" />
-            </figure>
-            <div class="product-body">
-              <h3 class="product-title">${itemName}</h3>
-              <div class="product-meta">
-                ${priceHtml}
-              </div>
-            </div>
-          </article>
-        </a>
-      `;
-    },
-
-    processedItems() {
-      let items = this.$store.products.all;
-      const lang = this.$store.i18n.lang;
-
-      if (this.searchTerm.trim()) {
-        const query = this.searchTerm.toLowerCase();
-        items = items.filter(item => {
-            const name = (item.name && item.name[lang]) ? item.name[lang] : ((item.name && item.name['id']) ? item.name['id'] : '');
-            const description = (item.description && item.description[lang]) ? item.description[lang] : ((item.description && item.description['id']) ? item.description['id'] : '');
-            const nameMatch = name.toLowerCase().includes(query);
-            const descriptionMatch = description.toLowerCase().includes(query);
-            return nameMatch || descriptionMatch;
-        });
-      }
-
-      if (this.selectedCategory === 'promo') {
-        items = items.filter(item => item.discount_price || (item.discount_percent && item.discount_percent > 0));
-      } else if (this.selectedCategory !== 'all') {
-        items = items.filter(item => item.category === this.selectedCategory);
-      }
-
-      const sortedItems = [...items];
-      switch (this.sortOption) {
-        case 'price-asc':
-          sortedItems.sort((a, b) => a.price - b.price);
-          break;
-        case 'price-desc':
-          sortedItems.sort((a, b) => b.price - a.price);
-          break;
-      }
-      return sortedItems;
-    },
-
-    paginatedItems() {
-      const start = (this.currentPage - 1) * this.itemsPerPage;
-      const end = start + this.itemsPerPage;
-      return this.processedItems().slice(start, end);
-    },
-
-    totalPages() {
-      return Math.ceil(this.processedItems().length / this.itemsPerPage);
-    },
-
-    goToPage(page) {
-      if (page < 1 || page > this.totalPages()) return;
-      this.currentPage = page;
-
-      const productSection = document.getElementById('Product');
-      if (productSection) {
-        window.scrollTo({ top: productSection.offsetTop, behavior: 'smooth' });
-      }
-
-      this.$nextTick(() => feather.replace());
-    },
-
-    init() {
-      const urlParams = new URLSearchParams(window.location.search);
-      this.searchTerm = urlParams.get('s') || '';
-
-      const refreshOnFilterChange = () => {
-        this.currentPage = 1;
-        this.$nextTick(() => feather.replace());
-      };
-      this.$watch('searchTerm', refreshOnFilterChange);
-      this.$watch('selectedCategory', refreshOnFilterChange);
-      this.$watch('sortOption', refreshOnFilterChange);
-
-      this.$watch('$store.products.isLoading', (loading) => {
-        if (!loading) {
-          this.$nextTick(() => feather.replace());
-        }
-      });
-    }
-  }));
-
-  Alpine.data('contentManager', () => ({
-    activeTab: 'products',
-    products: [],
-    news: [],
-    isLoading: { products: true, news: true },
-    searchQuery: { products: '', news: '' },
-    bulkDiscountPercent: null,
-
-    get filteredProducts() {
-        if (!this.searchQuery.products) return this.products;
-        const q = this.searchQuery.products.toLowerCase();
-        const lang = this.$store.i18n.lang;
-
-        return this.products.filter(p => {
-            const productName = (p.name && p.name[lang]) ? p.name[lang].toLowerCase() : ((p.name && p.name['id']) ? p.name['id'].toLowerCase() : '');
-            return productName.includes(q) || p.category.toLowerCase().includes(q);
-        });
-    },
-
-    get filteredNews() {
-      if (!this.searchQuery.news) return this.news;
-      const q = this.searchQuery.news.toLowerCase();
-      return this.news.filter(n =>
-        n.title.toLowerCase().includes(q) ||
-        n.excerpt.toLowerCase().includes(q)
-      );
-    },
-
-    async init() {
-      this.fetchProducts();
-      this.fetchNews();
-    },
-
-    async fetchProducts() {
-      this.isLoading.products = true;
-      try {
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .order('created_at', { ascending: false });
-        if (error) throw error;
-        this.products = data;
-      } catch (error) {
-        window.showNotification('Failed to load products.', true);
-      } finally {
-        this.isLoading.products = false;
-      }
-    },
-
-    async fetchNews() {
-      this.isLoading.news = true;
-      try {
-        const { data, error } = await supabase
-          .from('news')
-          .select('*')
-          .order('created_at', { ascending: false });
-        if (error) throw error;
-        this.news = data;
-      } catch (error) {
-        window.showNotification('Failed to load news.', true);
-      } finally {
-        this.isLoading.news = false;
-      }
-    },
-
-    async deleteItem(id, imageUrl) {
-      if (!confirm('Are you sure you want to delete this item?')) return;
-
-      const tableName = this.activeTab;
-      try {
-        const { error: dbErr } = await supabase.from(tableName).delete().eq('id', id);
-        if (dbErr) throw dbErr;
-
-        if (imageUrl) {
-          const fileName = imageUrl.split('/').pop();
-          if (fileName) {
-            await supabase.storage.from('product-images').remove([`${tableName}/${fileName}`]);
-          }
-        }
-
-        this[tableName] = this[tableName].filter(item => item.id !== id);
-        window.showNotification('Item successfully deleted.');
-      } catch (error) {
-        window.showNotification('Failed to delete item.', true);
-      }
-    },
-
-    async applyBulkDiscount() {
-      if (!this.bulkDiscountPercent || this.bulkDiscountPercent < 1 || this.bulkDiscountPercent > 90) {
-        window.showNotification('Please enter a valid discount percentage (1-90).', true);
-        return;
-      }
-
-      if (!confirm(`Are you sure you want to apply a ${this.bulkDiscountPercent}% discount to all eligible products? This action cannot be undone.`)) {
-        return;
-      }
-
-      try {
-        const { error } = await supabase
-          .from('products')
-          .update({
-            discount_percent: this.bulkDiscountPercent,
-            discount_price: null
-          })
-          .is('discount_price', null);
-
-        if (error) throw error;
-
-        window.showNotification('Bulk discount applied successfully!');
-        this.bulkDiscountPercent = null;
-        this.fetchProducts(); // Refresh the product list
-      } catch (error) {
-        window.showNotification('Failed to apply bulk discount.', true);
-      }
-    }
-  }));
-
-  Alpine.data('productDetail', () => ({
-        product: null,
-        relatedProducts: [],
-        relatedLoading: true,
-        priceInfo: { percentOff: 0, originalPrice: 0, discountedPrice: 0 },
-        ready: false,
-
-        // --- Mock Data for UI ---
-        mockImages: [],
-        mockColors: [],
-
-        // --- Component State ---
-        mainImage: '',
-        selectedColor: '',
-        quantity: 1,
-
-        init() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const productId = urlParams.get('id');
-
-            Alpine.effect(() => {
-                const isLoading = this.$store.products.isLoading;
-                const lang = this.$store.i18n.lang;
-
-                if (!isLoading) {
-                    this.product = this.$store.products.getProductById(productId);
-                    if (this.product) {
-                        this.priceInfo = calculateDiscount(this.product);
-                        const productName = (this.product.name && this.product.name[lang]) ? this.product.name[lang] : ((this.product.name && this.product.name['id']) ? this.product.name['id'] : '');
-                        document.title = "Carita Hidroponik | " + productName;
-
-                        this.setupMockData();
-                        this.mainImage = window.fixImagePath(this.product.image_url) || 'img/coming-soon.jpg';
-
-                        this.fetchRelatedProducts();
-                    }
-                    this.ready = true;
-                }
-            });
-        },
-
-        setupMockData() {
-            this.mockImages = [
-                window.fixImagePath(this.product.image_url) || 'img/coming-soon.jpg',
-                'img/general/Cabai-Jalapeno.png',
-                'img/general/Cabai-Thai-Chili.png',
-                'img/general/Cabai-Orange-Drop.png',
-            ];
-            this.mockColors = [
-                { name: 'Red', value: '#FF0000', image: window.fixImagePath(this.product.image_url) || 'img/coming-soon.jpg' },
-                { name: 'Green', value: '#008000', image: 'img/general/Cabai-Thai-Chili.png' },
-                { name: 'Yellow', value: '#FFFF00', image: 'img/general/Cabai-Orange-Drop.png' }
-            ];
-            this.selectedColor = this.mockColors[0].name;
-        },
-
-        selectColor(color) {
-            this.selectedColor = color.name;
-            this.mainImage = color.image;
-        },
-
-        selectThumbnail(image) {
-            this.mainImage = image;
-        },
-
-        increaseQuantity() {
-            this.quantity++;
-        },
-
-        decreaseQuantity() {
-            if (this.quantity > 1) {
-                this.quantity--;
-            }
-        },
-
-        addToCart() {
-            this.$store.cart.add(this.product.id, this.quantity);
-        },
-
-        fetchRelatedProducts() {
-            if (!this.product) return;
-            this.relatedLoading = true;
-            this.relatedProducts = this.$store.products.all.filter(p =>
-                p.category === this.product.category && String(p.id) !== String(this.product.id)
-            );
-            this.relatedLoading = false;
-            this.$nextTick(() => this.initSwiper());
-        },
-
-        initSwiper() {
-            if (this.mockImages.length > 0) {
-                new Swiper(".product-thumbnail-slider", {
-                    spaceBetween: 10,
-                    slidesPerView: 4,
-                    freeMode: true,
-                    watchSlidesProgress: true,
-                     navigation: {
-                        nextEl: ".swiper-button-next",
-                        prevEl: ".swiper-button-prev",
-                    },
-                });
-            }
-            if (this.relatedProducts.length > 0) {
-                new Swiper(".related-product-slider", {
-                    loop: this.relatedProducts.length > 4,
-                    spaceBetween: 15,
-                    navigation: {
-                        nextEl: ".swiper-button-next",
-                        prevEl: ".swiper-button-prev",
-                    },
-                    pagination: {
-                        el: ".swiper-pagination",
-                        clickable: true,
-                    },
-                    breakpoints: {
-                        320: { slidesPerView: 2, spaceBetween: 10 },
-                        768: { slidesPerView: 5, spaceBetween: 20 },
-                    },
-                });
-            }
-            this.$nextTick(() => feather.replace());
-        },
-
-        get productName() {
-            if (!this.product) return '';
-            const lang = this.$store.i18n.lang;
-            return (this.product.name && this.product.name[lang]) ? this.product.name[lang] : ((this.product.name && this.product.name['id']) ? this.product.name['id'] : '');
-        },
-
-        get productDescription() {
-            if (!this.product) return '';
-            const lang = this.$store.i18n.lang;
-            return (this.product.description && this.product.description[lang]) ? this.product.description[lang] : ((this.product.description && this.product.description['id']) ? this.product.description['id'] : '');
-        },
-
-        get productCharacteristicsList() {
-            if (!this.product || !this.product.characteristics) return '';
-
-            const rawText = this.product.characteristics;
-
-            const textToParse = (typeof rawText === 'object' && rawText !== null)
-                ? (rawText[this.$store.i18n.lang] || rawText['id'] || '')
-                : (typeof rawText === 'string' ? rawText : '');
-
-            if (!textToParse) return '';
-
-            return textToParse
-                .split('\n')
-                .filter(line => line.trim() !== '')
-                .map(line => `<li>✔ ${line.trim()}</li>`)
-                .join('');
-        }
-    }));
-
-    // --- Global Initialization ---
-    // Initialize stores on startup. Components will react to their state changes.
-    Alpine.store('i18n').init();
-    Alpine.store('products').init();
-    Alpine.store('cart').init();
-
-    // Signal that Alpine is ready
-    document.documentElement.setAttribute('data-alpine-ready', 'true');
-
-  function checkoutPage() {
-      return {
-        isProfileModalOpen: false,
-        isLoginModalOpen: false,
-        isConfirmModalOpen: false,
-        isCheckoutLoading: false,
-        isSnapPopupActive: false,
-        userProfile: null,
-        regions: {
-          services: []
-        },
-        shipping: {
-          courier: 'jne',
-          service: '',
-          cost: 0,
-          details: null,
-          destinationCityId: '',
-          addressLabel: ''
-        },
-
-        async init() {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session) return;
-
-          const { complete, profile } = await this.isProfileComplete();
-          if (!complete) {
-            this.isProfileModalOpen = true;
-            return;
-          }
-          this.userProfile = profile;
-          this.shipping.addressLabel = `${profile.address}, ${profile.district}, ${profile.regency}, ${profile.province}`;
-          await this.calculateShipping();
-        },
-
-        async calculateShipping() {
-          if (!this.shipping.courier || this.$store.cart.items.length === 0) {
-            this.regions.services = [];
-            this.shipping.cost = 0;
-            return;
-          }
-
-          try {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session?.access_token) {
-              this.isLoginModalOpen = true;
-              return;
-            }
-
-            const response = await window.fetchWithDebug(`${API_BASE_URL}/api/shipping/cost`, {
-              method: 'POST',
-              timeoutMs: 15000,
-              retries: 1,
-              headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${session.access_token}`
-              },
-              body: JSON.stringify({
-                weight: this.$store.cart.totalWeight,
-                courier: this.shipping.courier
-              })
-            });
-            const parseResponseBody = async () => {
-              const raw = await response.text();
-              if (!raw) return null;
-              try {
-                return JSON.parse(raw);
-              } catch (_unused) {
-                return { message: raw };
-              }
-            };
-
-            if (response.status === 401) {
-              this.isLoginModalOpen = true;
-              this.regions.services = [];
-              this.shipping.cost = 0;
-              return;
-            }
-            if (response.status === 409) {
-              this.isProfileModalOpen = true;
-              this.regions.services = [];
-              this.shipping.cost = 0;
-              return;
-            }
-            if (!response.ok) {
-              const errorBody = await parseResponseBody();
-              throw new Error(errorBody?.message || `Failed to calculate shipping cost (${response.status})`);
-            }
-
-            const data = await parseResponseBody();
-            if (!data || !Array.isArray(data.costs)) {
-              throw new Error('Shipping API returned invalid response format.');
-            }
-            this.regions.services = data.costs;
-            this.shipping.destinationCityId = data.destination_city_id || '';
-
-            // Auto-select first service if available
-            if (this.regions.services.length > 0) {
-              this.shipping.service = JSON.stringify(this.regions.services[0]);
-              this.updateShippingCost();
-            } else {
-              this.shipping.cost = 0;
-              this.shipping.service = '';
-              this.shipping.destinationCityId = '';
-            }
-          } catch (error) {
-            console.error(error);
-            const message = error?.name === 'AbortError'
-              ? 'Shipping request timed out. Please try again.'
-              : `Failed to get shipping services: ${error?.message || 'Unknown error'}`;
-            window.showNotification(message, true);
-          }
-        },
-
-        updateShippingCost() {
-          if (this.shipping.service) {
-            const serviceObj = JSON.parse(this.shipping.service);
-            this.shipping.cost = serviceObj.cost[0].value;
-            this.shipping.details = serviceObj;
-          } else {
-            this.shipping.cost = 0;
-            this.shipping.details = null;
-          }
-        },
-
-        calculateGrandTotal() {
-          const subtotal = this.$store.cart.total;
-          const tax = subtotal * 0.11;
-          const shipping = this.shipping.cost;
-          return subtotal + tax + shipping;
-        },
-
-        checkoutButtonText() {
-          if (this.isCheckoutLoading) return 'Preparing Payment...';
-          if (this.isSnapPopupActive) return 'Payment In Progress...';
-          return this.$store.i18n.t('cart.summary.checkoutButton');
-        },
-
-        getApiBaseUrl() {
-          return API_BASE_URL;
-        },
-
-        buildApiUrl(path) {
-          const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-          const baseUrl = this.getApiBaseUrl();
-          if (!baseUrl || baseUrl.includes('<DEPLOYED-BACKEND-DOMAIN>')) {
-            throw new Error('Backend API URL is not configured. Please contact support.');
-          }
-          return `${baseUrl}${normalizedPath}`;
-        },
-
-        async parseApiError(response, fallbackMessage) {
-          let data;
-          try {
-            data = await response.clone().json();
-          } catch (_) {
-            try {
-              data = await response.text();
-            } catch (__unused) {
-              data = null;
-            }
-          }
-
-          if (data && typeof data === 'object') {
-            return data.message || data.error || fallbackMessage;
-          }
-
-          if (typeof data === 'string') {
-            const cleaned = data.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-            if (cleaned && !/<!doctype|<html/i.test(data)) {
-              return cleaned;
-            }
-          }
-
-          return fallbackMessage;
-        },
-
-        async notifyBackendPaymentStatus(endpoint, payload, fallbackMessage) {
-          try {
-            const apiUrl = `${API_BASE_URL}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
-            const response = await window.fetchWithDebug(apiUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
-            });
+            console.info(`[Fetch] START: ${requestInit.method || 'GET'} ${input}`);
+            const response = await fetch(input, mergedInit);
+            clearTimeout(timeoutId);
 
             if (!response.ok) {
-              const errorDetail = await this.parseApiError(response, fallbackMessage);
-              console.error(`Backend notification failed [${response.status}]:`, {
-                endpoint,
-                apiUrl,
-                errorDetail
-              });
-              throw new Error(errorDetail);
+                const errorText = await response.clone().text();
+                console.warn(`[Fetch] Error ${response.status}:`, errorText);
             }
 
             return response;
-          } catch (error) {
-            console.error('Network error during backend notification:', {
-              endpoint,
-              error: error.message || error
-            });
+        } catch (error) {
+            clearTimeout(timeoutId);
+            if (attempt < retries) {
+                console.warn(`[Fetch] Retry attempt ${attempt + 1}...`);
+                await new Promise(r => setTimeout(r, retryDelayMs));
+                return attemptFetch(attempt + 1);
+            }
             throw error;
-          }
-        },
-
-        getMidtransClientKey(preferredKey = null) {
-          return preferredKey
-            || window.APP_CONFIG?.midtransClientKey
-            || document.querySelector('meta[name="midtrans-client-key"]')?.content
-            || '';
-        },
-
-        getCartPayload() {
-          return this.$store.cart.details.map(item => ({
-            product_id: item.productId || item.id,
-            variant_id: item.variantId || null,
-            name: item.name,
-            price: item.price,
-            quantity: item.quantity,
-            total: item.subtotal
-          }));
-        },
-
-        async loadSnapScript(clientKey) {
-          if (!clientKey) {
-            throw new Error('Midtrans client key is not configured.');
-          }
-
-          if (window.snap?.pay) return;
-
-          const existingScript = document.getElementById('midtrans-snap-script');
-          if (existingScript) {
-            existingScript.setAttribute('data-client-key', clientKey);
-            await new Promise((resolve, reject) => {
-              if (window.snap?.pay) {
-                resolve();
-                return;
-              }
-
-              existingScript.addEventListener('load', resolve, { once: true });
-              existingScript.addEventListener('error', () => reject(new Error('Failed to load Midtrans Snap.')), { once: true });
-            });
-            return;
-          }
-
-          await new Promise((resolve, reject) => {
-            const script = document.createElement('script');
-            script.id = 'midtrans-snap-script';
-            script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
-            script.setAttribute('data-client-key', clientKey);
-            script.onload = () => resolve();
-            script.onerror = () => reject(new Error('Failed to load Midtrans Snap.'));
-            document.head.appendChild(script);
-          });
-        },
-
-        async handleCheckout() {
-          if (this.isCheckoutLoading || this.isSnapPopupActive) return;
-
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session) {
-            this.isLoginModalOpen = true;
-            return;
-          }
-
-          const { complete, profile } = await this.isProfileComplete();
-          if (!complete) {
-            this.isProfileModalOpen = true;
-            return;
-          }
-          this.userProfile = profile;
-          this.isConfirmModalOpen = true;
-        },
-
-        async confirmAndProcessCheckout() {
-          if (this.isCheckoutLoading || this.isSnapPopupActive) return;
-
-          if (this.userProfile) {
-            await this.processCheckout(this.userProfile);
-          } else {
-            // Re-validate just in case
-            const { complete, profile } = await this.isProfileComplete();
-            if (complete) {
-              await this.processCheckout(profile);
-            } else {
-              this.isConfirmModalOpen = false;
-              this.isProfileModalOpen = true;
-            }
-          }
-        },
-
-        async isProfileComplete() {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session) return { complete: false, profile: null };
-
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('full_name, phone_number, address, postal_code, province, regency, district, village, latitude, longitude')
-            .eq('id', session.user.id)
-            .single();
-
-          if (error) return { complete: false, profile: null };
-
-          const requiredFields = ['full_name', 'phone_number', 'address', 'postal_code', 'province', 'regency', 'district', 'village'];
-          for (const f of requiredFields) {
-            if (!data[f] || String(data[f]).trim() === '') return { complete: false, profile: data };
-          }
-          if (data.latitude == null || data.longitude == null || (data.latitude === 0 && data.longitude === 0)) {
-            return { complete: false, profile: data };
-          }
-          return { complete: true, profile: data };
-        },
-
-        async processCheckout(profile) {
-          if (this.$store.cart.items.length === 0) {
-            window.showNotification('Your shopping cart is empty.', true);
-            return;
-          }
-
-          if (!this.shipping.details) {
-            await this.calculateShipping();
-            if (!this.shipping.details) {
-              window.showNotification('Shipping service is unavailable. Please verify your profile address and courier.', true);
-              return;
-            }
-          }
-
-          const { data: { user } } = await supabase.auth.getUser();
-          if (!user) {
-            window.showNotification('Session not found. Please log in again.', true);
-            return;
-          }
-
-          this.isCheckoutLoading = true;
-
-          const subtotal = this.$store.cart.total;
-          const tax = Math.round(subtotal * 0.11);
-          const shippingCost = Math.round(this.shipping.cost);
-          const grandTotal = subtotal + tax + shippingCost;
-
-          const checkoutPayload = {
-            order_code: this.generateOrderCode(),
-            user_id: user.id,
-            email: user.email,
-            shipping_address: {
-              ...profile,
-              rajaongkir_city_id: this.shipping.destinationCityId,
-              courier: this.shipping.courier,
-              shipping_service: this.shipping.details?.service,
-              shipping_cost: shippingCost
-            },
-            items: this.getCartPayload(),
-            subtotal: subtotal,
-            tax: tax,
-            shipping_cost: shippingCost,
-            total_amount: grandTotal
-          };
-
-          const cartDetails = this.$store.cart.details.map(item => ({
-            id: item.productId || item.id,
-            name: item.name,
-            quantity: item.quantity,
-            price: Math.round(Number(item.finalPrice) || 0)
-          }));
-
-          // Add tax and shipping as line items for Midtrans
-          if (tax > 0) {
-            cartDetails.push({
-              id: 'TAX-PPN-11',
-              name: 'PPN 11%',
-              quantity: 1,
-              price: tax
-            });
-          }
-
-          if (shippingCost > 0) {
-            cartDetails.push({
-              id: 'SHIPPING-COST',
-              name: `Shipping (${this.shipping.courier.toUpperCase()} ${this.shipping.details?.service || ''})`,
-              quantity: 1,
-              price: shippingCost
-            });
-          }
-
-          const transactionPayload = {
-            cart: cartDetails,
-            totalPrice: grandTotal,
-            customer: {
-              firstName: profile?.full_name || user.user_metadata?.full_name || user.email,
-              email: user.email,
-              phone: profile?.phone_number || ''
-            }
-          };
-
-          try {
-            const orderData = transactionPayload;
-            console.log('Requesting snap token...');
-
-            const tokenResponse = await window.fetchWithDebug(SNAP_TOKEN_ENDPOINT, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(orderData)
-            });
-
-            if (!tokenResponse.ok) {
-              let backendMessage = 'Payment request failed';
-              try {
-                const errorPayload = await tokenResponse.json();
-                if (errorPayload?.message) {
-                  backendMessage = `${backendMessage}: ${errorPayload.message}`;
-                }
-              } catch (_parseError) {
-                // ignore invalid JSON and keep default message
-              }
-              throw new Error(backendMessage);
-            }
-
-            const tokenData = await tokenResponse.json();
-            console.log('Snap token received:', tokenData.snapToken);
-
-            if (!tokenData.snapToken) {
-              throw new Error('Snap token missing');
-            }
-
-            await this.loadSnapScript(this.getMidtransClientKey(tokenData.client_key || tokenData.clientKey));
-
-            if (!window.snap?.pay) {
-              throw new Error('Snap.js not loaded');
-            }
-
-            this.isConfirmModalOpen = false;
-            this.isSnapPopupActive = true;
-
-            window.snap.pay(tokenData.snapToken, {
-              onSuccess: async (result) => {
-                try {
-                  await this.notifyBackendPaymentStatus('/api/order/confirm', {
-                    order_code: checkoutPayload.order_code,
-                    transaction_id: result.transaction_id,
-                    payment_result: result,
-                    checkout_payload: checkoutPayload,
-                    payment_status: 'success'
-                  }, 'Payment succeeded but order confirmation failed.');
-
-                  this.$store.cart.clear();
-                  window.showNotification(`Payment successful. Your order code is ${checkoutPayload.order_code}.`);
-                } catch (error) {
-                  window.showNotification(error.message || 'Payment confirmed but order sync failed.', true);
-                } finally {
-                  this.isSnapPopupActive = false;
-                }
-              },
-              onPending: async (result) => {
-                try {
-                  await this.notifyBackendPaymentStatus('/api/order/confirm', {
-                    order_code: checkoutPayload.order_code,
-                    transaction_id: result?.transaction_id || null,
-                    payment_result: result,
-                    checkout_payload: checkoutPayload,
-                    payment_status: 'pending'
-                  }, 'Payment is pending, but we could not sync your order status.');
-                  window.showNotification('Payment is pending. Please complete your payment from Midtrans.');
-                } catch (error) {
-                  window.showNotification(error.message || 'Payment is pending, but backend sync failed.', true);
-                } finally {
-                  this.isSnapPopupActive = false;
-                }
-              },
-              onError: async (result) => {
-                try {
-                  await this.notifyBackendPaymentStatus('/api/order/confirm', {
-                    order_code: checkoutPayload.order_code,
-                    transaction_id: result?.transaction_id || null,
-                    payment_result: result || null,
-                    checkout_payload: checkoutPayload,
-                    payment_status: 'failed'
-                  }, 'Payment failed and we could not sync your order status.');
-                } catch (error) {
-                  console.error('Failed to sync failed payment status:', error);
-                } finally {
-                  window.showNotification('Payment failed. Please try again.', true);
-                  this.isSnapPopupActive = false;
-                }
-              },
-              onClose: () => {
-                window.showNotification('Payment popup was closed before completion.', true);
-                this.isSnapPopupActive = false;
-              }
-            });
-          } catch (error) {
-            console.error('PAYMENT ERROR:', error);
-            window.showNotification(error.message || 'Unable to start payment. Please try again.', true);
-          } finally {
-            this.isCheckoutLoading = false;
-          }
-        },
-
-        generateOrderCode() {
-          const date = new Date();
-          const y = date.getFullYear();
-          const m = String(date.getMonth() + 1).padStart(2, '0');
-          const d = String(date.getDate()).padStart(2, '0');
-          const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-          return `CH-${y}${m}${d}-${random}`;
         }
-      }
-    }
-
-    Alpine.data('checkoutPage', checkoutPage);
-
-    const initialProfileState = {
-        full_name: '',
-        phone_number: '',
-        address: '',
-        postal_code: '',
-        province: '',
-        regency: '',
-        district: '',
-        village: '',
-        latitude: null,
-        longitude: null,
     };
 
-    Alpine.data('accountPage', () => ({
-        // --- Core View State ---
-        activeView: 'profile', // 'profile' or 'orderHistory'
+    return attemptFetch(0);
+};
 
-        // --- User and Profile Data ---
-        user: null,
-        profile: { ...initialProfileState },
-        loading: false,
+// --- DOM READY ---
+document.addEventListener("DOMContentLoaded", function () {
+    const loadComponent = async (id, path) => {
+        const mountNode = document.getElementById(id);
+        if (!mountNode) return;
 
-        // --- Order History Data ---
-        orders: [],
-        isOrderLoading: true,
-        orderSubscription: null,
+        try {
+            const response = await window.fetchWithDebug(window.toAppUrl(path), { cache: 'no-store' });
+            if (!response.ok) throw new Error('Failed to load component');
+            const html = await response.text();
+            mountNode.innerHTML = html;
 
-        // --- UI State ---
-        editProfileMode: false,
-        editAddressMode: false,
-
-        // --- Map State ---
-        map: null,
-        marker: null,
-
-        // --- Regional Data ---
-        provinces: [],
-        regencies: [],
-        districts: [],
-        villages: [],
-        selectedProvince: '',
-        selectedRegency: '',
-        selectedDistrict: '',
-        selectedVillage: '',
-
-        resetState() {
-            this.user = null;
-            this.profile = { ...initialProfileState };
-            this.orders = [];
-            this.activeView = 'profile';
-            this.editProfileMode = false;
-            this.editAddressMode = false;
-            if (this.orderSubscription) {
-                supabase.removeChannel(this.orderSubscription);
-                this.orderSubscription = null;
-            }
-        },
-
-        // --- Initialization ---
-        async init() {
-            const { data: { session } } = await window.supabase.auth.getSession();
-            if (!session) {
-                window.location.replace("login-page.html");
-                return;
-            }
-            this.user = session.user;
-
-            // Setup real-time auth listener
-            supabase.auth.onAuthStateChange((event, session) => {
-                if (event === 'SIGNED_OUT') {
-                    this.resetState();
-                    window.location.replace('login-page.html');
-                } else if (event === 'SIGNED_IN') {
-                    // Potentially handle user change if needed in the future
-                    this.user = session.user;
-                }
+            // Execute scripts in components
+            mountNode.querySelectorAll("script").forEach(script => {
+                const newScript = document.createElement("script");
+                newScript.textContent = script.textContent;
+                document.body.appendChild(newScript).remove();
             });
 
-            // Fetch all necessary data
-            await this.fetchProvinces();
-            await this.getProfile();
-            await this.fetchOrders();
-
-            this.$watch('editAddressMode', (value) => {
-                if (value) {
-                    this.$nextTick(() => {
-                        this.initMap();
-                    });
-                }
-            });
-        },
-
-        // --- View and URL Management ---
-
-        // --- Map Functionality ---
-        initMap() {
-            const defaultLat = -2.5489;
-            const defaultLng = 118.0149;
-
-            const lat = this.profile.latitude || defaultLat;
-            const lng = this.profile.longitude || defaultLng;
-
-            if (this.map) {
-                this.map.remove();
-            }
-
-            this.map = L.map('map').setView([lat, lng], 13);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(this.map);
-
-            this.marker = L.marker([lat, lng], {
-                draggable: true
-            }).addTo(this.map);
-
-            this.marker.on('dragend', (event) => {
-                const position = this.marker.getLatLng();
-                this.profile.latitude = position.lat;
-                this.profile.longitude = position.lng;
-            });
-
-            this.map.on('click', (event) => {
-                const position = event.latlng;
-                this.marker.setLatLng(position);
-                this.profile.latitude = position.lat;
-                this.profile.longitude = position.lng;
-            });
-        },
-
-        // --- Regional Data Fetching ---
-        async fetchProvinces() {
-            try {
-                const response = await window.fetchWithDebug('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json');
-                this.provinces = await response.json();
-            } catch (error) {
-                console.error("Failed to load provinces:", error);
-            }
-        },
-
-        async fetchRegencies() {
-            if (!this.selectedProvince) {
-                this.regencies = [];
-                this.districts = [];
-                this.villages = [];
-                return;
-            }
-            try {
-                const response = await window.fetchWithDebug(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${this.selectedProvince}.json`);
-                this.regencies = await response.json();
-                this.districts = [];
-                this.villages = [];
-            } catch (error) {
-                console.error("Failed to load regencies:", error);
-            }
-        },
-
-        async fetchDistricts() {
-            if (!this.selectedRegency) {
-                this.districts = [];
-                this.villages = [];
-                return;
-            }
-            try {
-                const response = await window.fetchWithDebug(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/${this.selectedRegency}.json`);
-                this.districts = await response.json();
-                this.villages = [];
-            } catch (error) {
-                console.error("Failed to load districts:", error);
-            }
-        },
-
-        async fetchVillages() {
-            if (!this.selectedDistrict) {
-                this.villages = [];
-                return;
-            }
-            try {
-                const response = await window.fetchWithDebug(`https://www.emsifa.com/api-wilayah-indonesia/api/villages/${this.selectedDistrict}.json`);
-                this.villages = await response.json();
-            } catch (error) {
-                console.error("Failed to load villages:", error);
-            }
-        },
-
-        updateProfileVillage() {
-            // Placeholder for future logic
-        },
-
-        // --- Order History Functionality ---
-        async fetchOrders() {
-            this.isOrderLoading = true;
-            try {
-                const { data, error } = await supabase
-                    .from('orders')
-                    .select('*')
-                    .eq('user_id', this.user.id)
-                    .order('created_at', { ascending: false });
-
-                if (error) throw error;
-                this.orders = data;
-                this.subscribeToOrderChanges();
-            } catch (error) {
-                window.showNotification('Failed to load order history.', true);
-            } finally {
-                this.isOrderLoading = false;
-            }
-        },
-
-        subscribeToOrderChanges() {
-            // Unsubscribe from any existing channel to prevent duplicates
-            if (this.orderSubscription) {
-                supabase.removeChannel(this.orderSubscription);
-            }
-
-            this.orderSubscription = supabase
-                .channel(`public:orders:user_id=eq.${this.user.id}`)
-                .on('postgres_changes', {
-                    event: '*',
-                    schema: 'public',
-                    table: 'orders',
-                    filter: `user_id=eq.${this.user.id}`
-                },
-                (payload) => {
-                    // Refetch all orders to ensure data consistency
-                    this.fetchOrders();
-                }
-            ).subscribe();
-        },
-
-        getStatusClass(status) {
-            if (!status) return 'status-default';
-            return `status-${status.toLowerCase().replace(/\s+/g, '-')}`;
-        },
-
-        // --- Profile and Address Management ---
-        async getProfile() {
-            this.loading = true;
-            try {
-                const { data, error } = await supabase
-                    .from('profiles')
-                    .select(`full_name, phone_number, address, postal_code, province, regency, district, village, latitude, longitude`)
-                    .eq('id', this.user.id)
-                    .single();
-
-                if (error && error.code !== 'PGRST116') {
-                    // PGRST116 means no rows found, which is a valid case for a new user.
-                    // We only throw if it's a different, unexpected error.
-                    throw error;
-                }
-
-                if (data) {
-                    this.profile = { ...this.profile, ...data };
-
-                    // --- Start of Sequential Address Hydration ---
-                    if (this.profile.province && this.provinces.length > 0) {
-                        const province = this.provinces.find(p => p.name === this.profile.province);
-                        if (!province) return;
-
-                        this.selectedProvince = province.id;
-                        await this.fetchRegencies();
-                        await this.$nextTick(); // Wait for DOM update
-
-                        if (this.profile.regency && this.regencies.length > 0) {
-                            const regency = this.regencies.find(r => r.name === this.profile.regency);
-                            if (!regency) return;
-
-                            this.selectedRegency = regency.id;
-                            await this.fetchDistricts();
-                            await this.$nextTick(); // Wait for DOM update
-
-                            if (this.profile.district && this.districts.length > 0) {
-                                const district = this.districts.find(d => d.name === this.profile.district);
-                                if (!district) return;
-
-                                this.selectedDistrict = district.id;
-                                await this.fetchVillages();
-                                await this.$nextTick(); // Wait for DOM update
-
-                                if (this.profile.village && this.villages.length > 0) {
-                                    const village = this.villages.find(v => v.name === this.profile.village);
-                                    if (village) {
-                                        this.selectedVillage = village.id;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            } catch (error) {
-                window.showNotification('Failed to load profile: ' + error.message, true);
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        validateProfilePayload(payload, mode = 'profile') {
-            if (!this.user?.id) {
-                return 'Missing authenticated user id.';
-            }
-
-            if (mode === 'profile') {
-                if (!payload.full_name || payload.full_name.trim().length < 2) {
-                    return 'Full name must be at least 2 characters.';
-                }
-                if (!payload.phone_number || payload.phone_number.trim().length < 6) {
-                    return 'Phone number must be at least 6 characters.';
-                }
-            }
-
-            if (mode === 'address') {
-                if (!payload.address || payload.address.trim().length < 8) {
-                    return 'Address must be at least 8 characters.';
-                }
-            }
-
-            return null;
-        },
-
-        async saveProfileWithUpdate(payload, mode = 'profile') {
-            const validationError = this.validateProfilePayload(payload, mode);
-            if (validationError) {
-                throw new Error(validationError);
-            }
-
-            const rowToUpdate = {
-                ...payload,
-                updated_at: new Date().toISOString()
-            };
-
-            console.info('[Profile] Update request mode:', mode);
-            console.info('[Profile] Update payload:', rowToUpdate);
-
-            const { data, error } = await supabase
-                .from('profiles')
-                .update(rowToUpdate)
-                .eq('id', this.user.id)
-                .select()
-                .maybeSingle();
-
-            console.info('[Profile] Update response data:', data);
-            console.info('[Profile] Update response error:', error);
-
-            if (error) throw error;
-            if (data) return data;
-
-            const rowToInsert = {
-                id: this.user.id,
-                ...rowToUpdate
-            };
-            console.info('[Profile] No existing row found. Inserting profile row:', rowToInsert);
-
-            const { data: insertedData, error: insertError } = await supabase
-                .from('profiles')
-                .insert(rowToInsert)
-                .select()
-                .single();
-
-            if (insertError) throw insertError;
-            return insertedData;
-        },
-
-        async saveProfileWithRpc(payload, mode = 'profile') {
-            const validationError = this.validateProfilePayload(payload, mode);
-            if (validationError) {
-                throw new Error(validationError);
-            }
-
-            const rpcPayload = {
-                user_id: this.user.id,
-                full_name: payload.full_name ?? null,
-                phone_number: payload.phone_number ?? null,
-                address: payload.address ?? null
-            };
-
-            console.info('[Profile] RPC request mode:', mode);
-            console.info('[Profile] RPC payload:', rpcPayload);
-
-            const { data, error } = await supabase.rpc('update_profile', rpcPayload);
-
-            console.info('[Profile] RPC response data:', data);
-            console.info('[Profile] RPC response error:', error);
-
-            if (error) throw error;
-            return Array.isArray(data) ? data[0] : data;
-        },
-
-        async updateProfile() {
-            this.loading = true;
-            try {
-                const payload = {
-                    full_name: this.profile.full_name,
-                    phone_number: this.profile.phone_number
-                };
-
-                const profileData = await this.saveProfileWithUpdate(payload, 'profile');
-
-                if (profileData) {
-                    this.profile = { ...this.profile, ...profileData };
-                    window.showNotification('Profile updated successfully!');
-                    this.editProfileMode = false;
-                }
-            } catch (error) {
-                console.error('[Profile] updateProfile failed:', error);
-                window.showNotification('Error updating profile: ' + (error.message || 'Unknown error'), true);
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        async updateAddress() {
-            this.loading = true;
-
-            const provinceName = this.provinces.find(p => p.id === this.selectedProvince)?.name || '';
-            const regencyName = this.regencies.find(r => r.id === this.selectedRegency)?.name || '';
-            const districtName = this.districts.find(d => d.id === this.selectedDistrict)?.name || '';
-            const villageName = this.villages.find(v => v.id === this.selectedVillage)?.name || '';
-
-            try {
-                const payload = {
-                    address: this.profile.address,
-                    postal_code: this.profile.postal_code,
-                    province: provinceName,
-                    regency: regencyName,
-                    district: districtName,
-                    village: villageName,
-                    latitude: this.profile.latitude,
-                    longitude: this.profile.longitude
-                };
-
-                console.info('[Profile] Updating address user id:', this.user?.id);
-                console.info('[Profile] Updating address payload:', payload);
-
-                const addressData = await this.saveProfileWithUpdate(payload, 'address');
-
-                if (addressData) {
-                    this.profile = { ...this.profile, ...addressData };
-                    console.info('[Profile] Address update success:', addressData);
-                    window.showNotification('Address updated successfully!');
-                    this.editAddressMode = false;
-                }
-            } catch (error) {
-                console.error('updateAddress request failed (full object):', error);
-
-                let userMessage = error?.message || 'Unknown error while updating address.';
-                if (error instanceof TypeError && String(error.message).toLowerCase().includes('fetch')) {
-                    userMessage = 'Network request failed. Check Supabase URL, CORS, and internet connection.';
-                }
-
-                window.showNotification('Error updating address: ' + userMessage, true);
-            } finally {
-                this.loading = false;
-            }
-        },
-
-        async handleLogout() {
-            this.loading = true;
-            await window.supabase.auth.signOut();
-            this.resetState();
-            window.location.replace('login-page.html');
+            if (window.feather) feather.replace();
+        } catch (error) {
+            console.error(`[Loader] Failed: ${path}`, error);
+            mountNode.innerHTML = '<div style="text-align:center; padding:1rem;">Failed to load section.</div>';
         }
-    }));
+    };
+
+    loadComponent("header-include", "/components/header.html");
+    loadComponent("footer-include", "/components/footer.html");
 });
 
-// Global notification
-window.showNotification = (message, isError = false) => {
-  const notificationElement = document.getElementById('notification');
-  if (!notificationElement) {
-    alert(message);
-    return;
-  }
-  notificationElement.textContent = message;
-  notificationElement.style.backgroundColor = isError ? '#ef4444' : 'var(--accent)';
-  notificationElement.classList.add('show');
-  setTimeout(() => {
-    notificationElement.classList.remove('show');
-  }, 3000);
+// --- UTILITIES ---
+window.formatRupiah = (num) => isNaN(num) ? "Rp 0" : new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(num);
+
+window.fixImagePath = (path) => path ? String(path).replace(/ /g, '-') : 'img/coming-soon.jpg';
+
+window.calculateDiscount = (product) => {
+    const original = product.price || 0;
+    let final = original;
+    let percent = 0;
+
+    if (product.discount_price > 0) {
+        final = product.discount_price;
+        percent = Math.floor(((original - final) / original) * 100);
+    } else if (product.discount_percent > 0) {
+        percent = product.discount_percent;
+        final = original - (original * percent / 100);
+    }
+    return { finalPrice: Math.max(0, final), percentOff: percent, originalPrice: original };
 };
+
+// --- ALPINE STORES ---
+document.addEventListener("alpine:init", () => {
+    Alpine.store('i18n', {
+        lang: localStorage.getItem('language') || 'id',
+        ready: false,
+        translations: {},
+        async init() {
+            await this.load();
+            this.ready = true;
+        },
+        async load() {
+            try {
+                const url = window.toAppUrl(`locales/${this.lang}.json?v=${Date.now()}`);
+                const res = await window.fetchWithDebug(url);
+                this.translations = await res.json();
+                document.documentElement.lang = this.lang;
+            } catch (e) { console.error("Lang load failed", e); }
+        },
+        t(key) {
+            return key.split('.').reduce((acc, cur) => acc && acc[cur], this.translations) || key;
+        }
+    });
+
+    Alpine.store("products", {
+        all: [],
+        isLoading: true,
+        async init() {
+            try {
+                const { data, error } = await window.supabase.from("products").select("*").order("id", { ascending: true });
+                if (error) throw error;
+                this.all = data || [];
+            } catch (e) { console.error("Fetch products failed", e); }
+            finally { this.isLoading = false; }
+        },
+        getProductById(id) { return this.all.find(p => String(p.id) === String(id)); }
+    });
+
+    Alpine.store("cart", {
+        items: JSON.parse(localStorage.getItem("cart")) || [],
+        init() { this.save(); },
+        add(productId, qty = 1) {
+            const existing = this.items.find(i => String(i.productId) === String(productId));
+            if (existing) existing.quantity += qty;
+            else this.items.push({ productId, quantity: qty });
+            this.save();
+        },
+        remove(productId, force = false) {
+            const idx = this.items.findIndex(i => String(i.productId) === String(productId));
+            if (idx > -1) {
+                if (force || this.items[idx].quantity <= 1) this.items.splice(idx, 1);
+                else this.items[idx].quantity--;
+            }
+            this.save();
+        },
+        save() { localStorage.setItem("cart", JSON.stringify(this.items)); },
+        get details() {
+            return this.items.map(item => {
+                const p = Alpine.store("products").getProductById(item.productId);
+                if (!p) return null;
+                const disc = window.calculateDiscount(p);
+                return { ...p, ...disc, quantity: item.quantity, subtotal: disc.finalPrice * item.quantity, totalWeight: (p.weight || 0) * item.quantity };
+            }).filter(Boolean);
+        },
+        get total() { return this.details.reduce((t, i) => t + i.subtotal, 0); },
+        get totalWeight() { return this.details.reduce((t, i) => t + i.totalWeight, 0); }
+    });
+});
+
+// --- CHECKOUT LOGIC ---
+function checkoutPage() {
+    return {
+        shipping: { courier: 'jne', cost: 0, service: '', destinationCityId: '' },
+        regions: { services: [] },
+        isCheckoutLoading: false,
+
+        async calculateShipping() {
+            if (!this.shipping.destinationCityId || !this.shipping.courier) return;
+            
+            this.isCheckoutLoading = true;
+            try {
+                const res = await window.fetchWithDebug(`${API_BASE_URL}/api/shipping/cost`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        destination: this.shipping.destinationCityId,
+                        weight: Alpine.store('cart').totalWeight,
+                        courier: this.shipping.courier
+                    })
+                });
+                const result = await res.json();
+                if (result.status === 'success') {
+                    this.regions.services = result.data;
+                }
+            } catch (e) {
+                console.error("Shipping calc failed", e);
+            } finally {
+                this.isCheckoutLoading = false;
+            }
+        }
+    };
+}
