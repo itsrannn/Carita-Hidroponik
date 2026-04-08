@@ -166,19 +166,22 @@ document.addEventListener('alpine:init', () => {
       if (!this.user?.id) return;
       this.loading = true;
       try {
+        const latitude = this.profile.latitude === '' || this.profile.latitude === null || this.profile.latitude === undefined
+          ? null
+          : Number(this.profile.latitude);
+        const longitude = this.profile.longitude === '' || this.profile.longitude === null || this.profile.longitude === undefined
+          ? null
+          : Number(this.profile.longitude);
+
         const payload = {
           address: this.profile.address || null,
           postal_code: this.profile.postal_code || null,
-          latitude: this.profile.latitude || null,
-          longitude: this.profile.longitude || null,
+          latitude: Number.isFinite(latitude) ? latitude : null,
+          longitude: Number.isFinite(longitude) ? longitude : null,
           province: this.profile.province || null,
           regency: this.profile.regency || null,
           district: this.profile.district || null,
-          village: this.profile.village || null,
-          province_id: this.selectedProvince || null,
-          regency_id: this.selectedRegency || null,
-          district_id: this.selectedDistrict || null,
-          village_id: this.selectedVillage || null
+          village: this.profile.village || null
         };
 
         const { error } = await window.supabase
@@ -187,7 +190,13 @@ document.addEventListener('alpine:init', () => {
           .eq('id', this.user.id);
 
         if (error) {
-          console.error('[Account] Failed to update address:', error);
+          console.error('[Account] Failed to update address:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code,
+            payload
+          });
           this.showNotification('Gagal menyimpan alamat.', true);
           return;
         }
@@ -195,7 +204,12 @@ document.addEventListener('alpine:init', () => {
         this.editAddressMode = false;
         this.showNotification('Perubahan alamat berhasil disimpan.');
       } catch (error) {
-        console.error('[Account] Error while updating address:', error);
+        console.error('[Account] Error while updating address:', {
+          message: error?.message || String(error),
+          details: error?.details,
+          hint: error?.hint,
+          code: error?.code
+        });
         this.showNotification('Terjadi kesalahan saat menyimpan alamat.', true);
       } finally {
         this.loading = false;
