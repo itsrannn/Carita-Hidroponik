@@ -579,6 +579,7 @@ function checkoutPage() {
         isSidebarOpen: false,
         isConfirmModalOpen: false,
         isProfileModalOpen: false,
+        isSnapPopupActive: false,
 
         shipping: {
             courier: 'jne',
@@ -589,6 +590,85 @@ function checkoutPage() {
         },
         regions: { services: [] },
         isCheckoutLoading: false,
+        ppnRate: 0.11,
+
+        async init() {
+            await this.hydrateShippingAddress();
+        },
+
+        get subtotal() {
+            return Number(Alpine.store('cart')?.total || 0);
+        },
+
+        get ppnAmount() {
+            return this.subtotal * this.ppnRate;
+        },
+
+        get ongkir() {
+            return Number(this.shipping.cost || 0);
+        },
+
+        checkoutButtonText() {
+            if (this.isCheckoutLoading) return 'Memproses...';
+            if (this.isSnapPopupActive) return 'Checkout Sedang Berjalan...';
+            return 'Checkout Sekarang';
+        },
+
+        async getLoggedInUser() {
+            if (!window.supabase?.auth?.getSession) return null;
+
+            try {
+                const { data, error } = await window.supabase.auth.getSession();
+                if (error) {
+                    console.error('[Checkout] Failed to load auth session:', error);
+                    return null;
+                }
+
+                return data?.session?.user || null;
+            } catch (error) {
+                console.error('[Checkout] Error while checking auth session:', error);
+                return null;
+            }
+        },
+
+        async hydrateShippingAddress() {
+            const user = await this.getLoggedInUser();
+            if (!user?.id || !window.supabase?.from) return;
+
+            try {
+                const { data, error } = await window.supabase
+                    .from('profiles')
+                    .select('address, city, regency, district, province, postal_code, city_id, regency_id')
+                    .eq('id', user.id)
+                    .maybeSingle();
+
+                if (error) {
+                    console.error('[Checkout] Failed to fetch profile for address:', error);
+                    return;
+                }
+
+                if (!data) return;
+
+                const cityId = data.city_id || data.regency_id || '';
+                this.shipping.destinationCityId = cityId ? String(cityId) : '';
+
+                const addressParts = [
+                    data.address,
+                    data.district,
+                    data.regency || data.city,
+                    data.province,
+                    data.postal_code
+                ].filter(Boolean);
+
+                this.shipping.addressLabel = addressParts.join(', ');
+
+                if (this.shipping.destinationCityId && this.shipping.courier) {
+                    await this.calculateShipping();
+                }
+            } catch (error) {
+                console.error('[Checkout] Failed to hydrate shipping address:', error);
+            }
+        },
 
         updateShippingCost() {
             if (!this.shipping.service) {
@@ -605,7 +685,61 @@ function checkoutPage() {
         },
 
         calculateGrandTotal() {
-            return Alpine.store('cart').total + Number(this.shipping.cost || 0);
+            return this.subtotal + this.ppnAmount + this.ongkir;
+        },
+
+        async validateCheckout() {
+            const user = await this.getLoggedInUser();
+            if (!user) {
+                this.isLoginModalOpen = true;
+                window.location.href = window.toAppPath('login-page.html?redirect=my-cart.html');
+                return { valid: false, reason: 'LOGIN_REQUIRED' };
+            }
+
+            if (Alpine.store('cart').items.length === 0) {
+                alert('Keranjang belanja kosong. Tambahkan produk terlebih dahulu.');
+                return { valid: false, reason: 'EMPTY_CART' };
+            }
+
+            if (!this.shipping.addressLabel || !this.shipping.destinationCityId) {
+                this.isProfileModalOpen = true;
+                alert('Alamat pengiriman belum lengkap. Silakan lengkapi alamat terlebih dahulu.');
+                window.location.href = window.toAppPath('my-account.html');
+                return { valid: false, reason: 'ADDRESS_INCOMPLETE' };
+            }
+
+            if (!this.shipping.service || this.ongkir <= 0) {
+                alert('Pilih layanan pengiriman untuk menghitung ongkir.');
+                return { valid: false, reason: 'SHIPPING_NOT_SELECTED' };
+            }
+
+            return { valid: true };
+        },
+
+        async handleCheckout() {
+            if (this.isCheckoutLoading || this.isSnapPopupActive) return;
+
+            const validation = await this.validateCheckout();
+            if (!validation.valid) return;
+
+            this.isConfirmModalOpen = true;
+        },
+
+        async confirmAndProcessCheckout() {
+            const validation = await this.validateCheckout();
+            if (!validation.valid) return;
+
+            this.isCheckoutLoading = true;
+            this.isSnapPopupActive = true;
+
+            try {
+                // Placeholder for payment flow (Snap popup/tokenization).
+                alert('Checkout tervalidasi. Integrasi pembayaran dapat dilanjutkan.');
+            } finally {
+                this.isCheckoutLoading = false;
+                this.isSnapPopupActive = false;
+                this.isConfirmModalOpen = false;
+            }
         },
 
         async calculateShipping() {
@@ -625,12 +759,23 @@ function checkoutPage() {
                 const result = await res.json();
                 if (result?.status === 'success') {
                     this.regions.services = Array.isArray(result.data) ? result.data : [];
+                    if (this.regions.services.length > 0) {
+                        this.shipping.service = JSON.stringify(this.regions.services[0]);
+                        this.updateShippingCost();
+                    } else {
+                        this.shipping.service = '';
+                        this.shipping.cost = 0;
+                    }
                 } else {
                     this.regions.services = [];
+                    this.shipping.service = '';
+                    this.shipping.cost = 0;
                 }
             } catch (error) {
                 console.error('[Checkout] Shipping calc failed', error);
                 this.regions.services = [];
+                this.shipping.service = '';
+                this.shipping.cost = 0;
             } finally {
                 this.isCheckoutLoading = false;
             }
