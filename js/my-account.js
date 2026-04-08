@@ -236,7 +236,8 @@ document.addEventListener('alpine:init', () => {
 
         const normalizeId = (value) => {
           if (value === '' || value === null || value === undefined) return null;
-          return String(value);
+          const parsed = Number(value);
+          return Number.isFinite(parsed) ? parsed : null;
         };
 
         const payload = {
@@ -244,10 +245,6 @@ document.addEventListener('alpine:init', () => {
           postal_code: this.profile.postal_code || null,
           latitude: Number.isFinite(latitude) ? latitude : null,
           longitude: Number.isFinite(longitude) ? longitude : null,
-          province: this.profile.province || null,
-          city: this.profile.city || this.profile.regency || null,
-          district: this.profile.district || null,
-          village: this.profile.village || null,
           province_id: normalizeId(this.selectedProvince),
           city_id: normalizeId(this.selectedRegency),
           district_id: normalizeId(this.selectedDistrict),
