@@ -31,37 +31,51 @@ document.addEventListener('alpine:init', () => {
     selectedRegency: '',
     selectedDistrict: '',
     selectedVillage: '',
+    map: null,
+    mapMarker: null,
+    mapInitialized: false,
 
     async init() {
-      if (!window.supabase) {
-        window.location.href = window.toAppPath('login-page.html');
-        return;
-      }
-
-      const { data, error } = await window.supabase.auth.getSession();
-      if (error) {
-        console.error('[Account] Failed to load session:', error);
-      }
-
-      const session = data?.session;
-      if (!session?.user) {
-        window.location.href = window.toAppPath('login-page.html?redirect=my-account.html');
-        return;
-      }
-
-      this.user = session.user;
-
-      await Promise.all([
-        this.fetchProfile(),
-        this.fetchOrders(),
-        this.fetchProvinces()
-      ]);
-
-      window.supabase.auth.onAuthStateChange((event) => {
-        if (event === 'SIGNED_OUT') {
+      try {
+        if (!window.supabase) {
           window.location.href = window.toAppPath('login-page.html');
+          return;
         }
-      });
+
+        const { data, error } = await window.supabase.auth.getSession();
+        if (error) {
+          console.error('[Account] Failed to load session:', error);
+        }
+
+        const session = data?.session;
+        if (!session?.user) {
+          window.location.href = window.toAppPath('login-page.html?redirect=my-account.html');
+          return;
+        }
+
+        this.user = session.user;
+
+        await this.fetchProvinces();
+        await Promise.all([
+          this.fetchProfile(),
+          this.fetchOrders()
+        ]);
+
+        this.$nextTick(() => this.initMap());
+        this.$watch('editAddressMode', (isEditMode) => {
+          if (isEditMode) {
+            this.$nextTick(() => this.initMap());
+          }
+        });
+
+        window.supabase.auth.onAuthStateChange((event) => {
+          if (event === 'SIGNED_OUT') {
+            window.location.href = window.toAppPath('login-page.html');
+          }
+        });
+      } catch (error) {
+        console.error('[Account] Failed to initialize account page:', error);
+      }
     },
 
     async fetchProfile() {
@@ -93,6 +107,9 @@ document.addEventListener('alpine:init', () => {
       if (this.selectedProvince) await this.fetchRegencies(false);
       if (this.selectedRegency) await this.fetchDistricts(false);
       if (this.selectedDistrict) await this.fetchVillages(false);
+      if (this.selectedVillage) this.updateProfileVillage();
+
+      this.syncMapWithProfile();
     },
 
     async fetchOrders() {
@@ -118,62 +135,77 @@ document.addEventListener('alpine:init', () => {
     async updateProfile() {
       if (!this.user?.id) return;
       this.loading = true;
+      try {
+        const payload = {
+          full_name: this.profile.full_name || null,
+          phone_number: this.profile.phone_number || null
+        };
 
-      const payload = {
-        full_name: this.profile.full_name || null,
-        phone_number: this.profile.phone_number || null
-      };
+        const { error } = await window.supabase
+          .from('profiles')
+          .update(payload)
+          .eq('id', this.user.id);
 
-      const { error } = await window.supabase
-        .from('profiles')
-        .update(payload)
-        .eq('id', this.user.id);
+        if (error) {
+          console.error('[Account] Failed to update profile:', error);
+          this.showNotification('Gagal menyimpan profil.', true);
+          return;
+        }
 
-      this.loading = false;
-      if (error) {
-        console.error('[Account] Failed to update profile:', error);
-        return;
+        this.editProfileMode = false;
+        this.showNotification('Profil berhasil disimpan.');
+      } catch (error) {
+        console.error('[Account] Error while updating profile:', error);
+        this.showNotification('Terjadi kesalahan saat menyimpan profil.', true);
+      } finally {
+        this.loading = false;
       }
-
-      this.editProfileMode = false;
     },
 
     async updateAddress() {
       if (!this.user?.id) return;
       this.loading = true;
+      try {
+        const payload = {
+          address: this.profile.address || null,
+          postal_code: this.profile.postal_code || null,
+          latitude: this.profile.latitude || null,
+          longitude: this.profile.longitude || null,
+          province: this.profile.province || null,
+          regency: this.profile.regency || null,
+          district: this.profile.district || null,
+          village: this.profile.village || null,
+          province_id: this.selectedProvince || null,
+          regency_id: this.selectedRegency || null,
+          district_id: this.selectedDistrict || null,
+          village_id: this.selectedVillage || null
+        };
 
-      const payload = {
-        address: this.profile.address || null,
-        postal_code: this.profile.postal_code || null,
-        latitude: this.profile.latitude || null,
-        longitude: this.profile.longitude || null,
-        province: this.profile.province || null,
-        regency: this.profile.regency || null,
-        district: this.profile.district || null,
-        village: this.profile.village || null,
-        province_id: this.selectedProvince || null,
-        regency_id: this.selectedRegency || null,
-        district_id: this.selectedDistrict || null,
-        village_id: this.selectedVillage || null
-      };
+        const { error } = await window.supabase
+          .from('profiles')
+          .update(payload)
+          .eq('id', this.user.id);
 
-      const { error } = await window.supabase
-        .from('profiles')
-        .update(payload)
-        .eq('id', this.user.id);
+        if (error) {
+          console.error('[Account] Failed to update address:', error);
+          this.showNotification('Gagal menyimpan alamat.', true);
+          return;
+        }
 
-      this.loading = false;
-      if (error) {
-        console.error('[Account] Failed to update address:', error);
-        return;
+        this.editAddressMode = false;
+        this.showNotification('Perubahan alamat berhasil disimpan.');
+      } catch (error) {
+        console.error('[Account] Error while updating address:', error);
+        this.showNotification('Terjadi kesalahan saat menyimpan alamat.', true);
+      } finally {
+        this.loading = false;
       }
-
-      this.editAddressMode = false;
     },
 
     async fetchProvinces() {
       try {
         const response = await fetch('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         this.provinces = await response.json();
       } catch (error) {
         console.error('[Account] Failed to fetch provinces:', error);
@@ -197,6 +229,7 @@ document.addEventListener('alpine:init', () => {
 
       try {
         const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${this.selectedProvince}.json`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         this.regencies = await response.json();
         const match = this.provinces.find((item) => String(item.id) === String(this.selectedProvince));
         this.profile.province = match?.name || '';
@@ -220,6 +253,7 @@ document.addEventListener('alpine:init', () => {
 
       try {
         const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/${this.selectedRegency}.json`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         this.districts = await response.json();
         const match = this.regencies.find((item) => String(item.id) === String(this.selectedRegency));
         this.profile.regency = match?.name || '';
@@ -241,6 +275,7 @@ document.addEventListener('alpine:init', () => {
 
       try {
         const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/villages/${this.selectedDistrict}.json`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         this.villages = await response.json();
         const match = this.districts.find((item) => String(item.id) === String(this.selectedDistrict));
         this.profile.district = match?.name || '';
@@ -253,6 +288,86 @@ document.addEventListener('alpine:init', () => {
     updateProfileVillage() {
       const match = this.villages.find((item) => String(item.id) === String(this.selectedVillage));
       this.profile.village = match?.name || '';
+    },
+
+    initMap() {
+      try {
+        if (!window.L) {
+          console.error('[Account] Leaflet is not loaded.');
+          return;
+        }
+
+        const mapContainer = document.getElementById('map');
+        if (!mapContainer) {
+          console.error('[Account] Map container with id="map" not found.');
+          return;
+        }
+
+        if (!this.mapInitialized) {
+          const initialLat = Number(this.profile.latitude) || -6.2;
+          const initialLng = Number(this.profile.longitude) || 106.816666;
+          this.map = window.L.map('map').setView([initialLat, initialLng], 13);
+          window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+          }).addTo(this.map);
+
+          this.map.on('click', (e) => {
+            const { lat, lng } = e.latlng;
+            this.setCoordinate(lat, lng);
+          });
+
+          this.mapInitialized = true;
+        }
+
+        this.syncMapWithProfile();
+        setTimeout(() => this.map?.invalidateSize(), 150);
+      } catch (error) {
+        console.error('[Account] Failed to initialize map:', error);
+      }
+    },
+
+    setCoordinate(lat, lng) {
+      const normalizedLat = Number(lat);
+      const normalizedLng = Number(lng);
+      if (!Number.isFinite(normalizedLat) || !Number.isFinite(normalizedLng)) return;
+
+      this.profile.latitude = Number(normalizedLat.toFixed(7));
+      this.profile.longitude = Number(normalizedLng.toFixed(7));
+
+      if (!this.map) return;
+
+      const latlng = [this.profile.latitude, this.profile.longitude];
+      if (this.mapMarker) {
+        this.mapMarker.setLatLng(latlng);
+      } else {
+        this.mapMarker = window.L.marker(latlng).addTo(this.map);
+      }
+      this.map.setView(latlng, Math.max(this.map.getZoom(), 13));
+    },
+
+    syncMapWithProfile() {
+      if (!this.map) return;
+
+      const lat = Number(this.profile.latitude);
+      const lng = Number(this.profile.longitude);
+      if (Number.isFinite(lat) && Number.isFinite(lng) && lat !== 0 && lng !== 0) {
+        this.setCoordinate(lat, lng);
+      }
+    },
+
+    showNotification(message, isError = false) {
+      const notification = document.getElementById('notification');
+      if (!notification) {
+        if (isError) console.error('[Account] Notification:', message);
+        else console.info('[Account] Notification:', message);
+        alert(message);
+        return;
+      }
+
+      notification.textContent = message;
+      notification.style.backgroundColor = isError ? '#c62828' : 'var(--accent)';
+      notification.classList.add('show');
+      setTimeout(() => notification.classList.remove('show'), 2500);
     },
 
     getStatusClass(status = '') {
