@@ -174,20 +174,67 @@ window.formatRupiah = (num) => (
         }).format(Number(num))
 );
 
-window.fixImagePath = (path) => {
+window.resolveImagePath = (path) => {
     const fallback = window.toAppPath('img/coming-soon.jpg');
     if (!path) return fallback;
 
     const trimmed = String(path).trim();
     if (!trimmed) return fallback;
 
-    if (/^(?:[a-z]+:)?\/\//i.test(trimmed) || trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
+    if (trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
         return trimmed;
     }
 
-    const normalized = trimmed.replace(/\\/g, '/').replace(/ /g, '-').replace(/^\/+/, '');
-    return window.toAppPath(normalized);
+    if (/^https?:\/\//i.test(trimmed)) {
+        try {
+            const url = new URL(trimmed);
+            if (url.origin === window.location.origin) {
+                const normalizedOriginPath = url.pathname.replace(/^\/+/, '');
+                if (APP_BASE_PATH) {
+                    const repoPrefix = APP_BASE_PATH.replace(/^\/+/, '');
+                    if (normalizedOriginPath.startsWith(`${repoPrefix}/`)) {
+                        return window.toAppPath(normalizedOriginPath.slice(repoPrefix.length + 1));
+                    }
+                }
+            }
+            return trimmed;
+        } catch (_e) {
+            return trimmed;
+        }
+    }
+
+    let normalized = trimmed.replace(/\\/g, '/').replace(/ /g, '-').replace(/^\/+/, '');
+    if (APP_BASE_PATH) {
+        const repoPrefix = APP_BASE_PATH.replace(/^\/+/, '');
+        if (normalized.startsWith(`${repoPrefix}/`)) {
+            normalized = normalized.slice(repoPrefix.length + 1);
+        }
+    }
+
+    return normalized ? window.toAppPath(normalized) : fallback;
 };
+
+window.fixImagePath = window.resolveImagePath;
+
+window.applyImageFallback = (imgElement) => {
+    if (!imgElement || imgElement.tagName !== 'IMG') return;
+    const fallback = window.toAppPath('img/coming-soon.jpg');
+    if (imgElement.dataset.fallbackApplied === '1') return;
+
+    imgElement.onerror = () => {
+        if (imgElement.dataset.fallbackApplied === '1') return;
+        imgElement.dataset.fallbackApplied = '1';
+        imgElement.src = fallback;
+    };
+};
+
+document.addEventListener('error', (event) => {
+    const target = event.target;
+    if (target && target.tagName === 'IMG') {
+        window.applyImageFallback(target);
+        target.onerror?.();
+    }
+}, true);
 
 window.calculateDiscount = (product) => {
     const original = Number(product?.price || 0);
