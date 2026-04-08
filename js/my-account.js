@@ -15,10 +15,12 @@ document.addEventListener('alpine:init', () => {
       latitude: null,
       longitude: null,
       province: '',
+      city: '',
       regency: '',
       district: '',
       village: '',
       province_id: '',
+      city_id: '',
       regency_id: '',
       district_id: '',
       village_id: ''
@@ -138,7 +140,12 @@ document.addEventListener('alpine:init', () => {
       // 1) Load provinces, 2) set province, 3) load cities, 4) set city,
       // 5) load districts, 6) set district, 7) load villages, 8) set village.
       await this.fetchRegencies(false);
-      this.selectedRegency = this.resolveRegionId(this.regencies, data.regency_id, data.regency);
+      this.selectedRegency = this.resolveRegionId(
+        this.regencies,
+        data.city_id ?? data.regency_id,
+        data.city ?? data.regency
+      );
+      this.profile.city_id = this.selectedRegency;
       this.profile.regency_id = this.selectedRegency;
 
       if (!this.selectedRegency) {
@@ -227,20 +234,27 @@ document.addEventListener('alpine:init', () => {
           ? null
           : Number(this.profile.longitude);
 
+        const normalizeId = (value) => {
+          if (value === '' || value === null || value === undefined) return null;
+          return String(value);
+        };
+
         const payload = {
           address: this.profile.address || null,
           postal_code: this.profile.postal_code || null,
           latitude: Number.isFinite(latitude) ? latitude : null,
           longitude: Number.isFinite(longitude) ? longitude : null,
           province: this.profile.province || null,
-          regency: this.profile.regency || null,
+          city: this.profile.city || this.profile.regency || null,
           district: this.profile.district || null,
           village: this.profile.village || null,
-          province_id: this.selectedProvince || null,
-          regency_id: this.selectedRegency || null,
-          district_id: this.selectedDistrict || null,
-          village_id: this.selectedVillage || null
+          province_id: normalizeId(this.selectedProvince),
+          city_id: normalizeId(this.selectedRegency),
+          district_id: normalizeId(this.selectedDistrict),
+          village_id: normalizeId(this.selectedVillage)
         };
+
+        console.info('[Account] Updating address payload:', payload);
 
         const { error } = await window.supabase
           .from('profiles')
@@ -253,7 +267,8 @@ document.addEventListener('alpine:init', () => {
             details: error.details,
             hint: error.hint,
             code: error.code,
-            payload
+            payload,
+            raw: error
           });
           this.showNotification('Gagal menyimpan alamat.', true);
           return;
@@ -328,7 +343,8 @@ document.addEventListener('alpine:init', () => {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         this.districts = await response.json();
         const match = this.regencies.find((item) => String(item.id) === String(this.selectedRegency));
-        this.profile.regency = match?.name || '';
+        this.profile.city = match?.name || '';
+        this.profile.regency = this.profile.city;
       } catch (error) {
         console.error('[Account] Failed to fetch districts:', error);
         this.districts = [];
