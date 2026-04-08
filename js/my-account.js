@@ -197,15 +197,19 @@ document.addEventListener('alpine:init', () => {
       if (!this.user?.id) return;
       this.loading = true;
       try {
+        const userId = this.user.id;
         const payload = {
           full_name: this.profile.full_name || null,
           phone_number: this.profile.phone_number || null
         };
 
-        const { error } = await window.supabase
+        const { data, error } = await window.supabase
           .from('profiles')
           .update(payload)
-          .eq('id', this.user.id);
+          .eq('id', userId)
+          .select();
+
+        console.log('[Account] updateProfile result:', data, error);
 
         if (error) {
           console.error('[Account] Failed to update profile:', error);
@@ -227,6 +231,7 @@ document.addEventListener('alpine:init', () => {
       if (!this.user?.id) return;
       this.loading = true;
       try {
+        const userId = this.user.id;
         const latitude = this.profile.latitude === '' || this.profile.latitude === null || this.profile.latitude === undefined
           ? null
           : Number(this.profile.latitude);
@@ -234,29 +239,37 @@ document.addEventListener('alpine:init', () => {
           ? null
           : Number(this.profile.longitude);
 
-        const normalizeId = (value) => {
-          if (value === '' || value === null || value === undefined) return null;
-          const parsed = Number(value);
-          return Number.isFinite(parsed) ? parsed : null;
+        const findRegionName = (options, selectedId) => {
+          if (!Array.isArray(options) || !selectedId) return null;
+          const match = options.find((item) => String(item.id) === String(selectedId));
+          return match?.name || null;
         };
+
+        const provinceName = findRegionName(this.provinces, this.selectedProvince) || this.profile.province || null;
+        const regencyName = findRegionName(this.regencies, this.selectedRegency) || this.profile.regency || this.profile.city || null;
+        const districtName = findRegionName(this.districts, this.selectedDistrict) || this.profile.district || null;
+        const villageName = findRegionName(this.villages, this.selectedVillage) || this.profile.village || null;
 
         const payload = {
           address: this.profile.address || null,
           postal_code: this.profile.postal_code || null,
           latitude: Number.isFinite(latitude) ? latitude : null,
           longitude: Number.isFinite(longitude) ? longitude : null,
-          province_id: normalizeId(this.selectedProvince),
-          city_id: normalizeId(this.selectedRegency),
-          district_id: normalizeId(this.selectedDistrict),
-          village_id: normalizeId(this.selectedVillage)
+          province: provinceName,
+          regency: regencyName,
+          district: districtName,
+          village: villageName
         };
 
         console.info('[Account] Updating address payload:', payload);
 
-        const { error } = await window.supabase
+        const { data, error } = await window.supabase
           .from('profiles')
           .update(payload)
-          .eq('id', this.user.id);
+          .eq('id', userId)
+          .select();
+
+        console.log('[Account] updateAddress result:', data, error);
 
         if (error) {
           console.error('[Account] Failed to update address:', {
