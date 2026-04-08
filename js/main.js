@@ -148,6 +148,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.body.appendChild(newScript).remove();
             });
 
+            if (window.Alpine && typeof window.Alpine.initTree === 'function') {
+                window.Alpine.initTree(mountNode);
+            }
+
             if (window.feather) window.feather.replace();
         } catch (error) {
             console.error(`[Loader] Failed: ${path}`, error);
@@ -264,6 +268,131 @@ document.addEventListener('alpine:init', () => {
             return value ?? key;
         }
     });
+
+
+    Alpine.store('i18n').init().catch((error) => {
+        console.error('[i18n] Initial bootstrap failed:', error);
+    });
+
+    Alpine.data('products', () => ({
+        searchTerm: '',
+        selectedCategory: 'all',
+        sortOption: 'default',
+        currentPage: 1,
+        itemsPerPage: 8,
+
+        init() {
+            if (!this.$store.products.isLoading && this.$store.products.all.length === 0) {
+                this.$store.products.init();
+            }
+
+            Alpine.effect(() => {
+                this.$store.i18n.lang;
+                this.currentPage = 1;
+            });
+        },
+
+        handleSearch(term = '') {
+            this.searchTerm = String(term || '').trim();
+            this.currentPage = 1;
+        },
+
+        toggleSort() {
+            this.sortOption = this.sortOption === 'price-asc'
+                ? 'price-desc'
+                : 'price-asc';
+            this.currentPage = 1;
+        },
+
+        processedItems() {
+            const list = Array.isArray(this.$store.products.all) ? [...this.$store.products.all] : [];
+            const term = this.searchTerm.toLowerCase();
+            const lang = this.$store.i18n.lang || 'id';
+
+            const filtered = list.filter((item) => {
+                if (!item) return false;
+
+                const matchesCategory = this.selectedCategory === 'all'
+                    || String(item.category || '').toLowerCase() === this.selectedCategory;
+
+                if (!matchesCategory) return false;
+
+                if (!term) return true;
+
+                const localizedName = (item.name && (item.name[lang] || item.name.id || item.name.en))
+                    || item.product_name
+                    || '';
+
+                return String(localizedName).toLowerCase().includes(term);
+            });
+
+            if (this.sortOption === 'price-asc' || this.sortOption === 'price-desc') {
+                const asc = this.sortOption === 'price-asc';
+                filtered.sort((a, b) => {
+                    const aPrice = window.calculateDiscount(a).finalPrice;
+                    const bPrice = window.calculateDiscount(b).finalPrice;
+                    return asc ? aPrice - bPrice : bPrice - aPrice;
+                });
+            }
+
+            return filtered;
+        },
+
+        promoItems() {
+            return this.processedItems().filter((item) => Number(item.discount_price || item.discount_percent || 0) > 0);
+        },
+
+        totalPages() {
+            return Math.max(1, Math.ceil(this.processedItems().length / this.itemsPerPage));
+        },
+
+        goToPage(page) {
+            const next = Number(page || 1);
+            this.currentPage = Math.min(Math.max(1, next), this.totalPages());
+        },
+
+        paginatedItems() {
+            const start = (this.currentPage - 1) * this.itemsPerPage;
+            return this.processedItems().slice(start, start + this.itemsPerPage);
+        },
+
+        renderProductCard(item) {
+            const { finalPrice, percentOff, originalPrice } = window.calculateDiscount(item);
+            const isPromo = percentOff > 0;
+            const lang = this.$store.i18n.lang;
+            const itemName = (item.name && (item.name[lang] || item.name.id || item.name.en))
+                || item.product_name
+                || 'Unnamed Product';
+
+            const ribbonHtml = isPromo
+                ? `<div class="discount-ribbon"><span>${percentOff}% OFF</span></div>`
+                : '';
+
+            const priceHtml = isPromo
+                ? `<div class="price-container"><div class="price-original">${window.formatRupiah(originalPrice)}</div><div class="price-discounted">${window.formatRupiah(finalPrice)}</div></div>`
+                : `<div class="price">${window.formatRupiah(originalPrice)}</div>`;
+
+            return `
+      <a href="${window.toAppPath(`product-details.html?id=${item.id}`)}" class="product-link">
+        <article class="product-card">
+          ${ribbonHtml}
+          <figure class="product-media">
+            <img src="${window.fixImagePath(item.image_url || item.img)}" alt="${itemName}" />
+          </figure>
+          <div class="product-body">
+            <h3 class="product-title">${itemName}</h3>
+            <div class="product-meta">
+              ${priceHtml}
+              <button class="btn-sm add-cart" @click.prevent.stop="$store.cart.add(${item.id})">
+                <i data-feather="shopping-bag"></i> Add
+              </button>
+            </div>
+          </div>
+        </article>
+      </a>
+    `;
+        }
+    }));
 
     Alpine.store('products', {
         all: [],
