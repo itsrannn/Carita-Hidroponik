@@ -59,7 +59,7 @@
     <div id="header-include"></div>
 
     <section id="Home" class="hero-section">
-      <div class="container" x-data="products" x-init="init()">
+      <div class="container" x-data="products()" x-init="init()">
         <!-- REFACTORED HERO SLIDER -->
         <div id="hero-slider" class="hero-slider" x-data="heroSlider()">
           <div class="slide-item" :class="{ 'active': currentIndex === 0 }">
