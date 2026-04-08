@@ -99,17 +99,71 @@ document.addEventListener('alpine:init', () => {
         ...data
       };
 
-      this.selectedProvince = data.province_id || '';
-      this.selectedRegency = data.regency_id || '';
-      this.selectedDistrict = data.district_id || '';
-      this.selectedVillage = data.village_id || '';
-
-      if (this.selectedProvince) await this.fetchRegencies(false);
-      if (this.selectedRegency) await this.fetchDistricts(false);
-      if (this.selectedDistrict) await this.fetchVillages(false);
-      if (this.selectedVillage) this.updateProfileVillage();
+      await this.hydrateAddressSelections(data);
 
       this.syncMapWithProfile();
+    },
+
+    resolveRegionId(options, preferredId, preferredName) {
+      if (!Array.isArray(options) || options.length === 0) return '';
+
+      if (preferredId !== null && preferredId !== undefined && String(preferredId) !== '') {
+        const byId = options.find((item) => String(item.id) === String(preferredId));
+        if (byId) return String(byId.id);
+      }
+
+      if (preferredName) {
+        const normalizedName = String(preferredName).trim().toLowerCase();
+        const byName = options.find((item) => String(item.name).trim().toLowerCase() === normalizedName);
+        if (byName) return String(byName.id);
+      }
+
+      return '';
+    },
+
+    async hydrateAddressSelections(data = {}) {
+      this.selectedProvince = this.resolveRegionId(this.provinces, data.province_id, data.province);
+      this.profile.province_id = this.selectedProvince;
+
+      if (!this.selectedProvince) {
+        this.regencies = [];
+        this.districts = [];
+        this.villages = [];
+        this.selectedRegency = '';
+        this.selectedDistrict = '';
+        this.selectedVillage = '';
+        return;
+      }
+
+      // 1) Load provinces, 2) set province, 3) load cities, 4) set city,
+      // 5) load districts, 6) set district, 7) load villages, 8) set village.
+      await this.fetchRegencies(false);
+      this.selectedRegency = this.resolveRegionId(this.regencies, data.regency_id, data.regency);
+      this.profile.regency_id = this.selectedRegency;
+
+      if (!this.selectedRegency) {
+        this.districts = [];
+        this.villages = [];
+        this.selectedDistrict = '';
+        this.selectedVillage = '';
+        return;
+      }
+
+      await this.fetchDistricts(false);
+      this.selectedDistrict = this.resolveRegionId(this.districts, data.district_id, data.district);
+      this.profile.district_id = this.selectedDistrict;
+
+      if (!this.selectedDistrict) {
+        this.villages = [];
+        this.selectedVillage = '';
+        return;
+      }
+
+      await this.fetchVillages(false);
+      this.selectedVillage = this.resolveRegionId(this.villages, data.village_id, data.village);
+      this.profile.village_id = this.selectedVillage;
+
+      this.updateProfileVillage();
     },
 
     async fetchOrders() {
@@ -181,7 +235,11 @@ document.addEventListener('alpine:init', () => {
           province: this.profile.province || null,
           regency: this.profile.regency || null,
           district: this.profile.district || null,
-          village: this.profile.village || null
+          village: this.profile.village || null,
+          province_id: this.selectedProvince || null,
+          regency_id: this.selectedRegency || null,
+          district_id: this.selectedDistrict || null,
+          village_id: this.selectedVillage || null
         };
 
         const { error } = await window.supabase
