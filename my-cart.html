@@ -165,10 +165,13 @@
             >
               Later
             </button>
-            <a href="my-account.html" class="btn btn-primary"
-            x-text="$store.i18n.t('cart.modal.profileIncomplete.completeButton')"
-              >Complete Profile</a
+            <button
+              @click="goToAccountPage()"
+              class="btn btn-primary"
+              x-text="$store.i18n.t('cart.modal.profileIncomplete.completeButton')"
             >
+              Complete Profile
+            </button>
           </div>
         </div>
       </div>
@@ -194,10 +197,13 @@
             >
               Close
             </button>
-            <a href="login-page.html" class="btn btn-primary"
-            x-text="$store.i18n.t('cart.modal.notLoggedIn.loginButton')"
-              >Login or Register</a
+            <button
+              @click="goToLoginPage()"
+              class="btn btn-primary"
+              x-text="$store.i18n.t('cart.modal.notLoggedIn.loginButton')"
             >
+              Login or Register
+            </button>
           </div>
         </div>
       </div>

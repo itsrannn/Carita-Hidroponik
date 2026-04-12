@@ -580,6 +580,13 @@ function checkoutPage() {
         isConfirmModalOpen: false,
         isProfileModalOpen: false,
         isSnapPopupActive: false,
+        checkoutState: {
+            isLoggedIn: false,
+            isProfileComplete: false,
+            isAddressComplete: false,
+            profileLoaded: false
+        },
+        profileSnapshot: null,
 
         shipping: {
             courier: 'jne',
@@ -593,7 +600,7 @@ function checkoutPage() {
         ppnRate: 0.11,
 
         async init() {
-            await this.hydrateShippingAddress();
+            await this.loadCheckoutState();
         },
 
         get subtotal() {
@@ -632,13 +639,16 @@ function checkoutPage() {
         },
 
         async hydrateShippingAddress() {
+            this.shipping.destinationCityId = '';
+            this.shipping.addressLabel = '';
+
             const user = await this.getLoggedInUser();
             if (!user?.id || !window.supabase?.from) return;
 
             try {
                 const { data, error } = await window.supabase
                     .from('profiles')
-                    .select('address, city, regency, district, province, postal_code, city_id, regency_id')
+                    .select('full_name, phone_number, address, city, regency, district, province, postal_code, city_id, regency_id, latitude, longitude')
                     .eq('id', user.id)
                     .maybeSingle();
 
@@ -647,7 +657,12 @@ function checkoutPage() {
                     return;
                 }
 
-                if (!data) return;
+                if (!data) {
+                    this.profileSnapshot = null;
+                    return;
+                }
+
+                this.profileSnapshot = data;
 
                 const cityId = data.city_id || data.regency_id || '';
                 this.shipping.destinationCityId = cityId ? String(cityId) : '';
@@ -667,7 +682,54 @@ function checkoutPage() {
                 }
             } catch (error) {
                 console.error('[Checkout] Failed to hydrate shipping address:', error);
+            } finally {
+                this.checkoutState.profileLoaded = true;
             }
+        },
+
+        isNonEmptyValue(value) {
+            return typeof value === 'string'
+                ? value.trim().length > 0
+                : value !== null && value !== undefined;
+        },
+
+        isCoordinateValid(value) {
+            const numeric = Number(value);
+            return Number.isFinite(numeric);
+        },
+
+        evaluateProfileState(profile) {
+            const safeProfile = profile || {};
+            const cityOrRegency = safeProfile.city || safeProfile.regency;
+
+            const isProfileComplete = this.isNonEmptyValue(safeProfile.full_name)
+                && this.isNonEmptyValue(safeProfile.phone_number);
+
+            const isAddressComplete = this.isNonEmptyValue(safeProfile.province)
+                && this.isNonEmptyValue(cityOrRegency)
+                && this.isNonEmptyValue(safeProfile.district)
+                && this.isCoordinateValid(safeProfile.latitude)
+                && this.isCoordinateValid(safeProfile.longitude);
+
+            this.checkoutState.isProfileComplete = isProfileComplete;
+            this.checkoutState.isAddressComplete = isAddressComplete;
+        },
+
+        async loadCheckoutState() {
+            const user = await this.getLoggedInUser();
+            this.checkoutState.isLoggedIn = Boolean(user);
+            this.checkoutState.profileLoaded = false;
+            this.profileSnapshot = null;
+
+            if (!this.checkoutState.isLoggedIn) {
+                this.checkoutState.profileLoaded = true;
+                this.checkoutState.isProfileComplete = false;
+                this.checkoutState.isAddressComplete = false;
+                return;
+            }
+
+            await this.hydrateShippingAddress();
+            this.evaluateProfileState(this.profileSnapshot);
         },
 
         updateShippingCost() {
@@ -689,27 +751,30 @@ function checkoutPage() {
         },
 
         async validateCheckout() {
-            const user = await this.getLoggedInUser();
-            if (!user) {
+            await this.loadCheckoutState();
+
+            if (!this.checkoutState.isLoggedIn) {
                 this.isLoginModalOpen = true;
-                window.location.href = window.toAppPath('login-page.html?redirect=my-cart.html');
                 return { valid: false, reason: 'LOGIN_REQUIRED' };
             }
 
             if (Alpine.store('cart').items.length === 0) {
-                alert('Keranjang belanja kosong. Tambahkan produk terlebih dahulu.');
+                this.showNotification('Keranjang belanja kosong. Tambahkan produk terlebih dahulu.', true);
                 return { valid: false, reason: 'EMPTY_CART' };
             }
 
-            if (!this.shipping.addressLabel || !this.shipping.destinationCityId) {
+            if (!this.checkoutState.profileLoaded) {
+                this.showNotification('Data profil masih dimuat. Coba lagi dalam beberapa detik.', true);
+                return { valid: false, reason: 'PROFILE_LOADING' };
+            }
+
+            if (!this.checkoutState.isProfileComplete || !this.checkoutState.isAddressComplete) {
                 this.isProfileModalOpen = true;
-                alert('Alamat pengiriman belum lengkap. Silakan lengkapi alamat terlebih dahulu.');
-                window.location.href = window.toAppPath('my-account.html');
-                return { valid: false, reason: 'ADDRESS_INCOMPLETE' };
+                return { valid: false, reason: 'PROFILE_OR_ADDRESS_INCOMPLETE' };
             }
 
             if (!this.shipping.service || this.ongkir <= 0) {
-                alert('Pilih layanan pengiriman untuk menghitung ongkir.');
+                this.showNotification('Pilih layanan pengiriman untuk menghitung ongkir.', true);
                 return { valid: false, reason: 'SHIPPING_NOT_SELECTED' };
             }
 
@@ -734,12 +799,35 @@ function checkoutPage() {
 
             try {
                 // Placeholder for payment flow (Snap popup/tokenization).
-                alert('Checkout tervalidasi. Integrasi pembayaran dapat dilanjutkan.');
+                this.showNotification('Checkout tervalidasi. Integrasi pembayaran dapat dilanjutkan.');
             } finally {
                 this.isCheckoutLoading = false;
                 this.isSnapPopupActive = false;
                 this.isConfirmModalOpen = false;
             }
+        },
+
+        goToLoginPage() {
+            this.isLoginModalOpen = false;
+            window.location.href = window.toAppPath('login-page.html?redirect=my-cart.html');
+        },
+
+        goToAccountPage() {
+            this.isProfileModalOpen = false;
+            window.location.href = window.toAppPath('my-account.html');
+        },
+
+        showNotification(message, isError = false) {
+            const notification = document.getElementById('notification');
+            if (!notification) {
+                console[isError ? 'error' : 'info']('[Checkout] Notification:', message);
+                return;
+            }
+
+            notification.textContent = message;
+            notification.style.backgroundColor = isError ? '#c62828' : 'var(--accent)';
+            notification.classList.add('show');
+            setTimeout(() => notification.classList.remove('show'), 2500);
         },
 
         async calculateShipping() {
