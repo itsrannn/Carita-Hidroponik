@@ -197,25 +197,13 @@ document.addEventListener('alpine:init', () => {
       if (!this.user?.id) return;
       this.loading = true;
       try {
-        const userId = this.user.id;
         const payload = {
           full_name: this.profile.full_name || null,
           phone_number: this.profile.phone_number || null
         };
 
-        const { data, error } = await window.supabase
-          .from('profiles')
-          .update(payload)
-          .eq('id', userId)
-          .select();
-
-        console.log('[Account] updateProfile result:', data, error);
-
-        if (error) {
-          console.error('[Account] Failed to update profile:', error);
-          this.showNotification('Gagal menyimpan profil.', true);
-          return;
-        }
+        const profile = await this.updateProfileViaApi(payload);
+        this.profile = { ...this.profile, ...profile };
 
         this.editProfileMode = false;
         this.showNotification('Profil berhasil disimpan.');
@@ -231,7 +219,6 @@ document.addEventListener('alpine:init', () => {
       if (!this.user?.id) return;
       this.loading = true;
       try {
-        const userId = this.user.id;
         const latitude = this.profile.latitude === '' || this.profile.latitude === null || this.profile.latitude === undefined
           ? null
           : Number(this.profile.latitude);
@@ -268,26 +255,8 @@ document.addEventListener('alpine:init', () => {
 
         console.info('[Account] Updating address payload:', payload);
 
-        const { data, error } = await window.supabase
-          .from('profiles')
-          .update(payload)
-          .eq('id', userId)
-          .select();
-
-        console.log('[Account] updateAddress result:', data, error);
-
-        if (error) {
-          console.error('[Account] Failed to update address:', {
-            message: error.message,
-            details: error.details,
-            hint: error.hint,
-            code: error.code,
-            payload,
-            raw: error
-          });
-          this.showNotification('Gagal menyimpan alamat.', true);
-          return;
-        }
+        const profile = await this.updateProfileViaApi(payload);
+        this.profile = { ...this.profile, ...profile };
 
         this.editAddressMode = false;
         this.showNotification('Perubahan alamat berhasil disimpan.');
@@ -302,6 +271,34 @@ document.addEventListener('alpine:init', () => {
       } finally {
         this.loading = false;
       }
+    },
+
+    async updateProfileViaApi(payload) {
+      const { data, error } = await window.supabase.auth.getSession();
+      if (error) {
+        throw error;
+      }
+
+      const accessToken = data?.session?.access_token;
+      if (!accessToken) {
+        throw new Error('Sesi login tidak ditemukan.');
+      }
+
+      const response = await fetch(window.toApiPath('/api/update-profile'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({ data: payload })
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.message || `HTTP ${response.status}`);
+      }
+
+      return result?.profile || {};
     },
 
     async fetchProvinces() {
