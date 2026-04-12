@@ -1,5 +1,6 @@
 const API_BASE_URL = 'https://backend-carita-hidroponik.vercel.app';
 const SNAP_TOKEN_ENDPOINT = `${API_BASE_URL}/api/payment/create-snap-token`;
+window.API_BASE_URL = API_BASE_URL;
 
 const APP_BASE_PATH = (() => {
     const { hostname, pathname } = window.location;
@@ -32,6 +33,14 @@ window.toAppUrl = (relativePath = '') => {
         return resolved;
     }
     return new URL(resolved, window.location.origin).href;
+};
+
+window.toApiPath = (relativePath = '') => {
+    const normalized = String(relativePath || '').trim();
+    if (!normalized) return API_BASE_URL;
+    if (/^(?:[a-z]+:)?\/\//i.test(normalized)) return normalized;
+    const path = normalized.startsWith('/') ? normalized : `/${normalized}`;
+    return `${API_BASE_URL}${path}`;
 };
 
 // --- GLOBAL ERROR HANDLING ---
@@ -700,7 +709,7 @@ function checkoutPage() {
 
         evaluateProfileState(profile) {
             const safeProfile = profile || {};
-            const cityOrRegency = safeProfile.city || safeProfile.regency;
+            const cityOrRegency = safeProfile.city || safeProfile.regency || safeProfile.city_id || safeProfile.regency_id;
 
             const isProfileComplete = this.isNonEmptyValue(safeProfile.full_name)
                 && this.isNonEmptyValue(safeProfile.phone_number);
@@ -708,6 +717,7 @@ function checkoutPage() {
             const isAddressComplete = this.isNonEmptyValue(safeProfile.province)
                 && this.isNonEmptyValue(cityOrRegency)
                 && this.isNonEmptyValue(safeProfile.district)
+                && this.isNonEmptyValue(safeProfile.address)
                 && this.isCoordinateValid(safeProfile.latitude)
                 && this.isCoordinateValid(safeProfile.longitude);
 
