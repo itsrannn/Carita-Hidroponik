@@ -258,7 +258,12 @@ document.addEventListener('alpine:init', () => {
           province: provinceName,
           regency: regencyName,
           district: districtName,
-          village: villageName
+          village: villageName,
+          province_id: this.selectedProvince || null,
+          city_id: this.selectedRegency || null,
+          regency_id: this.selectedRegency || null,
+          district_id: this.selectedDistrict || null,
+          village_id: this.selectedVillage || null
         };
 
         console.info('[Account] Updating address payload:', payload);
