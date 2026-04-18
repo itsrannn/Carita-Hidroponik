@@ -596,6 +596,10 @@ function checkoutPage() {
             profileLoaded: false
         },
         profileSnapshot: null,
+        profileDebug: {
+            normalizedProfile: null,
+            missingFields: []
+        },
 
         shipping: {
             courier: 'jne',
@@ -657,7 +661,7 @@ function checkoutPage() {
             try {
                 const { data, error } = await window.supabase
                     .from('profiles')
-                    .select('full_name, phone_number, address, city, regency, district, province, postal_code, city_id, regency_id, latitude, longitude')
+                    .select('*')
                     .eq('id', user.id)
                     .maybeSingle();
 
@@ -696,10 +700,20 @@ function checkoutPage() {
             }
         },
 
+        getFirstFilledValue(...values) {
+            for (const value of values) {
+                if (typeof value === 'string') {
+                    if (value.trim().length > 0) return value.trim();
+                    continue;
+                }
+
+                if (value !== null && value !== undefined && value !== '') return value;
+            }
+            return null;
+        },
+
         isNonEmptyValue(value) {
-            return typeof value === 'string'
-                ? value.trim().length > 0
-                : value !== null && value !== undefined;
+            return this.getFirstFilledValue(value) !== null;
         },
 
         isCoordinateValid(value) {
@@ -707,22 +721,73 @@ function checkoutPage() {
             return Number.isFinite(numeric);
         },
 
-        evaluateProfileState(profile) {
+        normalizeProfileData(profile) {
             const safeProfile = profile || {};
-            const cityOrRegency = safeProfile.city || safeProfile.regency || safeProfile.city_id || safeProfile.regency_id;
 
-            const isProfileComplete = this.isNonEmptyValue(safeProfile.full_name)
-                && this.isNonEmptyValue(safeProfile.phone_number);
+            const normalizedProfile = {
+                full_name: this.getFirstFilledValue(safeProfile.full_name, safeProfile.nama_penerima, safeProfile.receiver_name),
+                phone_number: this.getFirstFilledValue(safeProfile.phone_number, safeProfile.phone, safeProfile.no_hp),
+                address: this.getFirstFilledValue(safeProfile.address, safeProfile.alamat, safeProfile.full_address),
+                province: this.getFirstFilledValue(safeProfile.province, safeProfile.provinsi),
+                city_or_regency: this.getFirstFilledValue(
+                    safeProfile.regency,
+                    safeProfile.city,
+                    safeProfile.kota,
+                    safeProfile.kabupaten,
+                    safeProfile.city_id,
+                    safeProfile.regency_id
+                ),
+                district: this.getFirstFilledValue(safeProfile.district, safeProfile.kecamatan),
+                village: this.getFirstFilledValue(safeProfile.village, safeProfile.kelurahan),
+                postal_code: this.getFirstFilledValue(safeProfile.postal_code, safeProfile.kode_pos),
+                latitude: this.getFirstFilledValue(safeProfile.latitude, safeProfile.lat),
+                longitude: this.getFirstFilledValue(safeProfile.longitude, safeProfile.lng, safeProfile.lon)
+            };
 
-            const isAddressComplete = this.isNonEmptyValue(safeProfile.province)
-                && this.isNonEmptyValue(cityOrRegency)
-                && this.isNonEmptyValue(safeProfile.district)
-                && this.isNonEmptyValue(safeProfile.address)
-                && this.isCoordinateValid(safeProfile.latitude)
-                && this.isCoordinateValid(safeProfile.longitude);
+            return normalizedProfile;
+        },
+
+        evaluateProfileState(profile) {
+            const normalizedProfile = this.normalizeProfileData(profile);
+            const missingFields = [];
+
+            const requiredFields = [
+                { key: 'full_name', label: 'full_name' },
+                { key: 'phone_number', label: 'phone_number' },
+                { key: 'address', label: 'address' },
+                { key: 'province', label: 'province' },
+                { key: 'city_or_regency', label: 'city/regency' },
+                { key: 'district', label: 'district' },
+                { key: 'village', label: 'village' },
+                { key: 'postal_code', label: 'postal_code' }
+            ];
+
+            requiredFields.forEach((field) => {
+                if (!this.isNonEmptyValue(normalizedProfile[field.key])) {
+                    missingFields.push(field.label);
+                }
+            });
+
+            if (!this.isCoordinateValid(normalizedProfile.latitude)) {
+                missingFields.push('latitude');
+            }
+
+            if (!this.isCoordinateValid(normalizedProfile.longitude)) {
+                missingFields.push('longitude');
+            }
+
+            const isProfileComplete = this.isNonEmptyValue(normalizedProfile.full_name)
+                && this.isNonEmptyValue(normalizedProfile.phone_number);
+
+            const isAddressComplete = missingFields.length === 0;
 
             this.checkoutState.isProfileComplete = isProfileComplete;
             this.checkoutState.isAddressComplete = isAddressComplete;
+            this.profileDebug.normalizedProfile = normalizedProfile;
+            this.profileDebug.missingFields = missingFields;
+
+            console.log('Checkout profile data:', normalizedProfile);
+            console.log('Missing fields:', missingFields);
         },
 
         async loadCheckoutState() {
@@ -808,12 +873,142 @@ function checkoutPage() {
             this.isSnapPopupActive = true;
 
             try {
-                // Placeholder for payment flow (Snap popup/tokenization).
-                this.showNotification('Checkout tervalidasi. Integrasi pembayaran dapat dilanjutkan.');
+                const checkoutPayload = this.buildCheckoutPayload();
+                const snapSession = await this.createSnapSession(checkoutPayload);
+                await this.openMidtransSnap(snapSession, checkoutPayload);
+            } catch (error) {
+                console.error('[Checkout] Checkout flow failed:', error);
+                this.showNotification(error?.message || 'Checkout gagal diproses. Silakan coba lagi.', true);
             } finally {
                 this.isCheckoutLoading = false;
                 this.isSnapPopupActive = false;
                 this.isConfirmModalOpen = false;
+            }
+        },
+
+        buildCheckoutPayload() {
+            const cartDetails = Alpine.store('cart').details || [];
+            const cart = cartDetails.map((item) => ({
+                id: String(item.id),
+                name: item.name,
+                quantity: Number(item.quantity),
+                price: Number(item.finalPrice || item.price || 0)
+            }));
+
+            const roundedTax = Math.round(this.ppnAmount);
+            const roundedShipping = Math.round(this.ongkir);
+
+            if (roundedTax > 0) {
+                cart.push({
+                    id: 'ppn-tax',
+                    name: 'PPN 11%',
+                    quantity: 1,
+                    price: roundedTax
+                });
+            }
+
+            if (roundedShipping > 0) {
+                cart.push({
+                    id: 'shipping-fee',
+                    name: `Ongkir ${String(this.shipping.courier || '').toUpperCase()}`,
+                    quantity: 1,
+                    price: roundedShipping
+                });
+            }
+
+            const totalPrice = cart.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0);
+            const normalizedProfile = this.profileDebug.normalizedProfile || this.normalizeProfileData(this.profileSnapshot);
+
+            return {
+                cart,
+                totalPrice,
+                customer: {
+                    firstName: normalizedProfile.full_name || 'Pelanggan',
+                    name: normalizedProfile.full_name || 'Pelanggan',
+                    phone: normalizedProfile.phone_number || '',
+                    email: this.getFirstFilledValue(this.profileSnapshot?.email, this.profileSnapshot?.user_email) || 'customer@example.com'
+                }
+            };
+        },
+
+        async createSnapSession(payload) {
+            const response = await window.fetchWithDebug(SNAP_TOKEN_ENDPOINT, {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || !result?.snapToken) {
+                console.error('[Checkout] Failed to create snap session:', result);
+                throw new Error(result?.message || 'Gagal membuat token pembayaran Midtrans.');
+            }
+
+            return result;
+        },
+
+        loadMidtransSnapScript(clientKey) {
+            if (window.snap?.pay) return Promise.resolve(window.snap);
+
+            return new Promise((resolve, reject) => {
+                const existingScript = document.getElementById('midtrans-snap-script');
+                if (existingScript) {
+                    existingScript.addEventListener('load', () => resolve(window.snap));
+                    existingScript.addEventListener('error', () => reject(new Error('Gagal memuat script Midtrans Snap.')));
+                    return;
+                }
+
+                const script = document.createElement('script');
+                script.id = 'midtrans-snap-script';
+                script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+                script.setAttribute('data-client-key', clientKey || '');
+                script.onload = () => resolve(window.snap);
+                script.onerror = () => reject(new Error('Gagal memuat script Midtrans Snap.'));
+                document.body.appendChild(script);
+            });
+        },
+
+        async openMidtransSnap(snapSession, checkoutPayload) {
+            const snap = await this.loadMidtransSnapScript(snapSession.clientKey);
+            if (!snap?.pay) throw new Error('Midtrans Snap tidak tersedia.');
+
+            await new Promise((resolve, reject) => {
+                snap.pay(snapSession.snapToken, {
+                    onSuccess: async (result) => {
+                        await this.confirmPaymentStatus(snapSession.orderId, 'success', result?.transaction_id);
+                        this.showNotification('Pembayaran berhasil. Pesanan Anda diproses.');
+                        resolve();
+                    },
+                    onPending: async (result) => {
+                        await this.confirmPaymentStatus(snapSession.orderId, 'pending', result?.transaction_id);
+                        this.showNotification('Pembayaran pending. Silakan selesaikan pembayaran Anda.');
+                        resolve();
+                    },
+                    onError: async (_result) => {
+                        await this.confirmPaymentStatus(snapSession.orderId, 'failed');
+                        reject(new Error('Pembayaran gagal diproses oleh Midtrans.'));
+                    },
+                    onClose: () => {
+                        this.showNotification('Popup pembayaran ditutup sebelum selesai.', true);
+                        resolve();
+                    }
+                });
+            });
+
+            console.info('[Checkout] Midtrans payload sent:', checkoutPayload);
+        },
+
+        async confirmPaymentStatus(orderCode, paymentStatus, transactionId = null) {
+            try {
+                await window.fetchWithDebug(`${API_BASE_URL}/api/payment/confirm`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        order_code: orderCode,
+                        payment_status: paymentStatus,
+                        transaction_id: transactionId
+                    })
+                });
+            } catch (error) {
+                console.error('[Checkout] Failed to confirm payment status:', error);
             }
         },
 
