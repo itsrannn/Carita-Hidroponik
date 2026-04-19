@@ -602,15 +602,19 @@ function checkoutPage() {
         },
 
         shipping: {
-            courier: 'jne',
+            selectedMethod: 'rekomendasi-kami',
             cost: 0,
-            service: '',
-            destinationCityId: '',
-            addressLabel: ''
+            addressLabel: '',
+            estimateLabel: '',
+            zoneLabel: '',
+            methods: [
+                { code: 'rekomendasi-kami', label: 'Rekomendasi Kami', badge: 'Direkomendasikan', recommended: true, active: true, description: 'Metode internal dari gudang Turen, Malang.' },
+                { code: 'tiki', label: 'TIKI', badge: '', recommended: false, active: false, description: 'Segera tersedia.' },
+                { code: 'pos', label: 'POS Indonesia', badge: '', recommended: false, active: false, description: 'Segera tersedia.' },
+                { code: 'jne', label: 'JNE', badge: '', recommended: false, active: false, description: 'Segera tersedia.' }
+            ]
         },
-        regions: { services: [] },
         isCheckoutLoading: false,
-        isResolvingDestinationCityId: false,
         ppnRate: 0.11,
 
         async init() {
@@ -653,7 +657,6 @@ function checkoutPage() {
         },
 
         async hydrateShippingAddress() {
-            this.shipping.destinationCityId = '';
             this.shipping.addressLabel = '';
 
             const user = await this.getLoggedInUser();
@@ -678,7 +681,6 @@ function checkoutPage() {
 
                 this.profileSnapshot = data;
                 console.info('[Checkout] Loaded user profile for shipping:', data);
-                this.shipping.destinationCityId = await this.resolveDestinationCityIdFromProfile(data);
 
                 const addressParts = [
                     data.address,
@@ -693,81 +695,6 @@ function checkoutPage() {
                 console.error('[Checkout] Failed to hydrate shipping address:', error);
             } finally {
                 this.checkoutState.profileLoaded = true;
-            }
-        },
-
-        async resolveDestinationCityIdFromProfile(profile = null) {
-            const source = profile || this.profileSnapshot || {};
-            const resolvedFromProfile = this.getFirstFilledValue(
-                source.destinationCityId,
-                source.destination_city_id,
-                source.cityId,
-                source.city_id,
-                source.regency_id,
-                source.rajaongkir_city_id
-            );
-
-            if (resolvedFromProfile !== null) {
-                const mappedId = String(resolvedFromProfile).trim();
-                console.info('[Checkout] Mapped destination city ID directly from profile fields:', {
-                    destinationCityId: mappedId
-                });
-                return mappedId;
-            }
-
-            const regionLabel = this.getFirstFilledValue(
-                source.regency,
-                source.city,
-                source.kota,
-                source.kabupaten
-            );
-            const provinceLabel = this.getFirstFilledValue(source.province, source.provinsi);
-            if (!regionLabel) {
-                console.warn('[Checkout] Unable to resolve destination city ID: city/regency label is missing.');
-                return '';
-            }
-
-            if (this.isResolvingDestinationCityId) {
-                return this.shipping.destinationCityId || '';
-            }
-
-            this.isResolvingDestinationCityId = true;
-            try {
-                const { data } = await window.supabase.auth.getSession();
-                const accessToken = data?.session?.access_token || '';
-                const response = await window.fetchWithDebug(`${API_BASE_URL}/api/shipping/resolve-destination`, {
-                    method: 'POST',
-                    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-                    body: JSON.stringify({
-                        province: provinceLabel,
-                        city: regionLabel,
-                        regency: regionLabel
-                    })
-                });
-
-                const result = await response.json().catch(() => ({}));
-                if (!response.ok) {
-                    console.warn('[Checkout] Failed fallback city ID resolution:', result);
-                    return '';
-                }
-
-                const resolvedId = this.getFirstFilledValue(
-                    result?.destinationCityId,
-                    result?.destination_city_id,
-                    result?.data?.destinationCityId
-                );
-                const mappedId = resolvedId ? String(resolvedId).trim() : '';
-                console.info('[Checkout] Resolved destination city ID from city/regency fallback:', {
-                    regionLabel,
-                    provinceLabel,
-                    destinationCityId: mappedId
-                });
-                return mappedId;
-            } catch (error) {
-                console.error('[Checkout] Error while resolving destination city ID fallback:', error);
-                return '';
-            } finally {
-                this.isResolvingDestinationCityId = false;
             }
         },
 
@@ -877,31 +804,25 @@ function checkoutPage() {
             await this.hydrateShippingAddress();
             this.evaluateProfileState(this.profileSnapshot);
 
-            if (this.checkoutState.profileLoaded && this.shipping.courier) {
+            if (this.checkoutState.profileLoaded) {
                 await this.calculateShipping();
             }
         },
 
-        updateShippingCost() {
-            if (!this.shipping.service) {
-                this.shipping.cost = 0;
-                console.info('[Checkout] Shipping service cleared, cost reset to 0.');
+        updateShippingCost(cost = 0) {
+            this.shipping.cost = Number(cost || 0);
+            if (this.shipping.cost > 0) this.clearNotification();
+        },
+
+        onShippingMethodChange(methodCode) {
+            if (methodCode !== 'rekomendasi-kami') {
+                this.showNotification('Saat ini hanya metode Rekomendasi Kami yang tersedia.', true);
+                this.shipping.selectedMethod = 'rekomendasi-kami';
                 return;
             }
 
-            try {
-                const selected = JSON.parse(this.shipping.service);
-                this.shipping.cost = Number(selected?.cost?.[0]?.value || 0);
-                console.info('[Checkout] Shipping service selected:', {
-                    service: selected?.service,
-                    description: selected?.description,
-                    cost: this.shipping.cost
-                });
-                if (this.shipping.cost > 0) this.clearNotification();
-            } catch (_e) {
-                this.shipping.cost = 0;
-                console.warn('[Checkout] Failed to parse shipping service option.');
-            }
+            this.shipping.selectedMethod = 'rekomendasi-kami';
+            this.calculateShipping();
         },
 
         calculateGrandTotal() {
@@ -931,13 +852,12 @@ function checkoutPage() {
                 return { valid: false, reason: 'PROFILE_OR_ADDRESS_INCOMPLETE' };
             }
 
-            if (!this.shipping.service || this.ongkir <= 0) {
+            if (this.shipping.selectedMethod !== 'rekomendasi-kami' || this.ongkir <= 0) {
                 console.warn('[Checkout] Checkout validation failed for shipping state:', {
-                    selectedCourier: this.shipping.courier,
-                    selectedService: this.shipping.service,
+                    selectedMethod: this.shipping.selectedMethod,
                     shippingCost: this.ongkir
                 });
-                this.showNotification('Pilih layanan pengiriman untuk menghitung ongkir.', true);
+                this.showNotification('Metode pengiriman rekomendasi belum siap. Silakan cek alamat Anda.', true);
                 return { valid: false, reason: 'SHIPPING_NOT_SELECTED' };
             }
 
@@ -998,7 +918,7 @@ function checkoutPage() {
             if (roundedShipping > 0) {
                 cart.push({
                     id: 'shipping-fee',
-                    name: `Ongkir ${String(this.shipping.courier || '').toUpperCase()}`,
+                    name: 'Ongkir Rekomendasi Kami',
                     quantity: 1,
                     price: roundedShipping
                 });
@@ -1130,37 +1050,13 @@ function checkoutPage() {
             notification.textContent = '';
         },
 
-        onCourierChange(event) {
-            const selectedCourier = event?.target?.value || this.shipping.courier;
-            console.info('[Checkout] Courier selected:', selectedCourier);
-            this.shipping.service = '';
-            this.shipping.cost = 0;
-            this.regions.services = [];
-            this.calculateShipping();
-        },
-
-        normalizeShippingServices(result) {
-            if (Array.isArray(result?.data)) return result.data;
-            if (Array.isArray(result?.costs)) return result.costs;
-            if (Array.isArray(result?.rajaongkir?.results?.[0]?.costs)) return result.rajaongkir.results[0].costs;
-            return [];
-        },
-
         async calculateShipping() {
             if (!this.checkoutState.profileLoaded) {
                 await this.loadCheckoutState();
             }
 
-            if (!this.shipping.destinationCityId) {
-                this.shipping.destinationCityId = await this.resolveDestinationCityIdFromProfile(this.profileSnapshot);
-            }
-
-            if (!this.shipping.destinationCityId || !this.shipping.courier) {
-                console.warn('[Checkout] Shipping calculation skipped due to incomplete state:', {
-                    destinationCityId: this.shipping.destinationCityId,
-                    courier: this.shipping.courier
-                });
-                return;
+            if (this.shipping.selectedMethod !== 'rekomendasi-kami') {
+                this.shipping.selectedMethod = 'rekomendasi-kami';
             }
 
             this.isCheckoutLoading = true;
@@ -1168,11 +1064,8 @@ function checkoutPage() {
                 const { data } = await window.supabase.auth.getSession();
                 const accessToken = data?.session?.access_token || '';
                 const payload = {
-                    destination: this.shipping.destinationCityId,
-                    weight: Alpine.store('cart').totalWeight,
-                    courier: this.shipping.courier
+                    weight: Alpine.store('cart').totalWeight
                 };
-                console.info('[Checkout] Requesting shipping rates:', payload);
 
                 const res = await window.fetchWithDebug(`${API_BASE_URL}/api/shipping/cost`, {
                     method: 'POST',
@@ -1181,34 +1074,26 @@ function checkoutPage() {
                 });
 
                 const result = await res.json().catch(() => ({}));
-                console.info('[Checkout] Shipping API response:', result);
-
                 if (!res.ok) {
-                    throw new Error(result?.message || 'Gagal mengambil tarif pengiriman.');
+                    throw new Error(result?.message || 'Gagal mengambil estimasi pengiriman.');
                 }
 
-                this.regions.services = this.normalizeShippingServices(result);
-                if (this.regions.services.length > 0) {
-                    this.shipping.service = JSON.stringify(this.regions.services[0]);
-                    this.updateShippingCost();
-                    this.clearNotification();
-                } else {
-                    this.shipping.service = '';
-                    this.shipping.cost = 0;
-                    this.showNotification('Layanan pengiriman tidak tersedia untuk alamat ini.', true);
-                }
+                const recommendation = result?.recommendation || {};
+                this.shipping.zoneLabel = recommendation.zone_name || '';
+                this.shipping.estimateLabel = `${recommendation.etd || '1-4 hari kerja'} • Zona ${this.shipping.zoneLabel || '-'}`;
+                this.updateShippingCost(recommendation.cost || 0);
+                this.clearNotification();
             } catch (error) {
                 console.error('[Checkout] Shipping calc failed', error);
-                this.regions.services = [];
-                this.shipping.service = '';
                 this.shipping.cost = 0;
+                this.shipping.estimateLabel = '';
+                this.shipping.zoneLabel = '';
                 this.showNotification(error?.message || 'Gagal menghitung ongkir. Silakan coba lagi.', true);
             } finally {
                 console.info('[Checkout] Shipping state after calculation:', {
-                    courier: this.shipping.courier,
-                    selectedService: this.shipping.service,
+                    selectedMethod: this.shipping.selectedMethod,
                     shippingCost: this.shipping.cost,
-                    isShippingValid: Boolean(this.shipping.service) && this.ongkir > 0
+                    isShippingValid: this.shipping.selectedMethod === 'rekomendasi-kami' && this.ongkir > 0
                 });
                 this.isCheckoutLoading = false;
             }

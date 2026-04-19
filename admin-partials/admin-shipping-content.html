@@ -1,0 +1,52 @@
+<style>
+  .shipping-header { padding: var(--spacing-lg); background: #fff; border-bottom: 1px solid #dee2e6; }
+  .shipping-header h1 { margin: 0; }
+  .shipping-header p { margin: 8px 0 0; color: #6c757d; }
+  .shipping-card { background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 10px; padding: var(--spacing-lg); margin-bottom: var(--spacing-md); }
+  .shipping-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--spacing-sm); align-items: end; }
+  .shipping-grid input, .shipping-grid select { width: 100%; padding: 0.6rem 0.7rem; border: 1px solid #d8dee4; border-radius: 8px; }
+  .shipping-table { width: 100%; border-collapse: collapse; }
+  .shipping-table th, .shipping-table td { border-bottom: 1px solid #e9ecef; padding: 0.65rem; text-align: left; }
+  .btn-action { border: none; border-radius: 8px; padding: 0.5rem 0.75rem; cursor: pointer; font-weight: 600; }
+  .btn-primary { background: #1b5e20; color: #fff; }
+  .btn-danger { background: #fce8e6; color: #c5221f; }
+  .shipping-notice { margin-top: 0.75rem; padding: 0.6rem 0.8rem; border-radius: 8px; display: none; }
+  .shipping-notice.show { display: block; background: #e8f5e9; color: #1b5e20; }
+</style>
+
+<div class="container content-wrapper" id="shipping-admin-root">
+  <div class="shipping-header section">
+    <h1>Manajemen Ongkos Kirim</h1>
+    <p>Atur zona pengiriman internal dan tarif rekomendasi dari gudang Turen, Kabupaten Malang.</p>
+  </div>
+
+  <div class="shipping-card">
+    <label style="display: flex; gap: 0.5rem; align-items: center;">
+      <input id="recommended-shipping-toggle" type="checkbox">
+      <span>Aktifkan metode "Rekomendasi Kami" di checkout</span>
+    </label>
+  </div>
+
+  <div class="shipping-card">
+    <h3 style="margin-top: 0;">Tambah / Edit Zona</h3>
+    <div class="shipping-grid">
+      <div><label>Zone Name</label><input id="zone-name" placeholder="Kabupaten Malang"></div>
+      <div><label>District Match</label><input id="district-match" placeholder="malang / turen"></div>
+      <div><label>Province Match</label><input id="province-match" placeholder="jawa timur"></div>
+      <div><label>Base Rate</label><input id="base-rate" type="number" min="0" placeholder="10000"></div>
+      <div><label>Extra / Kg</label><input id="extra-rate" type="number" min="0" placeholder="3000"></div>
+      <div><label>Status</label><select id="rate-active"><option value="true">Aktif</option><option value="false">Nonaktif</option></select></div>
+      <div><button id="save-rate-btn" class="btn-action btn-primary">Simpan Zona</button></div>
+    </div>
+    <input id="editing-rate-id" type="hidden">
+    <div id="shipping-admin-notice" class="shipping-notice">Perubahan berhasil disimpan.</div>
+  </div>
+
+  <div class="shipping-card">
+    <h3 style="margin-top: 0;">Daftar Zona Ongkir</h3>
+    <table class="shipping-table">
+      <thead><tr><th>Zona</th><th>District Match</th><th>Province Match</th><th>Base Rate</th><th>Extra / Kg</th><th>Aktif</th><th>Aksi</th></tr></thead>
+      <tbody id="shipping-rates-tbody"></tbody>
+    </table>
+  </div>
+</div>
