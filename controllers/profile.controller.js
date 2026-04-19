@@ -58,7 +58,7 @@ async function updateProfile(req, res) {
       return res.status(400).json({ message: 'No valid profile fields provided.' });
     }
 
-    const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${user.id}&select=*`, {
+    const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}&select=*`, {
       method: 'PATCH',
       headers: {
         apikey: SUPABASE_SERVICE_ROLE_KEY,
@@ -74,8 +74,43 @@ async function updateProfile(req, res) {
       console.error('[ProfileAPI] Failed to update profile:', details);
       return res.status(500).json({ message: 'Failed to update profile.' });
     }
+
     const rows = await updateResponse.json();
-    const profile = Array.isArray(rows) ? rows[0] : rows;
+    let profile = Array.isArray(rows) ? rows[0] : rows;
+
+    // Safety net: some tenants may not have an existing profile row yet.
+    // In that case PATCH returns 200 with an empty array and nothing is persisted.
+    // We upsert by id to guarantee persistence for authenticated users.
+    if (!profile) {
+      const upsertPayload = {
+        id: user.id,
+        ...payload
+      };
+
+      const upsertResponse = await fetch(`${SUPABASE_URL}/rest/v1/profiles?on_conflict=id&select=*`, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          'Content-Type': 'application/json',
+          Prefer: 'resolution=merge-duplicates,return=representation'
+        },
+        body: JSON.stringify(upsertPayload)
+      });
+
+      if (!upsertResponse.ok) {
+        const details = await upsertResponse.text();
+        console.error('[ProfileAPI] Failed to upsert profile:', details);
+        return res.status(500).json({ message: 'Failed to persist profile update.' });
+      }
+
+      const upsertRows = await upsertResponse.json();
+      profile = Array.isArray(upsertRows) ? upsertRows[0] : upsertRows;
+    }
+
+    if (!profile?.id) {
+      return res.status(500).json({ message: 'Profile update did not return persisted data.' });
+    }
 
     return res.status(200).json({
       message: 'Profile updated successfully.',
