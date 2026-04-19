@@ -614,10 +614,17 @@ function checkoutPage() {
                 { code: 'jne', label: 'JNE', badge: '', recommended: false, active: false, description: 'Segera tersedia.' }
             ]
         },
+        isCalculatingShipping: false,
+        shippingLoaded: false,
+        lastShippingRequestKey: null,
         isCheckoutLoading: false,
         ppnRate: 0.11,
 
         async init() {
+            if (this.shippingLoaded) {
+                console.info('[Checkout] init skipped: shipping already loaded.');
+                return;
+            }
             await this.loadCheckoutState();
         },
 
@@ -798,14 +805,16 @@ function checkoutPage() {
                 this.checkoutState.profileLoaded = true;
                 this.checkoutState.isProfileComplete = false;
                 this.checkoutState.isAddressComplete = false;
+                this.shippingLoaded = false;
+                this.lastShippingRequestKey = null;
                 return;
             }
 
             await this.hydrateShippingAddress();
             this.evaluateProfileState(this.profileSnapshot);
 
-            if (this.checkoutState.profileLoaded) {
-                await this.calculateShipping();
+            if (this.checkoutState.profileLoaded && !this.shippingLoaded) {
+                await this.calculateShipping('loadCheckoutState:init');
             }
         },
 
@@ -822,7 +831,7 @@ function checkoutPage() {
             }
 
             this.shipping.selectedMethod = 'rekomendasi-kami';
-            this.calculateShipping();
+            this.calculateShipping('shipping-method-change', { force: true });
         },
 
         calculateGrandTotal() {
@@ -830,7 +839,14 @@ function checkoutPage() {
         },
 
         async validateCheckout() {
-            await this.loadCheckoutState();
+            console.info('[Checkout] validateCheckout start:', {
+                isLoggedIn: this.checkoutState.isLoggedIn,
+                profileLoaded: this.checkoutState.profileLoaded,
+                isProfileComplete: this.checkoutState.isProfileComplete,
+                isAddressComplete: this.checkoutState.isAddressComplete,
+                shippingLoaded: this.shippingLoaded,
+                shippingCost: this.ongkir
+            });
 
             if (!this.checkoutState.isLoggedIn) {
                 this.isLoginModalOpen = true;
@@ -866,6 +882,12 @@ function checkoutPage() {
 
         async handleCheckout() {
             if (this.isCheckoutLoading || this.isSnapPopupActive) return;
+
+            if (this.shouldRefreshShipping()) {
+                await this.calculateShipping('handleCheckout:state-changed', { force: true });
+            } else {
+                console.info('[Checkout] handleCheckout skip shipping recalculation: request key unchanged.');
+            }
 
             const validation = await this.validateCheckout();
             if (!validation.valid) return;
@@ -1050,15 +1072,51 @@ function checkoutPage() {
             notification.textContent = '';
         },
 
-        async calculateShipping() {
+        buildShippingRequestKey() {
+            const weight = Number(Alpine.store('cart')?.totalWeight || 0);
+            const profile = this.profileDebug.normalizedProfile || this.normalizeProfileData(this.profileSnapshot);
+
+            return JSON.stringify({
+                method: this.shipping.selectedMethod,
+                weight,
+                province: profile?.province || '',
+                cityOrRegency: profile?.city_or_regency || '',
+                district: profile?.district || '',
+                postalCode: profile?.postal_code || '',
+                address: profile?.address || ''
+            });
+        },
+
+        shouldRefreshShipping() {
+            if (!this.shippingLoaded) return true;
+            return this.buildShippingRequestKey() !== this.lastShippingRequestKey;
+        },
+
+        async calculateShipping(triggerSource = 'unknown', options = {}) {
+            const { force = false } = options || {};
+
+            if (this.isCalculatingShipping) {
+                console.info('[Checkout] calculateShipping prevented: request already in-flight.', { triggerSource });
+                return;
+            }
+
             if (!this.checkoutState.profileLoaded) {
-                await this.loadCheckoutState();
+                console.info('[Checkout] calculateShipping skipped: profile not loaded yet.', { triggerSource });
+                return;
             }
 
             if (this.shipping.selectedMethod !== 'rekomendasi-kami') {
                 this.shipping.selectedMethod = 'rekomendasi-kami';
             }
 
+            const requestKey = this.buildShippingRequestKey();
+            if (!force && this.shippingLoaded && requestKey === this.lastShippingRequestKey) {
+                console.info('[Checkout] calculateShipping prevented: duplicate request key.', { triggerSource });
+                return;
+            }
+
+            console.info('[Checkout] calculateShipping triggered.', { triggerSource, force });
+            this.isCalculatingShipping = true;
             this.isCheckoutLoading = true;
             try {
                 const { data } = await window.supabase.auth.getSession();
@@ -1082,20 +1140,25 @@ function checkoutPage() {
                 this.shipping.zoneLabel = recommendation.zone_name || '';
                 this.shipping.estimateLabel = `${recommendation.etd || '1-4 hari kerja'} • Zona ${this.shipping.zoneLabel || '-'}`;
                 this.updateShippingCost(recommendation.cost || 0);
+                this.shippingLoaded = true;
+                this.lastShippingRequestKey = requestKey;
                 this.clearNotification();
             } catch (error) {
                 console.error('[Checkout] Shipping calc failed', error);
                 this.shipping.cost = 0;
                 this.shipping.estimateLabel = '';
                 this.shipping.zoneLabel = '';
+                this.shippingLoaded = false;
                 this.showNotification(error?.message || 'Gagal menghitung ongkir. Silakan coba lagi.', true);
             } finally {
                 console.info('[Checkout] Shipping state after calculation:', {
                     selectedMethod: this.shipping.selectedMethod,
                     shippingCost: this.shipping.cost,
-                    isShippingValid: this.shipping.selectedMethod === 'rekomendasi-kami' && this.ongkir > 0
+                    isShippingValid: this.shipping.selectedMethod === 'rekomendasi-kami' && this.ongkir > 0,
+                    triggerSource
                 });
                 this.isCheckoutLoading = false;
+                this.isCalculatingShipping = false;
             }
         }
     };
