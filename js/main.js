@@ -810,14 +810,22 @@ function checkoutPage() {
         updateShippingCost() {
             if (!this.shipping.service) {
                 this.shipping.cost = 0;
+                console.info('[Checkout] Shipping service cleared, cost reset to 0.');
                 return;
             }
 
             try {
                 const selected = JSON.parse(this.shipping.service);
                 this.shipping.cost = Number(selected?.cost?.[0]?.value || 0);
+                console.info('[Checkout] Shipping service selected:', {
+                    service: selected?.service,
+                    description: selected?.description,
+                    cost: this.shipping.cost
+                });
+                if (this.shipping.cost > 0) this.clearNotification();
             } catch (_e) {
                 this.shipping.cost = 0;
+                console.warn('[Checkout] Failed to parse shipping service option.');
             }
         },
 
@@ -849,6 +857,11 @@ function checkoutPage() {
             }
 
             if (!this.shipping.service || this.ongkir <= 0) {
+                console.warn('[Checkout] Checkout validation failed for shipping state:', {
+                    selectedCourier: this.shipping.courier,
+                    selectedService: this.shipping.service,
+                    shippingCost: this.ongkir
+                });
                 this.showNotification('Pilih layanan pengiriman untuk menghitung ongkir.', true);
                 return { valid: false, reason: 'SHIPPING_NOT_SELECTED' };
             }
@@ -1035,41 +1048,85 @@ function checkoutPage() {
             setTimeout(() => notification.classList.remove('show'), 2500);
         },
 
+        clearNotification() {
+            const notification = document.getElementById('notification');
+            if (!notification) return;
+            notification.classList.remove('show');
+            notification.textContent = '';
+        },
+
+        onCourierChange(event) {
+            const selectedCourier = event?.target?.value || this.shipping.courier;
+            console.info('[Checkout] Courier selected:', selectedCourier);
+            this.shipping.service = '';
+            this.shipping.cost = 0;
+            this.regions.services = [];
+            this.calculateShipping();
+        },
+
+        normalizeShippingServices(result) {
+            if (Array.isArray(result?.data)) return result.data;
+            if (Array.isArray(result?.costs)) return result.costs;
+            if (Array.isArray(result?.rajaongkir?.results?.[0]?.costs)) return result.rajaongkir.results[0].costs;
+            return [];
+        },
+
         async calculateShipping() {
-            if (!this.shipping.destinationCityId || !this.shipping.courier) return;
+            if (!this.shipping.destinationCityId || !this.shipping.courier) {
+                console.warn('[Checkout] Shipping calculation skipped due to incomplete state:', {
+                    destinationCityId: this.shipping.destinationCityId,
+                    courier: this.shipping.courier
+                });
+                return;
+            }
 
             this.isCheckoutLoading = true;
             try {
+                const { data } = await window.supabase.auth.getSession();
+                const accessToken = data?.session?.access_token || '';
+                const payload = {
+                    destination: this.shipping.destinationCityId,
+                    weight: Alpine.store('cart').totalWeight,
+                    courier: this.shipping.courier
+                };
+                console.info('[Checkout] Requesting shipping rates:', payload);
+
                 const res = await window.fetchWithDebug(`${API_BASE_URL}/api/shipping/cost`, {
                     method: 'POST',
-                    body: JSON.stringify({
-                        destination: this.shipping.destinationCityId,
-                        weight: Alpine.store('cart').totalWeight,
-                        courier: this.shipping.courier
-                    })
+                    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+                    body: JSON.stringify(payload)
                 });
 
-                const result = await res.json();
-                if (result?.status === 'success') {
-                    this.regions.services = Array.isArray(result.data) ? result.data : [];
-                    if (this.regions.services.length > 0) {
-                        this.shipping.service = JSON.stringify(this.regions.services[0]);
-                        this.updateShippingCost();
-                    } else {
-                        this.shipping.service = '';
-                        this.shipping.cost = 0;
-                    }
+                const result = await res.json().catch(() => ({}));
+                console.info('[Checkout] Shipping API response:', result);
+
+                if (!res.ok) {
+                    throw new Error(result?.message || 'Gagal mengambil tarif pengiriman.');
+                }
+
+                this.regions.services = this.normalizeShippingServices(result);
+                if (this.regions.services.length > 0) {
+                    this.shipping.service = JSON.stringify(this.regions.services[0]);
+                    this.updateShippingCost();
+                    this.clearNotification();
                 } else {
-                    this.regions.services = [];
                     this.shipping.service = '';
                     this.shipping.cost = 0;
+                    this.showNotification('Layanan pengiriman tidak tersedia untuk alamat ini.', true);
                 }
             } catch (error) {
                 console.error('[Checkout] Shipping calc failed', error);
                 this.regions.services = [];
                 this.shipping.service = '';
                 this.shipping.cost = 0;
+                this.showNotification(error?.message || 'Gagal menghitung ongkir. Silakan coba lagi.', true);
             } finally {
+                console.info('[Checkout] Shipping state after calculation:', {
+                    courier: this.shipping.courier,
+                    selectedService: this.shipping.service,
+                    shippingCost: this.shipping.cost,
+                    isShippingValid: Boolean(this.shipping.service) && this.ongkir > 0
+                });
                 this.isCheckoutLoading = false;
             }
         }
