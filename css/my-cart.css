@@ -292,6 +292,47 @@ body {
   cursor: not-allowed;
 }
 
+
+.shipping-method-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.shipping-method-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #dfe9e3;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.shipping-method-item.is-recommended {
+  border-color: #2e7d32;
+  background: #f4fbf6;
+}
+
+.shipping-method-item.is-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.shipping-method-item input[type="radio"] {
+  margin-top: 0.2rem;
+}
+
+.shipping-badge {
+  display: inline-flex;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #fff;
+  background: #2e7d32;
+}
 .coupon-form {
   display: flex;
   align-items: center;

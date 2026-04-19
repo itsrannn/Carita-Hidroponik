@@ -44,3 +44,23 @@ INSERT INTO public.news (title, excerpt, image_url) VALUES
 ('5 Essential Tips for Your First Home Hydroponics System', 'Ready to dive into the world of soil-free gardening? This guide breaks down the five most important things you need to know to start a thriving hydroponic garden at home.', 'img/Pemula.png'),
 ('A Beginner''s Guide to A/B Mix Hydroponic Nutrients', 'Ever wondered what A/B mix nutrients are? This article explains the science behind the two-part formula and why it’s the secret to unlocking your plants'' full potential.', 'img/Nutrisi-AB.png'),
 ('Choosing Your Growing Medium: Rockwool vs. Coco Coir vs. Clay Pebbles', 'Rockwool, coco coir, and clay pebbles are three of the most popular hydroponic growing media. We compare their strengths and weaknesses to help you decide which one is right for your system.', 'img/Cabai-Silang.png');
+
+
+-- =====================================================================================
+-- SEED SCRIPT FOR 'shipping_rates' & 'shipping_settings'
+-- =====================================================================================
+TRUNCATE TABLE public.shipping_rates RESTART IDENTITY;
+INSERT INTO public.shipping_rates (zone_name, district_match, province_match, base_rate, extra_per_kg, is_active) VALUES
+('Turen', 'turen', 'jawa timur', 8000, 3000, true),
+('Kabupaten Malang', 'malang', 'jawa timur', 10000, 3000, true),
+('Kota Malang', 'kota malang', 'jawa timur', 12000, 3000, true),
+('Jawa Timur', NULL, 'jawa timur', 15000, 3000, true),
+('Jawa Tengah', NULL, 'jawa tengah', 18000, 3000, true),
+('Jakarta', NULL, 'jakarta', 22000, 3000, true),
+('Other', NULL, NULL, 25000, 3000, true);
+
+INSERT INTO public.shipping_settings (id, recommended_shipping_enabled, updated_at)
+VALUES (1, true, timezone('utc'::text, now()))
+ON CONFLICT (id) DO UPDATE
+SET recommended_shipping_enabled = EXCLUDED.recommended_shipping_enabled,
+    updated_at = EXCLUDED.updated_at;

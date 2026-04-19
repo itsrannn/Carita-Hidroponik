@@ -270,6 +270,10 @@
                     <i data-feather="bar-chart-2"></i>
                     <span x-text="$store.i18n.t('admin.hub.analyticsCard.title')">Analytics Dashboard</span>
                 </a>
+                <a class="sidebar-link" data-page="admin-shipping" data-source="admin-partials/admin-shipping-content.html">
+                    <i data-feather="truck"></i>
+                    <span>Manajemen Ongkos Kirim</span>
+                </a>
             </nav>
         </aside>
 
@@ -289,6 +293,7 @@
     <script src="js/main.js"></script>
     <script src="js/admin.js"></script>
     <script src="js/admin-dashboard.js"></script>
+    <script src="js/admin-shipping.js"></script>
     <script>
         const contentContainer = document.getElementById('content-container');
 
@@ -305,6 +310,10 @@
 
             if (page === 'admin-dashboard' && window.AdminDashboardPage) {
                 window.AdminDashboardPage.init();
+            }
+
+            if (page === 'admin-shipping' && window.AdminShippingPage) {
+                window.AdminShippingPage.init();
             }
 
             if (window.Alpine) {

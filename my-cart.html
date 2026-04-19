@@ -102,21 +102,26 @@
                 <p style="font-size: 0.85rem; margin-bottom: 0.75rem;" x-show="shipping.addressLabel" x-text="shipping.addressLabel"></p>
 
                 <div class="form-group">
-                  <label x-text="$store.i18n.t('cart.summary.courier')">Courier</label>
-                  <select class="form-control" x-model="shipping.courier" @change="onCourierChange($event)">
-                    <option value="jne">JNE</option>
-                    <option value="pos">POS Indonesia</option>
-                    <option value="tiki">TIKI</option>
-                  </select>
+                  <label>Metode Pengiriman</label>
+                  <div class="shipping-method-list">
+                    <template x-for="method in shipping.methods" :key="method.code">
+                      <label class="shipping-method-item" :class="{ 'is-recommended': method.code === 'rekomendasi-kami', 'is-disabled': !method.active }">
+                        <input type="radio" name="shipping-method" :value="method.code" x-model="shipping.selectedMethod" :disabled="!method.active" @change="onShippingMethodChange(method.code)">
+                        <div>
+                          <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                            <strong x-text="method.label"></strong>
+                            <span class="shipping-badge" x-show="method.recommended" x-text="method.badge"></span>
+                          </div>
+                          <small x-text="method.description"></small>
+                        </div>
+                      </label>
+                    </template>
+                  </div>
                 </div>
 
-                <div class="form-group" x-show="regions.services.length > 0">
-                  <label x-text="$store.i18n.t('cart.summary.service')">Service</label>
-                  <select class="form-control" x-model="shipping.service" @change="updateShippingCost()">
-                    <template x-for="s in regions.services" :key="s.service">
-                      <option :value="JSON.stringify(s)" x-text="`${s.service} - ${window.formatRupiah(s.cost[0].value)} (${s.cost[0].etd} days)`"></option>
-                    </template>
-                  </select>
+                <div class="summary-item" style="margin-top: 0.5rem; font-size: 0.85rem;" x-show="shipping.estimateLabel">
+                  <span>Estimasi</span>
+                  <span x-text="shipping.estimateLabel"></span>
                 </div>
 
                 <div class="summary-item" style="margin-top: 1rem; font-size: 0.85rem;">
