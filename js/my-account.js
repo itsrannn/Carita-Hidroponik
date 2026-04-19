@@ -256,7 +256,15 @@ document.addEventListener('alpine:init', () => {
         console.info('[Account] Updating address payload:', payload);
 
         const profile = await this.updateProfileViaApi(payload);
+        const hasPersistedAddress = this.hasAddressPersistenceMatch(payload, profile);
+        if (!hasPersistedAddress) {
+          throw new Error('Server response does not reflect the latest address payload.');
+        }
+
         this.profile = { ...this.profile, ...profile };
+
+        // Refresh from database source to avoid stale in-memory state.
+        await this.fetchProfile();
 
         this.editAddressMode = false;
         this.showNotification('Perubahan alamat berhasil disimpan.');
@@ -273,6 +281,15 @@ document.addEventListener('alpine:init', () => {
       }
     },
 
+
+    hasAddressPersistenceMatch(payload = {}, profile = {}) {
+      const keysToVerify = ['address', 'postal_code', 'province_id', 'city_id', 'district_id', 'village_id'];
+      return keysToVerify.every((key) => {
+        const expected = payload[key] === undefined ? null : payload[key];
+        const actual = profile?.[key] === undefined ? null : profile[key];
+        return String(actual ?? '') === String(expected ?? '');
+      });
+    },
     async updateProfileViaApi(payload) {
       const { data, error } = await window.supabase.auth.getSession();
       if (error) {
