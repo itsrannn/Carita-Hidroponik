@@ -117,7 +117,7 @@ async function getCities(req, res) {
 }
 
 async function calculateCost(req, res) {
-  const { weight, courier } = req.body;
+  const { weight, courier, destination } = req.body;
 
   if (!weight || !courier) {
     return res.status(400).json({ message: 'Weight and courier are required.' });
@@ -136,10 +136,19 @@ async function calculateCost(req, res) {
       return res.status(409).json({ message: 'Profile address is incomplete. Please complete your profile first.' });
     }
 
-    const destinationCityId = await resolveDestinationCityId(profile);
+    const destinationCityId = destination || await resolveDestinationCityId(profile);
     if (!destinationCityId) {
       return res.status(422).json({ message: 'Unable to resolve shipping destination from profile address.' });
     }
+
+    console.info('[Shipping] Cost request payload:', {
+      user_id: auth.user.id,
+      courier,
+      weight,
+      destination_city_id: destinationCityId,
+      latitude: profile.latitude,
+      longitude: profile.longitude
+    });
 
     const response = await fetch(`${RAJAONGKIR_BASE_URL}/cost`, {
       method: 'POST',
@@ -161,9 +170,20 @@ async function calculateCost(req, res) {
       return res.status(data.rajaongkir.status.code).json({ message: data.rajaongkir.status.description });
     }
 
+    const shippingResult = data.rajaongkir.results?.[0] || {};
+    const services = Array.isArray(shippingResult.costs) ? shippingResult.costs : [];
+
+    console.info('[Shipping] Cost response summary:', {
+      courier: shippingResult.code || courier,
+      service_count: services.length
+    });
+
     return res.json({
-      ...data.rajaongkir.results[0],
-      destination_city_id: destinationCityId
+      status: 'success',
+      courier: shippingResult.code || courier,
+      destination_city_id: destinationCityId,
+      data: services,
+      shippingOption: shippingResult
     });
   } catch (error) {
     console.error('Error calculating cost:', error);

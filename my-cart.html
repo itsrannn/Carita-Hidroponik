@@ -103,7 +103,7 @@
 
                 <div class="form-group">
                   <label x-text="$store.i18n.t('cart.summary.courier')">Courier</label>
-                  <select class="form-control" x-model="shipping.courier" @change="calculateShipping()">
+                  <select class="form-control" x-model="shipping.courier" @change="onCourierChange($event)">
                     <option value="jne">JNE</option>
                     <option value="pos">POS Indonesia</option>
                     <option value="tiki">TIKI</option>
