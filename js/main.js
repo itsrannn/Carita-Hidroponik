@@ -1,5 +1,5 @@
-const API_BASE_URL = 'https://backend-carita-hidroponik.vercel.app';
-const SNAP_TOKEN_ENDPOINT = `${API_BASE_URL}/api/payment/create-snap-token`;
+const API_BASE_URL = 'https://carita-hidroponik-backend.vercel.app';
+const SNAP_TOKEN_ENDPOINT = '/api/payment/create-snap-token';
 window.API_BASE_URL = API_BASE_URL;
 
 const APP_BASE_PATH = (() => {
@@ -962,7 +962,7 @@ function checkoutPage() {
         },
 
         async createSnapSession(payload) {
-            const response = await window.fetchWithDebug(SNAP_TOKEN_ENDPOINT, {
+            const response = await window.fetchWithDebug(window.toApiPath(SNAP_TOKEN_ENDPOINT), {
                 method: 'POST',
                 body: JSON.stringify(payload)
             });
@@ -1029,7 +1029,7 @@ function checkoutPage() {
 
         async confirmPaymentStatus(orderCode, paymentStatus, transactionId = null) {
             try {
-                await window.fetchWithDebug(`${API_BASE_URL}/api/payment/confirm`, {
+                await window.fetchWithDebug(window.toApiPath('/api/payment/confirm'), {
                     method: 'POST',
                     body: JSON.stringify({
                         order_code: orderCode,
@@ -1125,7 +1125,7 @@ function checkoutPage() {
                     weight: Alpine.store('cart').totalWeight
                 };
 
-                const res = await window.fetchWithDebug(`${API_BASE_URL}/api/shipping/cost`, {
+                const res = await window.fetchWithDebug(window.toApiPath('/api/shipping/cost'), {
                     method: 'POST',
                     headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
                     body: JSON.stringify(payload)

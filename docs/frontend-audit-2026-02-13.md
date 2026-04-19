@@ -8,11 +8,11 @@ Scope: `itsrannn/Carita-Hidroponik` frontend checkout/API calls
 - `BACKEND_API_URL` is resolved in `js/main.js` using this priority:
   1. `window.APP_CONFIG.apiBaseUrl`
   2. `<meta name="api-base-url" ...>`
-  3. fallback `'https://backend-carita-hidroponik.vercel.app'`
+  3. fallback `'https://carita-hidroponik-backend.vercel.app'`
 - Runtime check on production page `https://itsrannn.github.io/Carita-Hidroponik/my-cart.html` showed:
   - `window.APP_CONFIG = null`
   - `meta[name="api-base-url"] = null`
-  - Effective API base URL = `https://backend-carita-hidroponik.vercel.app`
+  - Effective API base URL = `https://carita-hidroponik-backend.vercel.app`
 
 ## 2) Fetch Call Inspection
 
@@ -24,12 +24,12 @@ Scope: `itsrannn/Carita-Hidroponik` frontend checkout/API calls
 - Absolute external fetches:
   - `fetch('https://www.emsifa.com/...')` for province/regency/district/village data
 - Backend checkout fetches (resolved absolute via `buildApiUrl()`):
-  - `POST https://backend-carita-hidroponik.vercel.app/api/payment/create-snap-token`
-  - `POST https://backend-carita-hidroponik.vercel.app/api/order/confirm`
+  - `POST https://carita-hidroponik-backend.vercel.app/api/payment/create-snap-token`
+  - `POST https://carita-hidroponik-backend.vercel.app/api/order/confirm`
 
 Observed checkout API probe in browser runtime:
 - Method: `POST`
-- URL: `https://backend-carita-hidroponik.vercel.app/api/payment/create-snap-token`
+- URL: `https://carita-hidroponik-backend.vercel.app/api/payment/create-snap-token`
 - Browser result: rejected with `TypeError: Failed to fetch`
 
 ## 3) Browser Network Trace
@@ -37,7 +37,7 @@ Observed checkout API probe in browser runtime:
 Using Playwright network listeners on production GitHub Pages URL:
 
 - Request is attempted by the browser and appears in network events:
-  - `REQUEST POST https://backend-carita-hidroponik.vercel.app/api/payment/create-snap-token`
+  - `REQUEST POST https://carita-hidroponik-backend.vercel.app/api/payment/create-snap-token`
 - Then fails:
   - `FAILED POST ... net::ERR_FAILED`
 - Console error includes exact root cause:
@@ -55,12 +55,12 @@ Conclusion for this section: this is not a malformed URL or JS crash before fetc
 ## 5) Environment & Hosting Constraints
 
 - Frontend is served from GitHub Pages origin: `https://itsrannn.github.io` (static hosting).
-- Backend is a different origin: `https://backend-carita-hidroponik.vercel.app`.
+- Backend is a different origin: `https://carita-hidroponik-backend.vercel.app`.
 - Therefore checkout always requires proper cross-origin CORS headers from backend for the GitHub Pages origin.
 
 ## Final Findings (Deliverables)
 
-1. Exact runtime API URL: `https://backend-carita-hidroponik.vercel.app`.
+1. Exact runtime API URL: `https://carita-hidroponik-backend.vercel.app`.
 2. Browser does attempt request: yes (`POST /api/payment/create-snap-token`) and it appears in network trace.
 3. Precise cause of `Failed to fetch`: CORS preflight rejection due to missing `Access-Control-Allow-Origin` for origin `https://itsrannn.github.io`.
 4. Minimal fix required:
