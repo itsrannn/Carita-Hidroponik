@@ -40,7 +40,7 @@ async function getAuthenticatedUser(req) {
 }
 
 async function getUserShippingProfile(token, userId) {
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}&select=province,regency,district,address,latitude,longitude`, {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}&select=province,regency,city,city_id,regency_id,district,address,latitude,longitude,destination_city_id`, {
     headers: {
       apikey: SUPABASE_ANON_KEY,
       Authorization: `Bearer ${token}`,
@@ -53,7 +53,24 @@ async function getUserShippingProfile(token, userId) {
   return rows?.[0] || null;
 }
 
+function getCityNameFromProfile(profile = {}) {
+  return profile.regency
+    || profile.city
+    || profile.kota
+    || profile.kabupaten
+    || null;
+}
+
 async function resolveDestinationCityId(profile) {
+  const directCityId = profile?.destination_city_id
+    || profile?.destinationCityId
+    || profile?.city_id
+    || profile?.cityId
+    || profile?.regency_id
+    || profile?.regencyId
+    || null;
+  if (directCityId) return String(directCityId);
+
   const provinceResponse = await fetch(`${RAJAONGKIR_BASE_URL}/province`, {
     headers: { key: RAJAONGKIR_API_KEY }
   });
@@ -71,7 +88,8 @@ async function resolveDestinationCityId(profile) {
   const cityData = await cityResponse.json();
   if (cityData?.rajaongkir?.status?.code !== 200) return null;
 
-  const targetRegency = normalizeRegionName(profile.regency);
+  const targetRegency = normalizeRegionName(getCityNameFromProfile(profile));
+  if (!targetRegency) return null;
   const cityMatch = cityData.rajaongkir.results.find((item) => normalizeRegionName(item.city_name) === targetRegency)
     || cityData.rajaongkir.results.find((item) => normalizeRegionName(item.city_name).includes(targetRegency))
     || cityData.rajaongkir.results.find((item) => targetRegency.includes(normalizeRegionName(item.city_name)));
@@ -113,6 +131,49 @@ async function getCities(req, res) {
   } catch (error) {
     console.error('Error fetching cities:', error);
     return res.status(500).json({ message: 'Internal server error fetching cities.' });
+  }
+}
+
+async function resolveDestination(req, res) {
+  try {
+    const auth = await getAuthenticatedUser(req);
+    if (auth.error) {
+      return res.status(401).json({ message: auth.error });
+    }
+
+    const profile = await getUserShippingProfile(auth.token, auth.user.id);
+    const requestRegion = req.body?.regency || req.body?.city || null;
+    const requestProvince = req.body?.province || null;
+    const sourceProfile = {
+      ...(profile || {}),
+      regency: requestRegion || profile?.regency || profile?.city || null,
+      city: requestRegion || profile?.city || profile?.regency || null,
+      province: requestProvince || profile?.province || null,
+      destination_city_id: req.body?.destination_city_id || req.body?.destinationCityId || profile?.destination_city_id || null
+    };
+
+    console.info('[Shipping] Resolve destination input:', {
+      user_id: auth.user.id,
+      province: sourceProfile.province,
+      regency: sourceProfile.regency,
+      city: sourceProfile.city,
+      city_id: sourceProfile.city_id,
+      regency_id: sourceProfile.regency_id
+    });
+
+    const destinationCityId = await resolveDestinationCityId(sourceProfile);
+    if (!destinationCityId) {
+      return res.status(422).json({ message: 'Unable to resolve destination city ID.' });
+    }
+
+    return res.json({
+      status: 'success',
+      destinationCityId,
+      destination_city_id: destinationCityId
+    });
+  } catch (error) {
+    console.error('Error resolving destination city ID:', error);
+    return res.status(500).json({ message: 'Internal server error resolving destination city ID.' });
   }
 }
 
@@ -194,5 +255,6 @@ async function calculateCost(req, res) {
 module.exports = {
   getProvinces,
   getCities,
+  resolveDestination,
   calculateCost
 };

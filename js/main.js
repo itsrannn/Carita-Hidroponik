@@ -610,6 +610,7 @@ function checkoutPage() {
         },
         regions: { services: [] },
         isCheckoutLoading: false,
+        isResolvingDestinationCityId: false,
         ppnRate: 0.11,
 
         async init() {
@@ -676,9 +677,8 @@ function checkoutPage() {
                 }
 
                 this.profileSnapshot = data;
-
-                const cityId = data.city_id || data.regency_id || '';
-                this.shipping.destinationCityId = cityId ? String(cityId) : '';
+                console.info('[Checkout] Loaded user profile for shipping:', data);
+                this.shipping.destinationCityId = await this.resolveDestinationCityIdFromProfile(data);
 
                 const addressParts = [
                     data.address,
@@ -689,14 +689,85 @@ function checkoutPage() {
                 ].filter(Boolean);
 
                 this.shipping.addressLabel = addressParts.join(', ');
-
-                if (this.shipping.destinationCityId && this.shipping.courier) {
-                    await this.calculateShipping();
-                }
             } catch (error) {
                 console.error('[Checkout] Failed to hydrate shipping address:', error);
             } finally {
                 this.checkoutState.profileLoaded = true;
+            }
+        },
+
+        async resolveDestinationCityIdFromProfile(profile = null) {
+            const source = profile || this.profileSnapshot || {};
+            const resolvedFromProfile = this.getFirstFilledValue(
+                source.destinationCityId,
+                source.destination_city_id,
+                source.cityId,
+                source.city_id,
+                source.regency_id,
+                source.rajaongkir_city_id
+            );
+
+            if (resolvedFromProfile !== null) {
+                const mappedId = String(resolvedFromProfile).trim();
+                console.info('[Checkout] Mapped destination city ID directly from profile fields:', {
+                    destinationCityId: mappedId
+                });
+                return mappedId;
+            }
+
+            const regionLabel = this.getFirstFilledValue(
+                source.regency,
+                source.city,
+                source.kota,
+                source.kabupaten
+            );
+            const provinceLabel = this.getFirstFilledValue(source.province, source.provinsi);
+            if (!regionLabel) {
+                console.warn('[Checkout] Unable to resolve destination city ID: city/regency label is missing.');
+                return '';
+            }
+
+            if (this.isResolvingDestinationCityId) {
+                return this.shipping.destinationCityId || '';
+            }
+
+            this.isResolvingDestinationCityId = true;
+            try {
+                const { data } = await window.supabase.auth.getSession();
+                const accessToken = data?.session?.access_token || '';
+                const response = await window.fetchWithDebug(`${API_BASE_URL}/api/shipping/resolve-destination`, {
+                    method: 'POST',
+                    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+                    body: JSON.stringify({
+                        province: provinceLabel,
+                        city: regionLabel,
+                        regency: regionLabel
+                    })
+                });
+
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    console.warn('[Checkout] Failed fallback city ID resolution:', result);
+                    return '';
+                }
+
+                const resolvedId = this.getFirstFilledValue(
+                    result?.destinationCityId,
+                    result?.destination_city_id,
+                    result?.data?.destinationCityId
+                );
+                const mappedId = resolvedId ? String(resolvedId).trim() : '';
+                console.info('[Checkout] Resolved destination city ID from city/regency fallback:', {
+                    regionLabel,
+                    provinceLabel,
+                    destinationCityId: mappedId
+                });
+                return mappedId;
+            } catch (error) {
+                console.error('[Checkout] Error while resolving destination city ID fallback:', error);
+                return '';
+            } finally {
+                this.isResolvingDestinationCityId = false;
             }
         },
 
@@ -805,6 +876,10 @@ function checkoutPage() {
 
             await this.hydrateShippingAddress();
             this.evaluateProfileState(this.profileSnapshot);
+
+            if (this.checkoutState.profileLoaded && this.shipping.courier) {
+                await this.calculateShipping();
+            }
         },
 
         updateShippingCost() {
@@ -1072,6 +1147,14 @@ function checkoutPage() {
         },
 
         async calculateShipping() {
+            if (!this.checkoutState.profileLoaded) {
+                await this.loadCheckoutState();
+            }
+
+            if (!this.shipping.destinationCityId) {
+                this.shipping.destinationCityId = await this.resolveDestinationCityIdFromProfile(this.profileSnapshot);
+            }
+
             if (!this.shipping.destinationCityId || !this.shipping.courier) {
                 console.warn('[Checkout] Shipping calculation skipped due to incomplete state:', {
                     destinationCityId: this.shipping.destinationCityId,
