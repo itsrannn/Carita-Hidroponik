@@ -238,6 +238,8 @@ document.addEventListener('alpine:init', () => {
         const villageName = findRegionName(this.villages, this.selectedVillage) || this.profile.village || null;
 
         const payload = {
+          full_name: this.profile.full_name || null,
+          phone_number: this.profile.phone_number || null,
           address: this.profile.address || null,
           postal_code: this.profile.postal_code || null,
           latitude: Number.isFinite(latitude) ? latitude : null,
@@ -308,6 +310,7 @@ document.addEventListener('alpine:init', () => {
         }
       };
       console.info('[Account] updateProfileViaApi request body:', requestBody);
+      console.log('[AUDIT] update-profile payload', requestBody?.data);
 
       const response = await fetch(window.toApiPath('/api/update-profile'), {
         method: 'POST',
@@ -319,6 +322,7 @@ document.addEventListener('alpine:init', () => {
       });
 
       const result = await response.json().catch(() => ({}));
+      console.log('[AUDIT] update-profile response body', result);
       if (!response.ok) {
         console.error('[Account] updateProfileViaApi non-OK response:', {
           status: response.status,
