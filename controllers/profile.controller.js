@@ -19,6 +19,11 @@ const ALLOWED_PROFILE_FIELDS = new Set([
   'district_id',
   'village_id'
 ]);
+const REQUIRED_REQUEST_WRAPPER = 'data';
+const REQUEST_CONTRACT_FIELDS = new Set([
+  ...ALLOWED_PROFILE_FIELDS,
+  'user_id'
+]);
 
 function sanitizePayload(payload = {}) {
   const sanitized = {};
@@ -57,6 +62,46 @@ function validateProfilePayload(payload = {}) {
   return errors;
 }
 
+function validateRequestContract(rawPayload, authenticatedUserId) {
+  const errors = [];
+  const isObjectPayload = rawPayload !== null && typeof rawPayload === 'object' && !Array.isArray(rawPayload);
+
+  if (!isObjectPayload) {
+    errors.push({
+      field: REQUIRED_REQUEST_WRAPPER,
+      reason: 'must be an object.'
+    });
+    return errors;
+  }
+
+  const userId = rawPayload.user_id;
+  if (!userId || typeof userId !== 'string') {
+    errors.push({
+      field: 'user_id',
+      reason: 'is required and must be a non-empty string.'
+    });
+  } else if (userId !== authenticatedUserId) {
+    errors.push({
+      field: 'user_id',
+      reason: 'must match the authenticated user id from the bearer token.',
+      received: userId,
+      expected: authenticatedUserId
+    });
+  }
+
+  const unknownFields = Object.keys(rawPayload).filter((key) => !REQUEST_CONTRACT_FIELDS.has(key));
+  if (unknownFields.length > 0) {
+    errors.push({
+      field: 'payload',
+      reason: 'contains unsupported field names.',
+      unsupportedFields: unknownFields,
+      allowedFields: Array.from(REQUEST_CONTRACT_FIELDS)
+    });
+  }
+
+  return errors;
+}
+
 async function updateProfile(req, res) {
   if (!SUPABASE_SERVICE_ROLE_KEY) {
     return res.status(500).json({ message: 'SUPABASE_SERVICE_ROLE_KEY is not configured on the backend.' });
@@ -81,13 +126,34 @@ async function updateProfile(req, res) {
     }
     const user = await authResponse.json();
 
-    const rawPayload = req.body?.data || {};
+    const hasExpectedWrapper = Object.prototype.hasOwnProperty.call(req.body || {}, REQUIRED_REQUEST_WRAPPER);
+    if (!hasExpectedWrapper) {
+      return res.status(400).json({
+        message: 'Invalid request payload contract.',
+        details: [
+          {
+            field: REQUIRED_REQUEST_WRAPPER,
+            reason: `missing top-level "${REQUIRED_REQUEST_WRAPPER}" wrapper.`
+          }
+        ]
+      });
+    }
+
+    const rawPayload = req.body?.data;
+    const contractErrors = validateRequestContract(rawPayload, user.id);
+    if (contractErrors.length > 0) {
+      return res.status(400).json({
+        message: 'Profile request contract validation failed.',
+        details: contractErrors
+      });
+    }
+
     const payload = sanitizePayload(rawPayload);
     if (Object.keys(payload).length === 0) {
       return res.status(400).json({
         message: 'No valid profile fields provided.',
         details: {
-          expectedWrapper: 'data',
+          expectedWrapper: REQUIRED_REQUEST_WRAPPER,
           receivedTopLevelKeys: Object.keys(req.body || {}),
           receivedDataKeys: Object.keys(rawPayload || {}),
           allowedFields: Array.from(ALLOWED_PROFILE_FIELDS)
