@@ -301,7 +301,12 @@ document.addEventListener('alpine:init', () => {
         throw new Error('Sesi login tidak ditemukan.');
       }
 
-      const requestBody = { data: payload };
+      const requestBody = {
+        data: {
+          user_id: this.user?.id || null,
+          ...payload
+        }
+      };
       console.info('[Account] updateProfileViaApi request body:', requestBody);
 
       const response = await fetch(window.toApiPath('/api/update-profile'), {
