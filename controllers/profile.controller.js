@@ -159,11 +159,55 @@ async function updateProfile(req, res) {
     }
 
     const rawPayload = normalizeRequestPayload(req.body?.data);
-    console.log('[AUDIT] /api/update-profile payload', {
-      keys: Object.keys(rawPayload || {}),
-      user_id: rawPayload?.user_id || null
-    });
-    const contractErrors = validateRequestContract(rawPayload, user.id);
+    const pick = (source, ...keys) => {
+      const result = {};
+      keys.forEach((key) => {
+        if (source && Object.prototype.hasOwnProperty.call(source, key)) {
+          result[key] = source[key];
+        }
+      });
+      return result;
+    };
+    const toText = (value) => {
+      if (value === undefined || value === null) return null;
+      const text = String(value).trim();
+      return text === '' ? null : text;
+    };
+
+    const normalizedPayload = {
+      ...pick(rawPayload, 'user_id'),
+      full_name: toText(rawPayload?.full_name),
+      phone_number: toText(rawPayload?.phone_number),
+      address: toText(rawPayload?.address),
+      postal_code: toText(rawPayload?.postal_code),
+      province: toText(rawPayload?.province),
+      city: toText(rawPayload?.city),
+      regency: toText(rawPayload?.regency),
+      district: toText(rawPayload?.district),
+      village: toText(rawPayload?.village),
+      province_id: toText(rawPayload?.province_id),
+      city_id: toText(rawPayload?.city_id),
+      regency_id: toText(rawPayload?.regency_id),
+      district_id: toText(rawPayload?.district_id),
+      village_id: toText(rawPayload?.village_id),
+      latitude:
+        rawPayload?.latitude === '' || rawPayload?.latitude === null || rawPayload?.latitude === undefined
+          ? null
+          : Number(rawPayload.latitude),
+      longitude:
+        rawPayload?.longitude === '' || rawPayload?.longitude === null || rawPayload?.longitude === undefined
+          ? null
+          : Number(rawPayload.longitude)
+    };
+
+    const payload = Object.fromEntries(
+      Object.entries(normalizedPayload).filter(([key, value]) => {
+        if (key === 'user_id') return false;
+        return value !== null && value !== undefined && value !== '';
+      })
+    );
+
+    const contractErrors = validateRequestContract(normalizedPayload, user.id);
     if (contractErrors.length > 0) {
       console.warn('[AUDIT] /api/update-profile contract validation failed', contractErrors);
       return res.status(400).json({
@@ -172,27 +216,42 @@ async function updateProfile(req, res) {
       });
     }
 
-    const payload = sanitizePayload(rawPayload);
+    const requiredProfileFields = ['full_name', 'phone_number'];
+    const missingRequiredFields = requiredProfileFields.filter((field) => !payload[field]);
+    if (missingRequiredFields.length > 0) {
+      console.warn('[AUDIT] /api/update-profile missing required profile fields', {
+        missingRequiredFields
+      });
+    }
+
+    const hasLatitude = payload.latitude !== undefined && payload.latitude !== null && payload.latitude !== '';
+    const hasLongitude = payload.longitude !== undefined && payload.longitude !== null && payload.longitude !== '';
+    if (hasLatitude && !Number.isFinite(Number(payload.latitude))) {
+      return res.status(400).json({
+        message: 'Profile payload validation failed.',
+        details: [{ field: 'latitude', reason: 'must be numeric if provided.' }]
+      });
+    }
+    if (hasLongitude && !Number.isFinite(Number(payload.longitude))) {
+      return res.status(400).json({
+        message: 'Profile payload validation failed.',
+        details: [{ field: 'longitude', reason: 'must be numeric if provided.' }]
+      });
+    }
+
     if (Object.keys(payload).length === 0) {
       return res.status(400).json({
         message: 'No valid profile fields provided.',
         details: {
           expectedWrapper: REQUIRED_REQUEST_WRAPPER,
           receivedTopLevelKeys: Object.keys(req.body || {}),
-          receivedDataKeys: Object.keys(rawPayload || {}),
+          receivedDataKeys: Object.keys(normalizedPayload || {}),
           allowedFields: Array.from(ALLOWED_PROFILE_FIELDS)
         }
       });
     }
 
-    const validationErrors = validateProfilePayload(payload);
-    if (validationErrors.length > 0) {
-      console.warn('[AUDIT] /api/update-profile payload validation failed', validationErrors);
-      return res.status(400).json({
-        message: 'Profile payload validation failed.',
-        details: validationErrors
-      });
-    }
+    console.log('[FINAL PAYLOAD]', payload);
 
     const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}&select=*`, {
       method: 'PATCH',
