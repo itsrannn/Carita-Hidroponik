@@ -299,29 +299,47 @@ document.addEventListener('alpine:init', () => {
       }
 
       const accessToken = data?.session?.access_token;
+      const sessionUserId = data?.session?.user?.id || null;
       if (!accessToken) {
         throw new Error('Sesi login tidak ditemukan.');
       }
 
       const requestBody = {
         data: {
-          user_id: this.user?.id || null,
+          user_id: this.user?.id || sessionUserId,
           ...payload
         }
       };
+      const endpointUrl = window.toApiPath('/api/update-profile');
+      const requestHeaders = {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`
+      };
+
       console.info('[Account] updateProfileViaApi request body:', requestBody);
+      console.log('[AUDIT] FINAL PAYLOAD', JSON.stringify(requestBody?.data || {}, null, 2));
+      console.log('[AUDIT] REQUEST META', {
+        endpointUrl,
+        headers: requestHeaders,
+        hasAuthorization: Boolean(requestHeaders.Authorization)
+      });
+      console.log('[AUDIT] PAYLOAD NON EMPTY', Object.keys(requestBody?.data || {}).length > 0);
       console.log('[AUDIT] update-profile payload', requestBody?.data);
 
-      const response = await fetch(window.toApiPath('/api/update-profile'), {
+      const response = await fetch(endpointUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`
-        },
+        headers: requestHeaders,
         body: JSON.stringify(requestBody)
       });
 
-      const result = await response.json().catch(() => ({}));
+      const rawText = await response.text();
+      console.log('[AUDIT] RAW RESPONSE', rawText);
+      let result = {};
+      try {
+        result = rawText ? JSON.parse(rawText) : {};
+      } catch (_parseError) {
+        result = { raw: rawText };
+      }
       console.log('[AUDIT] update-profile response body', result);
       if (!response.ok) {
         console.error('[Account] updateProfileViaApi non-OK response:', {
