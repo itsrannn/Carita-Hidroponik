@@ -133,6 +133,8 @@ async function updateProfile(req, res) {
   }
 
   try {
+    console.log('[AUDIT BACKEND] req.body', req.body);
+
     const authResponse = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
       headers: {
         apikey: SUPABASE_SERVICE_ROLE_KEY,
