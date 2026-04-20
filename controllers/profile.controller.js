@@ -22,8 +22,27 @@ const ALLOWED_PROFILE_FIELDS = new Set([
 const REQUIRED_REQUEST_WRAPPER = 'data';
 const REQUEST_CONTRACT_FIELDS = new Set([
   ...ALLOWED_PROFILE_FIELDS,
-  'user_id'
+  'user_id',
+  'userId',
+  'profileId',
+  'phone'
 ]);
+
+function normalizeRequestPayload(rawPayload = {}) {
+  if (!rawPayload || typeof rawPayload !== 'object' || Array.isArray(rawPayload)) {
+    return rawPayload;
+  }
+
+  const normalized = { ...rawPayload };
+  const normalizedUserId = normalized.user_id || normalized.userId || normalized.profileId || null;
+  normalized.user_id = normalizedUserId;
+
+  if (normalized.phone !== undefined && normalized.phone_number === undefined) {
+    normalized.phone_number = normalized.phone;
+  }
+
+  return normalized;
+}
 
 function sanitizePayload(payload = {}) {
   const sanitized = {};
@@ -139,9 +158,14 @@ async function updateProfile(req, res) {
       });
     }
 
-    const rawPayload = req.body?.data;
+    const rawPayload = normalizeRequestPayload(req.body?.data);
+    console.log('[AUDIT] /api/update-profile payload', {
+      keys: Object.keys(rawPayload || {}),
+      user_id: rawPayload?.user_id || null
+    });
     const contractErrors = validateRequestContract(rawPayload, user.id);
     if (contractErrors.length > 0) {
+      console.warn('[AUDIT] /api/update-profile contract validation failed', contractErrors);
       return res.status(400).json({
         message: 'Profile request contract validation failed.',
         details: contractErrors
@@ -163,6 +187,7 @@ async function updateProfile(req, res) {
 
     const validationErrors = validateProfilePayload(payload);
     if (validationErrors.length > 0) {
+      console.warn('[AUDIT] /api/update-profile payload validation failed', validationErrors);
       return res.status(400).json({
         message: 'Profile payload validation failed.',
         details: validationErrors
