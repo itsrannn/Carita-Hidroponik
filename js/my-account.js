@@ -301,18 +301,31 @@ document.addEventListener('alpine:init', () => {
         throw new Error('Sesi login tidak ditemukan.');
       }
 
+      const requestBody = { data: payload };
+      console.info('[Account] updateProfileViaApi request body:', requestBody);
+
       const response = await fetch(window.toApiPath('/api/update-profile'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`
         },
-        body: JSON.stringify({ data: payload })
+        body: JSON.stringify(requestBody)
       });
 
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(result?.message || `HTTP ${response.status}`);
+        console.error('[Account] updateProfileViaApi non-OK response:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: result
+        });
+        const error = new Error(result?.message || `HTTP ${response.status}`);
+        error.details = result?.details;
+        error.hint = result?.hint;
+        error.code = result?.code;
+        error.status = response.status;
+        throw error;
       }
 
       return result?.profile || {};

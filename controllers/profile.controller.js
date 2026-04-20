@@ -29,6 +29,34 @@ function sanitizePayload(payload = {}) {
   return sanitized;
 }
 
+function validateProfilePayload(payload = {}) {
+  const errors = [];
+  const hasLatitude = payload.latitude !== undefined && payload.latitude !== null && payload.latitude !== '';
+  const hasLongitude = payload.longitude !== undefined && payload.longitude !== null && payload.longitude !== '';
+
+  if (hasLatitude) {
+    const latitude = Number(payload.latitude);
+    if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) {
+      errors.push({
+        field: 'latitude',
+        reason: 'must be a finite number between -90 and 90.'
+      });
+    }
+  }
+
+  if (hasLongitude) {
+    const longitude = Number(payload.longitude);
+    if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+      errors.push({
+        field: 'longitude',
+        reason: 'must be a finite number between -180 and 180.'
+      });
+    }
+  }
+
+  return errors;
+}
+
 async function updateProfile(req, res) {
   if (!SUPABASE_SERVICE_ROLE_KEY) {
     return res.status(500).json({ message: 'SUPABASE_SERVICE_ROLE_KEY is not configured on the backend.' });
@@ -53,9 +81,26 @@ async function updateProfile(req, res) {
     }
     const user = await authResponse.json();
 
-    const payload = sanitizePayload(req.body?.data || {});
+    const rawPayload = req.body?.data || {};
+    const payload = sanitizePayload(rawPayload);
     if (Object.keys(payload).length === 0) {
-      return res.status(400).json({ message: 'No valid profile fields provided.' });
+      return res.status(400).json({
+        message: 'No valid profile fields provided.',
+        details: {
+          expectedWrapper: 'data',
+          receivedTopLevelKeys: Object.keys(req.body || {}),
+          receivedDataKeys: Object.keys(rawPayload || {}),
+          allowedFields: Array.from(ALLOWED_PROFILE_FIELDS)
+        }
+      });
+    }
+
+    const validationErrors = validateProfilePayload(payload);
+    if (validationErrors.length > 0) {
+      return res.status(400).json({
+        message: 'Profile payload validation failed.',
+        details: validationErrors
+      });
     }
 
     const updateResponse = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(user.id)}&select=*`, {
