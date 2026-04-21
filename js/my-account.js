@@ -203,9 +203,7 @@ document.addEventListener('alpine:init', () => {
         };
 
         const profile = await this.updateProfileViaApi(payload);
-        this.profile = { ...this.profile, ...profile };
-
-        this.editProfileMode = false;
+        await this.applyUpdatedProfile(profile, { exitProfileEditMode: true });
         this.showNotification('Profil berhasil disimpan.');
       } catch (error) {
         console.error('[Account] Error while updating profile:', error);
@@ -269,12 +267,10 @@ document.addEventListener('alpine:init', () => {
           throw new Error('Server response does not reflect the latest address payload.');
         }
 
-        this.profile = { ...this.profile, ...profile };
-
-        // Refresh from database source to avoid stale in-memory state.
-        await this.fetchProfile();
-
-        this.editAddressMode = false;
+        await this.applyUpdatedProfile(profile, {
+          exitAddressEditMode: true,
+          refreshFromDatabase: true
+        });
         this.showNotification('Profile berhasil disimpan');
       } catch (error) {
         console.error('[Account] Error while updating address:', {
@@ -298,6 +294,46 @@ document.addEventListener('alpine:init', () => {
         return String(actual ?? '') === String(expected ?? '');
       });
     },
+
+    async applyUpdatedProfile(
+      updatedProfile = {},
+      { exitProfileEditMode = false, exitAddressEditMode = false, refreshFromDatabase = false } = {}
+    ) {
+      if (updatedProfile && typeof updatedProfile === 'object' && !Array.isArray(updatedProfile)) {
+        this.profile = { ...this.profile, ...updatedProfile };
+        await this.hydrateAddressSelections(this.profile);
+        this.syncMapWithProfile();
+      }
+
+      if (refreshFromDatabase) {
+        await this.fetchProfile();
+      }
+
+      if (exitProfileEditMode) {
+        this.editProfileMode = false;
+      }
+
+      if (exitAddressEditMode) {
+        this.editAddressMode = false;
+      }
+    },
+
+    extractProfileFromApiResult(result = {}) {
+      const candidates = [
+        result?.profile,
+        result?.data?.profile,
+        result?.data,
+        result?.updatedProfile,
+        result?.user?.profile
+      ];
+
+      const matchedProfile = candidates.find((candidate) => (
+        candidate && typeof candidate === 'object' && !Array.isArray(candidate)
+      ));
+
+      return matchedProfile || {};
+    },
+
     async updateProfileViaApi(payload) {
       const { data, error } = await window.supabase.auth.getSession();
       if (error) {
@@ -363,7 +399,7 @@ document.addEventListener('alpine:init', () => {
         throw error;
       }
 
-      return result?.profile || {};
+      return this.extractProfileFromApiResult(result);
     },
 
     async fetchProvinces() {
