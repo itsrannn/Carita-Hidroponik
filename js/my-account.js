@@ -215,49 +215,55 @@ document.addEventListener('alpine:init', () => {
       }
     },
 
-    async updateAddress() {
-      if (!this.user?.id) return;
+    async submitProfileLocationForm(event) {
+      event.preventDefault();
+      if (!this.user?.id) {
+        this.showNotification('User tidak ditemukan. Silakan login ulang.', true);
+        return;
+      }
+
       this.loading = true;
       try {
-        const latitude = this.profile.latitude === '' || this.profile.latitude === null || this.profile.latitude === undefined
-          ? null
-          : Number(this.profile.latitude);
-        const longitude = this.profile.longitude === '' || this.profile.longitude === null || this.profile.longitude === undefined
-          ? null
-          : Number(this.profile.longitude);
-
-        const findRegionName = (options, selectedId) => {
-          if (!Array.isArray(options) || !selectedId) return null;
-          const match = options.find((item) => String(item.id) === String(selectedId));
-          return match?.name || null;
+        const form = event.currentTarget;
+        const getInputValue = (selector) => {
+          const field = form?.querySelector(selector) || document.querySelector(selector);
+          return String(field?.value || '').trim();
+        };
+        const getSelectedText = (selector) => {
+          const select = form?.querySelector(selector) || document.querySelector(selector);
+          if (!select || select.selectedIndex < 0) return '';
+          return String(select.options[select.selectedIndex]?.text || '').trim();
         };
 
-        const provinceName = findRegionName(this.provinces, this.selectedProvince) || this.profile.province || null;
-        const regencyName = findRegionName(this.regencies, this.selectedRegency) || this.profile.regency || this.profile.city || null;
-        const districtName = findRegionName(this.districts, this.selectedDistrict) || this.profile.district || null;
-        const villageName = findRegionName(this.villages, this.selectedVillage) || this.profile.village || null;
+        const latitudeValue = getInputValue('#latitude');
+        const longitudeValue = getInputValue('#longitude');
+        const parsedLatitude = latitudeValue === '' ? null : Number(latitudeValue);
+        const parsedLongitude = longitudeValue === '' ? null : Number(longitudeValue);
 
+        const requestBody = {
+          data: {
+            user_id: this.user.id,
+            province: getSelectedText('#province'),
+            regency: getSelectedText('#regency'),
+            district: getSelectedText('#district'),
+            village: getSelectedText('#village'),
+            address: getInputValue('#address'),
+            postal_code: getInputValue('#postalCode'),
+            longitude: Number.isFinite(parsedLongitude) ? parsedLongitude : null,
+            latitude: Number.isFinite(parsedLatitude) ? parsedLatitude : null,
+            full_name: getInputValue('#fullName')
+          }
+        };
+
+        const profile = await this.updateProfileViaApi(requestBody);
         const payload = {
-          full_name: this.profile.full_name || null,
-          phone_number: this.profile.phone_number || null,
-          address: this.profile.address || null,
-          postal_code: this.profile.postal_code || null,
-          latitude: Number.isFinite(latitude) ? latitude : null,
-          longitude: Number.isFinite(longitude) ? longitude : null,
-          province: provinceName,
-          regency: regencyName,
-          district: districtName,
-          village: villageName,
+          ...requestBody.data,
           province_id: this.selectedProvince || null,
           city_id: this.selectedRegency || null,
           regency_id: this.selectedRegency || null,
           district_id: this.selectedDistrict || null,
           village_id: this.selectedVillage || null
         };
-
-        console.info('[Account] Updating address payload:', payload);
-
-        const profile = await this.updateProfileViaApi(payload);
         const hasPersistedAddress = this.hasAddressPersistenceMatch(payload, profile);
         if (!hasPersistedAddress) {
           throw new Error('Server response does not reflect the latest address payload.');
@@ -269,7 +275,7 @@ document.addEventListener('alpine:init', () => {
         await this.fetchProfile();
 
         this.editAddressMode = false;
-        this.showNotification('Perubahan alamat berhasil disimpan.');
+        this.showNotification('Profile berhasil disimpan');
       } catch (error) {
         console.error('[Account] Error while updating address:', {
           message: error?.message || String(error),
@@ -277,7 +283,7 @@ document.addEventListener('alpine:init', () => {
           hint: error?.hint,
           code: error?.code
         });
-        this.showNotification('Terjadi kesalahan saat menyimpan alamat.', true);
+        this.showNotification(error?.message || 'Terjadi kesalahan saat menyimpan alamat.', true);
       } finally {
         this.loading = false;
       }
@@ -304,12 +310,14 @@ document.addEventListener('alpine:init', () => {
         throw new Error('Sesi login tidak ditemukan.');
       }
 
-      const requestBody = {
-        data: {
-          user_id: this.user?.id || sessionUserId,
-          ...payload
-        }
-      };
+      const requestBody = payload?.data
+        ? payload
+        : {
+            data: {
+              user_id: this.user?.id || sessionUserId,
+              ...payload
+            }
+          };
       const endpointUrl = window.toApiPath('/api/update-profile');
       const requestHeaders = {
         'Content-Type': 'application/json',

@@ -82,7 +82,7 @@
                   <button class="btn btn-sm btn-outline" @click="editAddressMode = !editAddressMode" x-text="editAddressMode ? $store.i18n.t('account.address.cancelButton') : $store.i18n.t('account.address.editButton')"></button>
                 </div>
                 <div class="section-body">
-                  <form class="account-form" @submit.prevent="updateAddress">
+                  <form class="account-form" @submit="submitProfileLocationForm($event)">
                     <div class="form-group">
                       <label for="province" x-text="$store.i18n.t('account.address.provinceLabel')">Province</label>
                       <select id="province" x-model="selectedProvince" @change="fetchRegencies" :disabled="!editAddressMode">
