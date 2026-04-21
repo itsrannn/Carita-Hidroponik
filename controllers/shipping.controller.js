@@ -31,6 +31,22 @@ function calculateShippingCost({ weightKg, baseRate, extraPerKg }) {
   return safeBaseRate + (additionalWeight * safeExtraPerKg);
 }
 
+function calculateFallbackShippingCost({ weightKg, distanceKm, destinationProvince }) {
+  const minimumWeightKg = Math.max(1, Number(weightKg || 1));
+  const normalizedProvince = normalizeRegionName(destinationProvince);
+  const safeDistanceKm = Math.max(1, Number(distanceKm || 10));
+
+  const baseRate = 12000;
+  const perKgRate = 2500;
+  const perKmRate = 150;
+
+  const longHaulMultiplier = safeDistanceKm > 80 ? 1.15 : 1;
+  const provinceMultiplier = normalizedProvince.includes('jawa timur') ? 1 : 1.2;
+
+  const subtotal = baseRate + ((minimumWeightKg - 1) * perKgRate) + (safeDistanceKm * perKmRate);
+  return Math.round(subtotal * longHaulMultiplier * provinceMultiplier);
+}
+
 async function getAuthenticatedUser(req) {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
@@ -130,7 +146,7 @@ function resolveShippingRate(profile = {}, rates = []) {
 }
 
 async function calculateCost(req, res) {
-  const { weight } = req.body || {};
+  const { weight, distanceKm } = req.body || {};
 
   try {
     const auth = await getAuthenticatedUser(req);
@@ -150,22 +166,22 @@ async function calculateCost(req, res) {
       return res.status(503).json({ message: 'Metode Rekomendasi Kami sedang dinonaktifkan oleh admin.' });
     }
 
-    const rates = await getActiveShippingRates(auth.token);
-    if (rates.length === 0) {
-      return res.status(422).json({ message: 'Shipping rates are not configured yet.' });
-    }
-
-    const matchedRate = resolveShippingRate(profile, rates);
-    if (!matchedRate) {
-      return res.status(422).json({ message: 'No matching shipping zone found for your address.' });
-    }
-
     const weightKg = toWeightKg(weight);
-    const shippingCost = calculateShippingCost({
-      weightKg,
-      baseRate: matchedRate.base_rate,
-      extraPerKg: matchedRate.extra_per_kg
-    });
+    const rates = await getActiveShippingRates(auth.token);
+    const matchedRate = resolveShippingRate(profile, rates);
+    const hasConfiguredRate = Boolean(matchedRate);
+
+    const shippingCost = hasConfiguredRate
+      ? calculateShippingCost({
+          weightKg,
+          baseRate: matchedRate.base_rate,
+          extraPerKg: matchedRate.extra_per_kg
+        })
+      : calculateFallbackShippingCost({
+          weightKg,
+          distanceKm,
+          destinationProvince: profile.province
+        });
 
     return res.json({
       status: 'success',
@@ -174,9 +190,9 @@ async function calculateCost(req, res) {
         code: 'rekomendasi-kami',
         label: 'Rekomendasi Kami',
         badge: 'Direkomendasikan',
-        zone_name: matchedRate.zone_name,
-        base_rate: Number(matchedRate.base_rate || 0),
-        extra_per_kg: Number(matchedRate.extra_per_kg || 0),
+        zone_name: hasConfiguredRate ? matchedRate.zone_name : 'Fallback Manual',
+        base_rate: Number(hasConfiguredRate ? matchedRate.base_rate : 12000),
+        extra_per_kg: Number(hasConfiguredRate ? matchedRate.extra_per_kg : 2500),
         weight_kg: weightKg,
         cost: shippingCost,
         etd: '1-4 hari kerja'

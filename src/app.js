@@ -17,6 +17,7 @@ app.use(express.json());
 app.use('/api/payment', paymentRoutes);
 app.use('/api/order', paymentRoutes);
 app.use('/api/shipping', shippingRoutes);
+app.use('/api', shippingRoutes);
 app.use('/api', profileRoutes);
 
 app.get('/', (req, res) => {
