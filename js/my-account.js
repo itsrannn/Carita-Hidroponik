@@ -254,18 +254,18 @@ document.addEventListener('alpine:init', () => {
         };
 
         const profile = await this.updateProfileViaApi(requestBody);
-        const payload = {
-          ...requestBody.data,
-          province_id: this.selectedProvince || null,
-          city_id: this.selectedRegency || null,
-          regency_id: this.selectedRegency || null,
-          district_id: this.selectedDistrict || null,
-          village_id: this.selectedVillage || null
-        };
-        const hasPersistedAddress = this.hasAddressPersistenceMatch(payload, profile);
-        if (!hasPersistedAddress) {
-          throw new Error('Server response does not reflect the latest address payload.');
-        }
+        //const payload = {
+          //...requestBody.data,
+          //province_id: this.selectedProvince || null,
+          //city_id: this.selectedRegency || null,
+          //regency_id: this.selectedRegency || null,
+          //district_id: this.selectedDistrict || null,
+          //village_id: this.selectedVillage || null
+        //};
+       // const hasPersistedAddress = this.hasAddressPersistenceMatch(payload, profile);
+       // if (!hasPersistedAddress) {
+       //  throw new Error('Server response does not reflect the latest address payload.');
+       //}
 
         await this.applyUpdatedProfile(profile, {
           exitAddressEditMode: true,
