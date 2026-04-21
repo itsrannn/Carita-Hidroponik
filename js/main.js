@@ -617,6 +617,9 @@ function checkoutPage() {
         isCalculatingShipping: false,
         shippingLoaded: false,
         lastShippingRequestKey: null,
+        shippingDebounceTimer: null,
+        lastShippingDebounceToken: null,
+        shippingRequestController: null,
         isCheckoutLoading: false,
         ppnRate: 0.11,
 
@@ -1093,70 +1096,66 @@ function checkoutPage() {
         },
 
         async calculateShipping(triggerSource = 'unknown', options = {}) {
-            const { force = false } = options || {};
+            const { force = false, debounceMs = 400, fallbackCost = 25000, timeoutMs = 8000 } = options || {};
 
-            if (this.isCalculatingShipping) {
-                console.info('[Checkout] calculateShipping prevented: request already in-flight.', { triggerSource });
-                return;
-            }
-
-            if (!this.checkoutState.profileLoaded) {
-                console.info('[Checkout] calculateShipping skipped: profile not loaded yet.', { triggerSource });
-                return;
-            }
-
-            if (this.shipping.selectedMethod !== 'rekomendasi-kami') {
-                this.shipping.selectedMethod = 'rekomendasi-kami';
-            }
+            if (!this.checkoutState.profileLoaded) return fallbackCost;
+            if (this.shipping.selectedMethod !== 'rekomendasi-kami') this.shipping.selectedMethod = 'rekomendasi-kami';
+            if (this.isCalculatingShipping) return this.shipping.cost || fallbackCost;
 
             const requestKey = this.buildShippingRequestKey();
             if (!force && this.shippingLoaded && requestKey === this.lastShippingRequestKey) {
-                console.info('[Checkout] calculateShipping prevented: duplicate request key.', { triggerSource });
-                return;
+                return this.shipping.cost || fallbackCost;
             }
 
-            console.info('[Checkout] calculateShipping triggered.', { triggerSource, force });
+            if (!force) {
+                clearTimeout(this.shippingDebounceTimer);
+                const token = Symbol('shipping-debounce');
+                this.lastShippingDebounceToken = token;
+                await new Promise((resolve) => {
+                    this.shippingDebounceTimer = setTimeout(resolve, debounceMs);
+                });
+                if (this.lastShippingDebounceToken !== token || this.isCalculatingShipping) {
+                    return this.shipping.cost || fallbackCost;
+                }
+            }
+
             this.isCalculatingShipping = true;
             this.isCheckoutLoading = true;
+            this.shippingRequestController = new AbortController();
+            const timeoutId = setTimeout(() => this.shippingRequestController?.abort(), timeoutMs);
+
             try {
                 const { data } = await window.supabase.auth.getSession();
                 const accessToken = data?.session?.access_token || '';
-                const payload = {
-                    weight: Alpine.store('cart').totalWeight
-                };
-
                 const res = await window.fetchWithDebug(window.toApiPath('/api/shipping/cost'), {
                     method: 'POST',
                     headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify({ weight: Alpine.store('cart').totalWeight }),
+                    signal: this.shippingRequestController.signal
                 });
 
                 const result = await res.json().catch(() => ({}));
-                if (!res.ok) {
-                    throw new Error(result?.message || 'Gagal mengambil estimasi pengiriman.');
-                }
+                if (!res.ok) throw new Error(result?.message || 'Gagal mengambil estimasi pengiriman.');
 
                 const recommendation = result?.recommendation || {};
+                const nextCost = Number(recommendation.cost || 0);
+                if (!Number.isFinite(nextCost) || nextCost <= 0) throw new Error('Invalid shipping cost response.');
+
                 this.shipping.zoneLabel = recommendation.zone_name || '';
                 this.shipping.estimateLabel = `${recommendation.etd || '1-4 hari kerja'} • Zona ${this.shipping.zoneLabel || '-'}`;
-                this.updateShippingCost(recommendation.cost || 0);
+                this.updateShippingCost(nextCost);
                 this.shippingLoaded = true;
                 this.lastShippingRequestKey = requestKey;
                 this.clearNotification();
+                return nextCost;
             } catch (error) {
-                console.error('[Checkout] Shipping calc failed', error);
-                this.shipping.cost = 0;
-                this.shipping.estimateLabel = '';
-                this.shipping.zoneLabel = '';
-                this.shippingLoaded = false;
-                this.showNotification(error?.message || 'Gagal menghitung ongkir. Silakan coba lagi.', true);
+                if (error?.name !== 'AbortError') {
+                    console.error('[Checkout] Shipping calculation failed:', error?.message || error);
+                }
+                return fallbackCost;
             } finally {
-                console.info('[Checkout] Shipping state after calculation:', {
-                    selectedMethod: this.shipping.selectedMethod,
-                    shippingCost: this.shipping.cost,
-                    isShippingValid: this.shipping.selectedMethod === 'rekomendasi-kami' && this.ongkir > 0,
-                    triggerSource
-                });
+                clearTimeout(timeoutId);
+                this.shippingRequestController = null;
                 this.isCheckoutLoading = false;
                 this.isCalculatingShipping = false;
             }
