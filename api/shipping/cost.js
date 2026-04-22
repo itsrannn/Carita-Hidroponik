@@ -65,22 +65,23 @@ module.exports = function handler(req, res) {
     }
 
     const billedWeightKg = Math.max(1, Math.ceil(effectiveWeight / 1000));
-    const cost = rate.baseCost + (billedWeightKg * rate.ratePerKg);
+    const shippingCost = rate.baseCost + (billedWeightKg * rate.ratePerKg);
+    const normalizedCost = Number(shippingCost);
 
     const response = {
       success: true,
       courier,
-      cost,
+      cost: normalizedCost,
       etd: rate.etd,
       recommendation: {
         courier,
-        cost,
+        cost: normalizedCost,
         etd: rate.etd,
         zone_name: 'Manual Internal'
       }
     };
 
-    console.log('shipping response:', response);
+    console.log('shipping final response:', response);
     return res.status(200).json(response);
   } catch (error) {
     console.error('shipping error:', error);
