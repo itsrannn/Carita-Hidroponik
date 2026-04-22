@@ -607,6 +607,7 @@ function checkoutPage() {
             addressLabel: '',
             estimateLabel: '',
             zoneLabel: '',
+            error: '',
             methods: [
                 { code: 'rekomendasi-kami', label: 'Rekomendasi Kami', badge: 'Direkomendasikan', recommended: true, active: true, description: 'Metode internal dari gudang Turen, Malang.' },
                 { code: 'tiki', label: 'TIKI', badge: '', recommended: false, active: false, description: 'Segera tersedia.' },
@@ -1125,11 +1126,10 @@ function checkoutPage() {
             const timeoutId = setTimeout(() => this.shippingRequestController?.abort(), timeoutMs);
 
             try {
-                const { data } = await window.supabase.auth.getSession();
-                const accessToken = data?.session?.access_token || '';
+                this.shipping.error = '';
                 const res = await window.fetchWithDebug(window.toApiPath('/api/shipping/cost'), {
                     method: 'POST',
-                    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ weight: Alpine.store('cart').totalWeight }),
                     signal: this.shippingRequestController.signal
                 });
@@ -1149,10 +1149,14 @@ function checkoutPage() {
                 this.clearNotification();
                 return nextCost;
             } catch (error) {
+                this.updateShippingCost(0);
+                this.shipping.error = 'Gagal mengambil ongkir';
+                this.shipping.zoneLabel = '';
+                this.shipping.estimateLabel = '';
                 if (error?.name !== 'AbortError') {
                     console.error('[Checkout] Shipping calculation failed:', error?.message || error);
                 }
-                return fallbackCost;
+                return 0;
             } finally {
                 clearTimeout(timeoutId);
                 this.shippingRequestController = null;

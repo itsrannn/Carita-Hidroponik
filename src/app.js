@@ -6,10 +6,15 @@ const app = express();
 const paymentRoutes = require('../routes/payment.routes');
 const profileRoutes = require('../routes/profile.routes');
 
-app.use(cors({
+const corsOptions = {
   origin: 'https://itsrannn.github.io',
-  credentials: true
-}));
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 
