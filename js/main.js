@@ -1149,13 +1149,19 @@ function checkoutPage() {
                 const result = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(result?.message || 'Gagal mengambil estimasi pengiriman.');
 
+                const rawCost =
+                    result?.recommendation?.cost ??
+                    result?.cost ??
+                    result?.shippingCost ??
+                    result?.data?.cost;
+                const nextCost = Number(rawCost);
+                if (!Number.isFinite(nextCost) || nextCost <= 0) throw new Error('Invalid shipping cost response');
+
                 const recommendation = result?.recommendation || {
-                    cost: result?.cost,
-                    etd: result?.etd,
-                    zone_name: result?.zone_name || ''
+                    cost: nextCost,
+                    etd: result?.etd || result?.data?.etd,
+                    zone_name: result?.zone_name || result?.data?.zone_name || ''
                 };
-                const nextCost = Number(recommendation.cost ?? result?.cost ?? 0);
-                if (!Number.isFinite(nextCost) || nextCost <= 0) throw new Error('Invalid shipping cost response.');
 
                 this.shipping.zoneLabel = recommendation.zone_name || '';
                 this.shipping.estimateLabel = `${recommendation.etd || '1-4 hari kerja'} • Zona ${this.shipping.zoneLabel || '-'}`;
