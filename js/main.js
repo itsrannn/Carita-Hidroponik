@@ -1127,18 +1127,34 @@ function checkoutPage() {
 
             try {
                 this.shipping.error = '';
+                const cartStore = Alpine.store('cart');
+                const totalWeight = Number(cartStore?.totalWeight || 0);
+                const quantity = Number(cartStore?.quantity || 0);
+                const courier = this.shipping.selectedMethod === 'rekomendasi-kami'
+                    ? 'jne'
+                    : this.shipping.selectedMethod;
+
                 const res = await window.fetchWithDebug(window.toApiPath('/api/shipping/cost'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ weight: Alpine.store('cart').totalWeight }),
+                    body: JSON.stringify({
+                        courier,
+                        weight: totalWeight,
+                        quantity,
+                        totalWeight
+                    }),
                     signal: this.shippingRequestController.signal
                 });
 
                 const result = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(result?.message || 'Gagal mengambil estimasi pengiriman.');
 
-                const recommendation = result?.recommendation || {};
-                const nextCost = Number(recommendation.cost || 0);
+                const recommendation = result?.recommendation || {
+                    cost: result?.cost,
+                    etd: result?.etd,
+                    zone_name: result?.zone_name || ''
+                };
+                const nextCost = Number(recommendation.cost ?? result?.cost ?? 0);
                 if (!Number.isFinite(nextCost) || nextCost <= 0) throw new Error('Invalid shipping cost response.');
 
                 this.shipping.zoneLabel = recommendation.zone_name || '';
