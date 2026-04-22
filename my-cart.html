@@ -135,6 +135,8 @@
                 <span id="summary-shipping" x-text="window.formatRupiah(ongkir)"></span>
               </div>
 
+              <p style="margin: 0.5rem 0 0; font-size: 0.85rem; color: #c62828;" x-show="shipping.error" x-text="shipping.error"></p>
+
               <div class="summary-total">
                 <span x-text="$store.i18n.t('cart.summary.total')">Total</span>
                 <span id="summary-total" x-text="window.formatRupiah(calculateGrandTotal())"></span>
