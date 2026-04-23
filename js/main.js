@@ -972,7 +972,7 @@ function checkoutPage() {
             });
 
             const result = await response.json().catch(() => ({}));
-            const token =
+            const snapToken =
                 result?.token ||
                 result?.snapToken ||
                 result?.snap_token;
@@ -982,16 +982,15 @@ function checkoutPage() {
                 throw new Error(result?.message || 'Gagal membuat token pembayaran Midtrans.');
             }
 
-            if (!token) {
-                throw new Error('Token Midtrans tidak ditemukan');
+            if (!snapToken) {
+                console.error('[Checkout] Token not found:', result);
+                throw new Error('Gagal membuat token pembayaran Midtrans.');
             }
 
-            console.log('[MIDTRANS TOKEN RECEIVED]', token);
+            this.latestSnapSession = result;
+            console.log('[MIDTRANS TOKEN RECEIVED]', snapToken);
 
-            return {
-                ...result,
-                snapToken: token
-            };
+            return snapToken;
         },
 
         loadMidtransSnapScript(clientKey) {
@@ -1016,26 +1015,29 @@ function checkoutPage() {
         },
 
         async openMidtransSnap(snapSession, checkoutPayload) {
-            const snap = await this.loadMidtransSnapScript(snapSession.clientKey);
+            const snapMetadata = this.latestSnapSession || {};
+            const snap = await this.loadMidtransSnapScript(snapMetadata.clientKey);
             if (!snap?.pay) throw new Error('Midtrans Snap tidak tersedia.');
-            const token = snapSession?.snapToken || snapSession?.token || snapSession?.snap_token;
+            const token = typeof snapSession === 'string'
+                ? snapSession
+                : (snapSession?.token || snapSession?.snapToken || snapSession?.snap_token);
             if (!token) throw new Error('Token Midtrans tidak ditemukan');
             console.log('[SNAP PAY START]');
 
             await new Promise((resolve, reject) => {
                 window.snap.pay(token, {
                     onSuccess: async (result) => {
-                        await this.confirmPaymentStatus(snapSession.orderId, 'success', result?.transaction_id);
+                        await this.confirmPaymentStatus(snapMetadata.orderId, 'success', result?.transaction_id);
                         this.showNotification('Pembayaran berhasil. Pesanan Anda diproses.');
                         resolve();
                     },
                     onPending: async (result) => {
-                        await this.confirmPaymentStatus(snapSession.orderId, 'pending', result?.transaction_id);
+                        await this.confirmPaymentStatus(snapMetadata.orderId, 'pending', result?.transaction_id);
                         this.showNotification('Pembayaran pending. Silakan selesaikan pembayaran Anda.');
                         resolve();
                     },
                     onError: async (_result) => {
-                        await this.confirmPaymentStatus(snapSession.orderId, 'failed');
+                        await this.confirmPaymentStatus(snapMetadata.orderId, 'failed');
                         reject(new Error('Pembayaran gagal diproses oleh Midtrans.'));
                     },
                     onClose: () => {
