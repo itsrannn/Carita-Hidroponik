@@ -77,7 +77,9 @@
 
   const readOrderIdFromUrl = () => {
     const params = new URLSearchParams(window.location.search);
-    return params.get('id');
+    const orderId = params.get('id');
+    console.log('Order ID from URL:', orderId);
+    return orderId;
   };
 
   const getOrderItems = (order = {}) => {
@@ -116,15 +118,18 @@
       return null;
     }
 
-    const { data: orderData, error: orderError } = await window.supabase
+    const query = window.supabase
       .from('orders')
       .select('id, order_code, created_at, status, total_amount, shipping_cost, service_fee, order_details, user_id')
       .eq('user_id', userId)
-      .or(`id.eq.${orderId},order_code.eq.${orderId}`)
+      .eq('id', orderId)
       .limit(1)
       .maybeSingle();
 
+    const { data: orderData, error: orderError } = await query;
+
     if (orderError) throw orderError;
+    console.log('Order detail response:', orderData);
     return orderData || null;
   }
 
@@ -203,7 +208,7 @@
       const quantity = toNumber(item.quantity);
       const price = toNumber(item.price);
       const subtotal = quantity * price;
-      const image = window.resolveImagePath(item.image_url || item.image || item.thumbnail || '');
+      const image = window.fixImagePath(item.image_url || item.img || item.image || item.thumbnail || 'img/coming-soon.jpg');
 
       return `
         <article class="product-item">
@@ -360,6 +365,9 @@
   }
 
   function bindEvents() {
+    if (!els.refundActionBtn || !els.refundModalClose || !els.refundCancelBtn || !els.refundMethod || !els.refundForm) {
+      return;
+    }
     els.refundActionBtn.addEventListener('click', openRefundModal);
     els.refundModalClose.addEventListener('click', closeRefundModal);
     els.refundCancelBtn.addEventListener('click', closeRefundModal);
@@ -416,7 +424,9 @@
     }
   }
 
-  bindEvents();
-  updateAccountLabel();
-  initPage();
+  document.addEventListener('DOMContentLoaded', async () => {
+    bindEvents();
+    updateAccountLabel();
+    await initPage();
+  });
 })();
