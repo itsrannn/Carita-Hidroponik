@@ -593,6 +593,28 @@ document.addEventListener('alpine:init', () => {
       return window.formatRupiah(amount);
     },
 
+    getPrimaryItem(order = {}) {
+      const details = Array.isArray(order?.order_details) ? order.order_details : [];
+      return details[0] || null;
+    },
+
+    getOrderThumbnail(order = {}) {
+      const firstItem = this.getPrimaryItem(order) || {};
+      const rawImage = firstItem.image_url || firstItem.image || firstItem.thumbnail || '';
+      return window.resolveImagePath(rawImage);
+    },
+
+    handleOrderThumbError(event) {
+      if (!event?.target) return;
+      window.applyImageFallback(event.target);
+      event.target.onerror?.();
+    },
+
+    toOrderDetailUrl(order = {}) {
+      const orderId = encodeURIComponent(order?.order_code || order?.id || '');
+      return window.toAppPath(`order-detail.html?id=${orderId}`);
+    },
+
     async handleLogout() {
       if (!window.supabase) return;
 
