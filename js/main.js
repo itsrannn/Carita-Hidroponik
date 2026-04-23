@@ -972,12 +972,26 @@ function checkoutPage() {
             });
 
             const result = await response.json().catch(() => ({}));
-            if (!response.ok || !result?.snapToken) {
+            const token =
+                result?.token ||
+                result?.snapToken ||
+                result?.snap_token;
+
+            if (!response.ok) {
                 console.error('[Checkout] Failed to create snap session:', result);
                 throw new Error(result?.message || 'Gagal membuat token pembayaran Midtrans.');
             }
 
-            return result;
+            if (!token) {
+                throw new Error('Token Midtrans tidak ditemukan');
+            }
+
+            console.log('[MIDTRANS TOKEN RECEIVED]', token);
+
+            return {
+                ...result,
+                snapToken: token
+            };
         },
 
         loadMidtransSnapScript(clientKey) {
@@ -1004,9 +1018,12 @@ function checkoutPage() {
         async openMidtransSnap(snapSession, checkoutPayload) {
             const snap = await this.loadMidtransSnapScript(snapSession.clientKey);
             if (!snap?.pay) throw new Error('Midtrans Snap tidak tersedia.');
+            const token = snapSession?.snapToken || snapSession?.token || snapSession?.snap_token;
+            if (!token) throw new Error('Token Midtrans tidak ditemukan');
+            console.log('[SNAP PAY START]');
 
             await new Promise((resolve, reject) => {
-                snap.pay(snapSession.snapToken, {
+                window.snap.pay(token, {
                     onSuccess: async (result) => {
                         await this.confirmPaymentStatus(snapSession.orderId, 'success', result?.transaction_id);
                         this.showNotification('Pembayaran berhasil. Pesanan Anda diproses.');
