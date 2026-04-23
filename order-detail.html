@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Order Detail | Carita Hidroponik</title>
+  <link rel="icon" type="image/x-icon" href="img/Logo.jpg" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/order-detail.css" />
+  <link rel="stylesheet" href="css/mobile.css" media="(max-width: 768px)" />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="header-include"></div>
+
+  <main class="main-content order-detail-page">
+    <div class="container order-detail-container">
+      <a class="btn btn-secondary back-btn" href="my-account.html">← Kembali ke Akun Saya</a>
+
+      <section class="detail-shell" id="order-detail-shell">
+        <div class="order-loading" id="order-loading">Memuat detail pesanan...</div>
+
+        <div id="order-detail-content" class="hidden">
+          <header class="detail-card order-head-card">
+            <div>
+              <p class="muted-text">ID Pesanan</p>
+              <h1 id="order-id">-</h1>
+              <p id="order-date" class="muted-text">-</p>
+            </div>
+            <div class="status-group">
+              <span id="order-status-badge" class="status-badge status-default">-</span>
+              <span id="refund-status-badge" class="status-badge refund-badge hidden"></span>
+            </div>
+          </header>
+
+          <section class="detail-card">
+            <h2>Status Pengiriman</h2>
+            <div id="shipping-timeline" class="timeline"></div>
+          </section>
+
+          <section class="detail-card">
+            <h2>Produk</h2>
+            <div id="order-products" class="product-list"></div>
+          </section>
+
+          <section class="detail-card">
+            <h2>Ringkasan Biaya</h2>
+            <div class="cost-summary" id="cost-summary"></div>
+          </section>
+
+          <section class="detail-card" id="refund-action-card">
+            <h2>Pembatalan / Refund</h2>
+            <p class="muted-text">Ajukan pembatalan atau refund sebelum pesanan dikirim.</p>
+            <button id="open-refund-modal" class="btn btn-primary hidden">Ajukan Pembatalan / Refund</button>
+          </section>
+        </div>
+
+        <div id="order-detail-empty" class="hidden empty-state">
+          Detail pesanan tidak ditemukan.
+        </div>
+      </section>
+    </div>
+
+    <div id="notification" class="notification"></div>
+  </main>
+
+  <div id="refund-modal" class="refund-modal hidden" aria-hidden="true">
+    <div class="refund-modal-backdrop" id="refund-modal-close"></div>
+    <div class="refund-modal-content" role="dialog" aria-modal="true" aria-labelledby="refund-modal-title">
+      <h3 id="refund-modal-title">Ajukan Pembatalan / Refund</h3>
+      <form id="refund-form" novalidate>
+        <div class="form-group">
+          <label for="refund-reason">Alasan Pembatalan</label>
+          <textarea id="refund-reason" rows="4" required placeholder="Tulis alasan pembatalan / refund..."></textarea>
+          <small class="form-error" id="refund-reason-error"></small>
+        </div>
+        <div class="form-group">
+          <label for="refund-method">Metode Refund</label>
+          <select id="refund-method" required>
+            <option value="">Pilih metode refund</option>
+            <option value="BCA">BCA</option>
+            <option value="Mandiri">Mandiri</option>
+            <option value="BRI">BRI</option>
+            <option value="BNI">BNI</option>
+            <option value="Dana">Dana</option>
+            <option value="OVO">OVO</option>
+            <option value="GoPay">GoPay</option>
+            <option value="ShopeePay">ShopeePay</option>
+            <option value="SeaBank">SeaBank</option>
+            <option value="Bank Lainnya">Bank Lainnya</option>
+          </select>
+          <small class="form-error" id="refund-method-error"></small>
+        </div>
+        <div class="form-group">
+          <label for="refund-account" id="refund-account-label">Nomor Rekening</label>
+          <input id="refund-account" type="text" required placeholder="Masukkan nomor rekening" />
+          <small class="form-error" id="refund-account-error"></small>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="refund-cancel-btn">Batal</button>
+          <button type="submit" class="btn btn-primary" id="refund-submit-btn">Kirim Pengajuan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="footer-include"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/order-detail.js"></script>
+</body>
+</html>
