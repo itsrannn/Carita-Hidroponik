@@ -600,8 +600,8 @@ document.addEventListener('alpine:init', () => {
 
     getOrderThumbnail(order = {}) {
       const firstItem = this.getPrimaryItem(order) || {};
-      const rawImage = firstItem.image_url || firstItem.image || firstItem.thumbnail || '';
-      return window.resolveImagePath(rawImage);
+      const rawImage = firstItem.image_url || firstItem.img || firstItem.image || firstItem.thumbnail || '';
+      return window.fixImagePath(rawImage || 'img/coming-soon.jpg');
     },
 
     handleOrderThumbError(event) {
@@ -611,7 +611,9 @@ document.addEventListener('alpine:init', () => {
     },
 
     toOrderDetailUrl(order = {}) {
-      const orderId = encodeURIComponent(order?.order_code || order?.id || '');
+      const clickedOrderId = order?.id;
+      console.log('Order ID clicked:', clickedOrderId);
+      const orderId = encodeURIComponent(clickedOrderId || '');
       return window.toAppPath(`order-detail.html?id=${orderId}`);
     },
 
