@@ -124,7 +124,11 @@ document.addEventListener('alpine:init', () => {
     },
 
     async hydrateAddressSelections(data = {}) {
-      this.selectedProvince = this.resolveRegionId(this.provinces, data.province_id, data.province);
+      this.selectedProvince = this.resolveRegionId(
+        this.provinces,
+        data.province_id !== null && data.province_id !== undefined ? String(data.province_id) : data.province_id,
+        data.province
+      );
       this.profile.province_id = this.selectedProvince;
 
       if (!this.selectedProvince) {
@@ -142,7 +146,9 @@ document.addEventListener('alpine:init', () => {
       await this.fetchRegencies(false);
       this.selectedRegency = this.resolveRegionId(
         this.regencies,
-        data.city_id ?? data.regency_id,
+        data.city_id !== null && data.city_id !== undefined
+          ? String(data.city_id)
+          : (data.regency_id !== null && data.regency_id !== undefined ? String(data.regency_id) : data.regency_id),
         data.city ?? data.regency
       );
       this.profile.city_id = this.selectedRegency;
@@ -157,7 +163,11 @@ document.addEventListener('alpine:init', () => {
       }
 
       await this.fetchDistricts(false);
-      this.selectedDistrict = this.resolveRegionId(this.districts, data.district_id, data.district);
+      this.selectedDistrict = this.resolveRegionId(
+        this.districts,
+        data.district_id !== null && data.district_id !== undefined ? String(data.district_id) : data.district_id,
+        data.district
+      );
       this.profile.district_id = this.selectedDistrict;
 
       if (!this.selectedDistrict && data.district_id !== null && data.district_id !== undefined && String(data.district_id) !== '') {
@@ -175,9 +185,17 @@ document.addEventListener('alpine:init', () => {
       if (this.villages.length === 0 && data.district_id && String(data.district_id) !== String(this.selectedDistrict)) {
         await this.fetchVillages(false, String(data.district_id));
       }
-      this.selectedVillage = data.village_id ? String(data.village_id) : '';
+      this.selectedVillage = String(data.village_id || '');
       if (this.selectedVillage && !this.villages.find((item) => String(item.id) === this.selectedVillage)) {
         this.selectedVillage = this.resolveRegionId(this.villages, data.village_id, data.village);
+      }
+      if (!this.selectedVillage && data.village) {
+        const villageByName = this.villages.find(
+          (item) => String(item.name).trim().toLowerCase() === String(data.village).trim().toLowerCase()
+        );
+        if (villageByName) {
+          this.selectedVillage = String(villageByName.id);
+        }
       }
       this.profile.village_id = this.selectedVillage;
 
@@ -250,20 +268,21 @@ document.addEventListener('alpine:init', () => {
         const parsedLongitude = longitudeValue === '' ? null : Number(longitudeValue);
 
         const requestBody = {
-          data: {
-            user_id: this.user.id,
-            province: getSelectedText('#province'),
-            regency: getSelectedText('#regency'),
-            district: getSelectedText('#district'),
-            village: getSelectedText('#village'),
-            village_id: this.selectedVillage || null,
-            address: getInputValue('#address'),
-            postal_code: getInputValue('#postalCode'),
-            longitude: Number.isFinite(parsedLongitude) ? parsedLongitude : null,
-            latitude: Number.isFinite(parsedLatitude) ? parsedLatitude : null,
-            full_name: getInputValue('#fullName')
-          }
+          user_id: this.user.id,
+          province: getSelectedText('#province'),
+          regency: getSelectedText('#regency'),
+          district: getSelectedText('#district'),
+          village: getSelectedText('#village'),
+          village_id: String(this.selectedVillage || ''),
+          address: getInputValue('#address'),
+          postal_code: getInputValue('#postalCode'),
+          longitude: Number.isFinite(parsedLongitude) ? parsedLongitude : null,
+          latitude: Number.isFinite(parsedLatitude) ? parsedLatitude : null,
+          full_name: getInputValue('#fullName')
         };
+        if (!requestBody.village_id) {
+          throw new Error('Village belum dipilih');
+        }
 
         const profile = await this.updateProfileViaApi(requestBody);
         //const payload = {
@@ -278,10 +297,11 @@ document.addEventListener('alpine:init', () => {
        // if (!hasPersistedAddress) {
        //  throw new Error('Server response does not reflect the latest address payload.');
        //}
-
+        this.profile.village = requestBody.village;
+        this.profile.village_id = requestBody.village_id;
         await this.applyUpdatedProfile(profile, {
           exitAddressEditMode: true,
-          refreshFromDatabase: true
+          refreshFromDatabase: false
         });
         this.showNotification('Profile berhasil disimpan');
       } catch (error) {
@@ -358,14 +378,10 @@ document.addEventListener('alpine:init', () => {
         throw new Error('Sesi login tidak ditemukan.');
       }
 
-      const requestBody = payload?.data
-        ? payload
-        : {
-            data: {
-              user_id: this.user?.id || sessionUserId,
-              ...payload
-            }
-          };
+      const requestBody = {
+        user_id: payload?.user_id || this.user?.id || sessionUserId,
+        ...payload
+      };
       const endpointUrl = window.toApiPath('/api/update-profile');
       const requestHeaders = {
         'Content-Type': 'application/json',
@@ -373,14 +389,14 @@ document.addEventListener('alpine:init', () => {
       };
 
       console.info('[Account] updateProfileViaApi request body:', requestBody);
-      console.log('[AUDIT] FINAL PAYLOAD', JSON.stringify(requestBody?.data || {}, null, 2));
+      console.log('[AUDIT] FINAL PAYLOAD', JSON.stringify(requestBody || {}, null, 2));
       console.log('[AUDIT] REQUEST META', {
         endpointUrl,
         headers: requestHeaders,
         hasAuthorization: Boolean(requestHeaders.Authorization)
       });
-      console.log('[AUDIT] PAYLOAD NON EMPTY', Object.keys(requestBody?.data || {}).length > 0);
-      console.log('[AUDIT] update-profile payload', requestBody?.data);
+      console.log('[AUDIT] PAYLOAD NON EMPTY', Object.keys(requestBody || {}).length > 0);
+      console.log('[AUDIT] update-profile payload', requestBody);
 
       const response = await fetch(endpointUrl, {
         method: 'POST',
@@ -397,13 +413,14 @@ document.addEventListener('alpine:init', () => {
         result = { raw: rawText };
       }
       console.log('[AUDIT] update-profile response body', result);
+      console.error('[DEBUG BACKEND RESPONSE]', result);
       if (!response.ok) {
         console.error('[Account] updateProfileViaApi non-OK response:', {
           status: response.status,
           statusText: response.statusText,
           body: result
         });
-        const error = new Error(result?.message || `HTTP ${response.status}`);
+        const error = new Error(result?.message || result?.error || `HTTP ${response.status}`);
         error.details = result?.details;
         error.hint = result?.hint;
         error.code = result?.code;
@@ -477,8 +494,11 @@ document.addEventListener('alpine:init', () => {
     },
 
     async fetchVillages(reset = true, districtId = this.selectedDistrict) {
-      if (!districtId) {
+      console.log('[DEBUG] fetchVillages districtId:', districtId);
+      const normalizedDistrictId = districtId !== null && districtId !== undefined ? String(districtId).trim() : '';
+      if (!normalizedDistrictId) {
         this.villages = [];
+        console.log('[DEBUG] villages result:', this.villages);
         return;
       }
 
@@ -487,14 +507,21 @@ document.addEventListener('alpine:init', () => {
       }
 
       try {
-        const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/villages/${districtId}.json`);
+        const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/villages/${normalizedDistrictId}.json`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        this.villages = await response.json();
-        const match = this.districts.find((item) => String(item.id) === String(districtId));
+        const villagesResult = await response.json();
+        this.villages = Array.isArray(villagesResult) ? villagesResult : [];
+        const match = this.districts.find((item) => String(item.id) === normalizedDistrictId);
         this.profile.district = match?.name || '';
+        console.log('[DEBUG] villages result:', this.villages);
       } catch (error) {
-        console.error('[Account] Failed to fetch villages:', error);
+        console.error('[Account] Failed to fetch villages:', {
+          districtId: normalizedDistrictId,
+          message: error?.message || String(error),
+          error
+        });
         this.villages = [];
+        console.log('[DEBUG] villages result:', this.villages);
       }
     },
 
