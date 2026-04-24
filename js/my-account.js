@@ -160,6 +160,11 @@ document.addEventListener('alpine:init', () => {
       this.selectedDistrict = this.resolveRegionId(this.districts, data.district_id, data.district);
       this.profile.district_id = this.selectedDistrict;
 
+      if (!this.selectedDistrict && data.district_id !== null && data.district_id !== undefined && String(data.district_id) !== '') {
+        this.selectedDistrict = String(data.district_id);
+        this.profile.district_id = this.selectedDistrict;
+      }
+
       if (!this.selectedDistrict) {
         this.villages = [];
         this.selectedVillage = '';
