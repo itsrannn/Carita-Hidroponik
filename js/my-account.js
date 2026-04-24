@@ -172,6 +172,9 @@ document.addEventListener('alpine:init', () => {
       }
 
       await this.fetchVillages(false);
+      if (this.villages.length === 0 && data.district_id && String(data.district_id) !== String(this.selectedDistrict)) {
+        await this.fetchVillages(false, String(data.district_id));
+      }
       this.selectedVillage = this.resolveRegionId(this.villages, data.village_id, data.village);
       this.profile.village_id = this.selectedVillage;
 
@@ -469,8 +472,8 @@ document.addEventListener('alpine:init', () => {
       }
     },
 
-    async fetchVillages(reset = true) {
-      if (!this.selectedDistrict) {
+    async fetchVillages(reset = true, districtId = this.selectedDistrict) {
+      if (!districtId) {
         this.villages = [];
         return;
       }
@@ -480,10 +483,10 @@ document.addEventListener('alpine:init', () => {
       }
 
       try {
-        const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/villages/${this.selectedDistrict}.json`);
+        const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/villages/${districtId}.json`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         this.villages = await response.json();
-        const match = this.districts.find((item) => String(item.id) === String(this.selectedDistrict));
+        const match = this.districts.find((item) => String(item.id) === String(districtId));
         this.profile.district = match?.name || '';
       } catch (error) {
         console.error('[Account] Failed to fetch villages:', error);
