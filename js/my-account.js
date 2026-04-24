@@ -175,7 +175,10 @@ document.addEventListener('alpine:init', () => {
       if (this.villages.length === 0 && data.district_id && String(data.district_id) !== String(this.selectedDistrict)) {
         await this.fetchVillages(false, String(data.district_id));
       }
-      this.selectedVillage = this.resolveRegionId(this.villages, data.village_id, data.village);
+      this.selectedVillage = data.village_id ? String(data.village_id) : '';
+      if (this.selectedVillage && !this.villages.find((item) => String(item.id) === this.selectedVillage)) {
+        this.selectedVillage = this.resolveRegionId(this.villages, data.village_id, data.village);
+      }
       this.profile.village_id = this.selectedVillage;
 
       this.updateProfileVillage();
@@ -253,6 +256,7 @@ document.addEventListener('alpine:init', () => {
             regency: getSelectedText('#regency'),
             district: getSelectedText('#district'),
             village: getSelectedText('#village'),
+            village_id: this.selectedVillage || null,
             address: getInputValue('#address'),
             postal_code: getInputValue('#postalCode'),
             longitude: Number.isFinite(parsedLongitude) ? parsedLongitude : null,
