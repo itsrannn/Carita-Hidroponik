@@ -274,14 +274,22 @@ document.addEventListener('alpine:init', () => {
         const parsedLatitude = latitudeValue === '' ? null : Number(latitudeValue);
         const parsedLongitude = longitudeValue === '' ? null : Number(longitudeValue);
 
-        const selectedVillageObj = this.villages.find((item) => String(item.id) === String(this.selectedVillage));
+        const selectedVillage = this.villages.find((item) => String(item.id) === String(this.selectedVillage));
+        console.log('[Village Object]', selectedVillage);
+        const selectedVillageName = String(
+          selectedVillage?.label
+          || selectedVillage?.name
+          || selectedVillage?.text
+          || getSelectedText('#village')
+          || ''
+        ).trim();
 
         const requestBody = {
           user_id: this.user.id,
           province: getSelectedText('#province'),
           regency: getSelectedText('#regency'),
           district: getSelectedText('#district'),
-          village: String(selectedVillageObj?.name || getSelectedText('#village') || '').trim(),
+          village: selectedVillageName,
           village_id: String(this.selectedVillage || ''),
           address: getInputValue('#address'),
           postal_code: getInputValue('#postalCode'),
