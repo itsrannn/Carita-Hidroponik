@@ -190,11 +190,18 @@ document.addEventListener('alpine:init', () => {
         this.selectedVillage = this.resolveRegionId(this.villages, data.village_id, data.village);
       }
       if (!this.selectedVillage && data.village) {
+        const normalizedVillage = String(data.village).trim();
         const villageByName = this.villages.find(
-          (item) => String(item.name).trim().toLowerCase() === String(data.village).trim().toLowerCase()
+          (item) => String(item.name).trim().toLowerCase() === normalizedVillage.toLowerCase()
         );
         if (villageByName) {
           this.selectedVillage = String(villageByName.id);
+        } else {
+          const villageByLegacyCode = this.villages.find((item) => String(item.id) === normalizedVillage);
+          if (villageByLegacyCode) {
+            this.selectedVillage = String(villageByLegacyCode.id);
+            this.profile.village = villageByLegacyCode.name;
+          }
         }
       }
       this.profile.village_id = this.selectedVillage;
@@ -267,12 +274,14 @@ document.addEventListener('alpine:init', () => {
         const parsedLatitude = latitudeValue === '' ? null : Number(latitudeValue);
         const parsedLongitude = longitudeValue === '' ? null : Number(longitudeValue);
 
+        const selectedVillageObj = this.villages.find((item) => String(item.id) === String(this.selectedVillage));
+
         const requestBody = {
           user_id: this.user.id,
           province: getSelectedText('#province'),
           regency: getSelectedText('#regency'),
           district: getSelectedText('#district'),
-          village: getSelectedText('#village'),
+          village: String(selectedVillageObj?.name || getSelectedText('#village') || '').trim(),
           village_id: String(this.selectedVillage || ''),
           address: getInputValue('#address'),
           postal_code: getInputValue('#postalCode'),
