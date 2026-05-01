@@ -41,7 +41,7 @@
                   <p class="cart-empty-message" x-text="$store.i18n.t('cart.emptyMessage')">Your shopping cart is empty.</p>
                 </template>
 
-                <template x-for="item in $store.cart.details" :key="item.id" x-init="$nextTick(() => window.safeFeatherReplace && window.safeFeatherReplace())">
+                <template x-for="item in $store.cart.details" :key="item.id" x-init="$nextTick(() => setTimeout(() => window.safeFeatherReplace && window.safeFeatherReplace(), 0))">
                   <div class="cart-item">
                     <div class="cart-item-product">
                       <img :src="item.img" :alt="item.name" class="cart-item-image" />
