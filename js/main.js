@@ -136,9 +136,21 @@ window.fetchWithDebug = async (input, init = {}) => {
 };
 
 // --- DOM READY ---
-document.addEventListener('DOMContentLoaded', () => {
-    const loadComponent = async (id, path) => {
-        const mountNode = document.getElementById(id);
+window.safeFeatherReplace = () => {
+    if (!(window.feather && typeof window.feather.replace === 'function')) return;
+
+    requestAnimationFrame(() => {
+        try {
+            window.feather.replace();
+        } catch (error) {
+            console.warn('[Feather] replace skipped:', error);
+        }
+    });
+};
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const loadComponent = async (selector, path) => {
+        const mountNode = document.querySelector(selector);
         if (!mountNode) return;
 
         try {
@@ -160,16 +172,25 @@ document.addEventListener('DOMContentLoaded', () => {
             if (window.Alpine && typeof window.Alpine.initTree === 'function') {
                 window.Alpine.initTree(mountNode);
             }
-
-            if (window.feather) window.feather.replace();
         } catch (error) {
             console.error(`[Loader] Failed: ${path}`, error);
             mountNode.innerHTML = '<div style="text-align:center; padding:1rem;">Failed to load section.</div>';
         }
     };
 
-    loadComponent('header-include', '/components/header.html');
-    loadComponent('footer-include', '/components/footer.html');
+    const initLayout = async () => {
+        console.log('Header:', document.querySelector('#header'));
+        console.log('Footer:', document.querySelector('#footer'));
+
+        await loadComponent('#header, #header-include', './components/header.html');
+        await loadComponent('#footer, #footer-include', './components/footer.html');
+
+        setTimeout(() => {
+            window.safeFeatherReplace();
+        }, 50);
+    };
+
+    await initLayout();
 });
 
 // --- UTILITIES ---

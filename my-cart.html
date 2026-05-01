@@ -20,7 +20,7 @@
     $store.products.init();
     $store.cart.init();
   ">
-    <div id="header-include"></div>
+    <div id="header"></div>
 
     <main class="main-content" x-data="checkoutPage()" x-init="init()">
       <section class="cart-section">
@@ -41,7 +41,7 @@
                   <p class="cart-empty-message" x-text="$store.i18n.t('cart.emptyMessage')">Your shopping cart is empty.</p>
                 </template>
 
-                <template x-for="item in $store.cart.details" :key="item.id" x-init="$nextTick(() => feather.replace())">
+                <template x-for="item in $store.cart.details" :key="item.id" x-init="$nextTick(() => window.safeFeatherReplace && window.safeFeatherReplace())">
                   <div class="cart-item">
                     <div class="cart-item-product">
                       <img :src="item.img" :alt="item.name" class="cart-item-image" />
@@ -278,7 +278,7 @@
       </div>
     </main>
 
-    <div id="footer-include"></div>
+    <div id="footer"></div>
 
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
