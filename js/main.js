@@ -603,16 +603,18 @@ function checkoutPage() {
 
         shipping: {
             selectedMethod: 'rekomendasi-kami',
+            selectedCourier: 'recommendation',
+            dropdownOpen: false,
             cost: 0,
             addressLabel: '',
             estimateLabel: '',
             zoneLabel: '',
             error: '',
-            methods: [
-                { code: 'rekomendasi-kami', label: 'Rekomendasi Kami', badge: 'Direkomendasikan', recommended: true, active: true, description: 'Metode internal dari gudang Turen, Malang.' },
-                { code: 'tiki', label: 'TIKI', badge: '', recommended: false, active: false, description: 'Segera tersedia.' },
-                { code: 'pos', label: 'POS Indonesia', badge: '', recommended: false, active: false, description: 'Segera tersedia.' },
-                { code: 'jne', label: 'JNE', badge: '', recommended: false, active: false, description: 'Segera tersedia.' }
+            couriers: [
+                { id: 'recommendation', name: 'Rekomendasi Kami', available: true, recommended: true, etd: '1-2 hari' },
+                { id: 'tiki', name: 'TIKI', available: false },
+                { id: 'pos', name: 'POS Indonesia', available: false },
+                { id: 'jne', name: 'JNE', available: false }
             ]
         },
         isCalculatingShipping: false,
@@ -827,14 +829,31 @@ function checkoutPage() {
             if (this.shipping.cost > 0) this.clearNotification();
         },
 
+        getSelectedCourier() {
+            return this.shipping.couriers.find((courier) => courier.id === this.shipping.selectedCourier)
+                || this.shipping.couriers[0];
+        },
+
+        selectCourier(courier) {
+            if (!courier?.available) return;
+
+            this.shipping.selectedCourier = courier.id;
+            this.shipping.dropdownOpen = false;
+
+            const methodCode = courier.id === 'recommendation' ? 'rekomendasi-kami' : courier.id;
+            this.onShippingMethodChange(methodCode);
+        },
+
         onShippingMethodChange(methodCode) {
             if (methodCode !== 'rekomendasi-kami') {
                 this.showNotification('Saat ini hanya metode Rekomendasi Kami yang tersedia.', true);
                 this.shipping.selectedMethod = 'rekomendasi-kami';
+                this.shipping.selectedCourier = 'recommendation';
                 return;
             }
 
             this.shipping.selectedMethod = 'rekomendasi-kami';
+            this.shipping.selectedCourier = 'recommendation';
             this.calculateShipping('shipping-method-change', { force: true });
         },
 
