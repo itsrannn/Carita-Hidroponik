@@ -103,19 +103,35 @@
 
                 <div class="form-group">
                   <label>Metode Pengiriman</label>
-                  <div class="shipping-method-list">
-                    <template x-for="method in shipping.methods" :key="method.code">
-                      <label class="shipping-method-item" :class="{ 'is-recommended': method.code === 'rekomendasi-kami', 'is-disabled': !method.active }">
-                        <input type="radio" name="shipping-method" :value="method.code" x-model="shipping.selectedMethod" :disabled="!method.active" @change="onShippingMethodChange(method.code)">
-                        <div>
-                          <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                            <strong x-text="method.label"></strong>
-                            <span class="shipping-badge" x-show="method.recommended" x-text="method.badge"></span>
-                          </div>
-                          <small x-text="method.description"></small>
+                  <div class="shipping-dropdown" @click.outside="shipping.dropdownOpen = false">
+                    <button type="button" class="shipping-dropdown-trigger" @click="shipping.dropdownOpen = !shipping.dropdownOpen" :aria-expanded="shipping.dropdownOpen">
+                      <div class="shipping-selected-content" x-data="{ selectedCourier: getSelectedCourier() }" x-effect="selectedCourier = getSelectedCourier()">
+                        <div class="shipping-selected-main">
+                          <strong x-text="selectedCourier.name"></strong>
+                          <span class="shipping-badge" x-show="selectedCourier.recommended">Direkomendasikan</span>
                         </div>
-                      </label>
-                    </template>
+                        <small x-text="selectedCourier.available ? selectedCourier.etd : 'Segera tersedia'"></small>
+                      </div>
+                      <i data-feather="chevron-down" class="shipping-dropdown-arrow" :class="{ 'is-open': shipping.dropdownOpen }"></i>
+                    </button>
+
+                    <div class="shipping-dropdown-menu" x-show="shipping.dropdownOpen" x-transition:enter="shipping-dropdown-enter" x-transition:enter-start="shipping-dropdown-enter-start" x-transition:enter-end="shipping-dropdown-enter-end" x-transition:leave="shipping-dropdown-leave" x-transition:leave-start="shipping-dropdown-leave-start" x-transition:leave-end="shipping-dropdown-leave-end">
+                      <template x-for="courier in shipping.couriers" :key="courier.id">
+                        <button
+                          type="button"
+                          class="shipping-option"
+                          :class="{ 'is-selected': shipping.selectedCourier === courier.id, 'is-disabled': !courier.available }"
+                          :disabled="!courier.available"
+                          @click="selectCourier(courier)"
+                        >
+                          <div class="shipping-option-main">
+                            <strong x-text="courier.name"></strong>
+                            <span class="shipping-badge" x-show="courier.recommended">Direkomendasikan</span>
+                          </div>
+                          <small x-text="courier.available ? courier.etd : 'Segera tersedia'"></small>
+                        </button>
+                      </template>
+                    </div>
                   </div>
                 </div>
 
