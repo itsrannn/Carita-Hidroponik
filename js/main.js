@@ -136,61 +136,61 @@ window.fetchWithDebug = async (input, init = {}) => {
 };
 
 // --- DOM READY ---
+let featherInitialized = false;
 window.safeFeatherReplace = () => {
-    if (!(window.feather && typeof window.feather.replace === 'function')) return;
+    if (!window.feather || typeof window.feather.replace !== 'function') return;
 
-    requestAnimationFrame(() => {
-        try {
-            window.feather.replace();
-        } catch (error) {
-            console.warn('[Feather] replace skipped:', error);
-        }
-    });
+    try {
+        window.feather.replace();
+    } catch (error) {
+        console.warn('[Feather] replace skipped:', error);
+    }
 };
 
-document.addEventListener('DOMContentLoaded', async () => {
-    const loadComponent = async (selector, path) => {
+let layoutInitialized = false;
+
+async function loadComponent(selector, path) {
+    try {
         const mountNode = document.querySelector(selector);
-        if (!mountNode) return;
+        if (!mountNode || mountNode.dataset.componentLoaded === 'true') return;
 
-        try {
-            const response = await window.fetchWithDebug(window.toAppUrl(path), {
-                cache: 'no-store',
-                skipJsonContentType: true
-            });
-            if (!response.ok) throw new Error(`Failed to load component: ${path}`);
+        const response = await window.fetchWithDebug(window.toAppUrl(path), {
+            cache: 'no-store',
+            skipJsonContentType: true
+        });
+        if (!response.ok) throw new Error(`Failed to load component: ${path}`);
 
-            const html = await response.text();
-            mountNode.innerHTML = html;
+        const html = await response.text();
+        mountNode.innerHTML = html;
+        mountNode.dataset.componentLoaded = 'true';
 
-            mountNode.querySelectorAll('script').forEach((script) => {
-                const newScript = document.createElement('script');
-                newScript.textContent = script.textContent;
-                document.body.appendChild(newScript).remove();
-            });
-
-            if (window.Alpine && typeof window.Alpine.initTree === 'function') {
-                window.Alpine.initTree(mountNode);
-            }
-        } catch (error) {
-            console.error(`[Loader] Failed: ${path}`, error);
-            mountNode.innerHTML = '<div style="text-align:center; padding:1rem;">Failed to load section.</div>';
+        if (window.Alpine && typeof window.Alpine.initTree === 'function') {
+            window.Alpine.initTree(mountNode);
         }
-    };
+    } catch (error) {
+        console.error(`[Loader] Failed: ${path}`, error);
+    }
+}
 
-    const initLayout = async () => {
-        console.log('Header:', document.querySelector('#header'));
-        console.log('Footer:', document.querySelector('#footer'));
+async function initLayout() {
+    if (layoutInitialized) return;
+    layoutInitialized = true;
 
-        await loadComponent('#header, #header-include', './components/header.html');
-        await loadComponent('#footer, #footer-include', './components/footer.html');
+    await loadComponent('#header', './components/header.html');
+    await loadComponent('#header-include', './components/header.html');
+    await loadComponent('#footer', './components/footer.html');
+    await loadComponent('#footer-include', './components/footer.html');
 
-        setTimeout(() => {
+    setTimeout(() => {
+        if (!featherInitialized) {
             window.safeFeatherReplace();
-        }, 50);
-    };
+            featherInitialized = true;
+        }
+    }, 50);
+}
 
-    await initLayout();
+document.addEventListener('DOMContentLoaded', () => {
+    initLayout();
 });
 
 // --- UTILITIES ---

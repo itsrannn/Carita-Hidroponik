@@ -120,7 +120,7 @@
     <script src="js/main.js"></script>
 
     <script>
-      document.addEventListener("DOMContentLoaded", () => feather.replace());
+      document.addEventListener("DOMContentLoaded", () => window.safeFeatherReplace && window.safeFeatherReplace());
     </script>
     <script>
       function showForm(formIdToShow) {
@@ -233,7 +233,7 @@
       });
     </script>
     <script>
-      document.addEventListener("DOMContentLoaded", () => feather.replace());
+      document.addEventListener("DOMContentLoaded", () => window.safeFeatherReplace && window.safeFeatherReplace());
     </script>
 
     <script>
@@ -262,7 +262,7 @@
         icon.replaceWith(newIcon);
 
         // Tell Feather Icons to process the new icon
-        feather.replace();
+        window.safeFeatherReplace && window.safeFeatherReplace();
       });
     </script>
   </body>

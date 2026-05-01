@@ -83,7 +83,7 @@ document.addEventListener('alpine:init', () => {
     this.crossSellLoading = false;
     this.$nextTick(() => {
       if (window.feather) {
-        feather.replace();
+        window.safeFeatherReplace && window.safeFeatherReplace();
       }
     });
   },
@@ -175,7 +175,7 @@ document.addEventListener('alpine:init', () => {
   showAddToCartToast() {
     this.showCartToast = true;
     this.$nextTick(() => {
-      if (window.feather) feather.replace();
+      if (window.feather) window.safeFeatherReplace && window.safeFeatherReplace();
     });
     if (this.cartToastTimeout) {
       clearTimeout(this.cartToastTimeout);

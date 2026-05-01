@@ -268,7 +268,7 @@
           init() {
             this.startInterval();
             // Need to re-run feather.replace() for icons inside Alpine components
-            this.$nextTick(() => feather.replace());
+            this.$nextTick(() => window.safeFeatherReplace && window.safeFeatherReplace());
           },
           destroy() {
             clearInterval(this.slideInterval);
