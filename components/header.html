@@ -77,7 +77,7 @@
 
     <div class="top-actions">
       <!-- User Icon -->
-      <a :href="profileLink" class="header-icon" aria-label="Account">
+      <a href="https://itsrannn.github.io/Carita-Hidroponik/my-profile.html" class="header-icon" aria-label="Account">
         <i data-feather="user"></i>
       </a>
 
@@ -109,23 +109,17 @@
         </button>
 
         <div x-show="open" x-transition class="dropdown-content">
-          <template
-            x-for="lang in Object.keys($store.i18n.supportedLangs).filter(l => l !== $store.i18n.lang).slice(0, 1)"
-            :key="lang">
+          <a href="#"
+             @click.prevent="$store.i18n.setLang($store.i18n.lang === 'en' ? 'id' : 'en'); open = false"
+             :aria-label="'Switch language to ' + $store.i18n.supportedLangs[$store.i18n.lang === 'en' ? 'id' : 'en']">
 
-            <a href="#"
-               @click.prevent="$store.i18n.setLang(lang); open = false"
-               :aria-label="'Switch language to ' + $store.i18n.supportedLangs[lang]">
-
-              <img
-                :src="lang === 'en'
-                  ? 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/gb.svg'
-                  : 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/id.svg'"
-                class="flag-icon"
-                :alt="$store.i18n.supportedLangs[lang]">
-            </a>
-
-          </template>
+            <img
+              :src="$store.i18n.lang === 'en'
+                ? 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/id.svg'
+                : 'https://cdn.jsdelivr.net/npm/flag-icons@latest/flags/1x1/gb.svg'"
+              class="flag-icon"
+              :alt="$store.i18n.supportedLangs[$store.i18n.lang === 'en' ? 'id' : 'en']">
+          </a>
         </div>
       </div>
 
@@ -145,7 +139,7 @@
 <script>
   function headerComponent() {
     return {
-      profileLink: 'login-page.html',
+      profileLink: 'https://itsrannn.github.io/Carita-Hidroponik/my-profile.html',
       isOnIndexPage:
         window.location.pathname.endsWith('index.html') ||
         window.location.pathname === '/',
