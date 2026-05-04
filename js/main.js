@@ -1,3 +1,17 @@
+window.headerComponent = function () {
+    return {
+        profileLink: '/my-account.html',
+        isOnIndexPage: window.location.pathname.includes('index') || window.location.pathname === '/',
+        toggleMobileMenu() {
+            const sidebar = document.getElementById('categorySidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('mobile-active');
+                document.body.classList.toggle('sidebar-open');
+            }
+        }
+    };
+};
+
 const API_BASE_URL = 'https://carita-hidroponik-backend.vercel.app';
 const SNAP_TOKEN_ENDPOINT = '/api/payment/create-snap-token';
 window.API_BASE_URL = API_BASE_URL;
@@ -165,7 +179,7 @@ async function loadComponent(selector, path) {
         mountNode.dataset.componentLoaded = 'true';
 
         if (window.Alpine && typeof window.Alpine.initTree === 'function') {
-            window.Alpine.initTree(mountNode);
+            window.Alpine.initTree(document.body);
         }
     } catch (error) {
         console.error(`[Loader] Failed: ${path}`, error);
