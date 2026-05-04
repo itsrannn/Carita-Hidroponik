@@ -67,7 +67,7 @@
 </style>
 
 <!-- ================= HEADER ================= -->
-<header x-data="headerComponent" class="topbar">
+<header x-data="headerComponent()" class="topbar">
   <div class="container topbar-inner">
     <div class="brand">
       <a href="index.html">
@@ -141,4 +141,29 @@
   </div>
 </header>
 
+<script>
+  function headerComponent() {
+    return {
+      profileLink: 'login-page.html',
+      isOnIndexPage:
+        window.location.pathname.endsWith('index.html') ||
+        window.location.pathname === '/',
 
+      init() {
+        const supabaseSessionKey = Object.keys(sessionStorage)
+          .find(key => key.startsWith('sb-'));
+        if (supabaseSessionKey) {
+          this.profileLink = 'my-account.html';
+        }
+      },
+
+      toggleMobileMenu() {
+        const sidebar = document.getElementById("categorySidebar");
+        if (sidebar) {
+          sidebar.classList.toggle("mobile-active");
+          document.body.classList.toggle("sidebar-open");
+        }
+      }
+    }
+  }
+</script>
