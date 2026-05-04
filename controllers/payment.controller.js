@@ -35,6 +35,71 @@ function normalizeCart(cart) {
   return { itemDetails, calculatedTotal };
 }
 
+function toOrderItems(items = []) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return { error: 'items must be a non-empty array.' };
+  }
+
+  const orderDetails = [];
+  for (const item of items) {
+    const id = String(item.id || item.product_id || '').trim();
+    const name = String(item.name || '').trim();
+    const quantity = Number(item.quantity);
+    const price = Number(item.price);
+
+    if (!id || !name || !Number.isFinite(quantity) || !Number.isFinite(price) || quantity <= 0 || price <= 0) {
+      return { error: 'Each item must include valid id, name, quantity, and price.' };
+    }
+
+    orderDetails.push({ id, name, quantity, price });
+  }
+  return { orderDetails };
+}
+
+async function createOrder(req, res) {
+  const { items, shipping_cost: shippingCost = 0 } = req.body || {};
+  const normalized = toOrderItems(items);
+  if (normalized.error) return res.status(400).json({ message: normalized.error });
+
+  const subtotal = normalized.orderDetails.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const shipping = Math.max(0, Number(shippingCost) || 0);
+  const totalAmount = Math.round(subtotal + shipping);
+  const orderId = `ORDER-${Date.now()}-${randomUUID().slice(0, 6).toUpperCase()}`;
+
+  const order = orderRepository.create({
+    orderId,
+    status: 'pending_payment',
+    totalAmount,
+    shippingCost: shipping,
+    orderDetails: normalized.orderDetails,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
+
+  return res.status(201).json({ success: true, order_id: order.orderId });
+}
+
+async function createPaymentToken(req, res) {
+  const { order_id: orderId } = req.body || {};
+  if (!orderId) return res.status(400).json({ message: 'order_id is required.' });
+
+  const order = orderRepository.findByOrderId(orderId);
+  if (!order) return res.status(404).json({ message: 'Order not found.' });
+
+  try {
+    const token = await midtransService.createSnapToken({
+      orderId: order.orderId,
+      grossAmount: order.totalAmount,
+      itemDetails: order.orderDetails,
+      customerDetails: order.customer || { first_name: 'Customer', email: 'customer@example.com', phone: '' },
+    });
+
+    return res.status(201).json({ token, created_at: new Date().toISOString(), clientKey: process.env.MIDTRANS_CLIENT_KEY });
+  } catch (_error) {
+    return res.status(502).json({ message: 'Failed to create Midtrans transaction token.' });
+  }
+}
+
 async function confirmOrder(req, res) {
   const { order_code: orderCode, transaction_id: transactionId, payment_status: paymentStatus } = req.body || {};
 
@@ -166,6 +231,8 @@ function getPaidOrdersForAdmin(_req, res) {
 }
 
 module.exports = {
+  createOrder,
+  createPaymentToken,
   createSnapToken,
   confirmOrder,
   webhook,

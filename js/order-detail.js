@@ -6,7 +6,8 @@
   const state = {
     order: null,
     refund: null,
-    session: null
+    session: null,
+    countdownInterval: null
   };
 
   const els = {
@@ -29,8 +30,11 @@
     refundMethod: document.getElementById('refund-method'),
     refundAccountLabel: document.getElementById('refund-account-label'),
     refundAccount: document.getElementById('refund-account'),
-    refundSubmitBtn: document.getElementById('refund-submit-btn')
+    refundSubmitBtn: document.getElementById('refund-submit-btn'),
+    payNowBtn: document.getElementById('pay-now-btn'),
+    paymentCountdown: document.getElementById('payment-countdown')
   };
+  const PAYMENT_EXPIRY_MS = 15 * 60 * 1000;
 
   const showNotification = (message, isError = false) => {
     const notification = document.getElementById('notification');
@@ -260,6 +264,62 @@
     }
   }
 
+  function getPaymentTimerKey(orderId) {
+    return `payment_token_created_at:${orderId}`;
+  }
+
+  function startPaymentCountdown(createdAt) {
+    if (!els.paymentCountdown || !state.order) return;
+    if (state.countdownInterval) clearInterval(state.countdownInterval);
+
+    const expiryTime = new Date(createdAt).getTime() + PAYMENT_EXPIRY_MS;
+    const update = () => {
+      const remaining = expiryTime - Date.now();
+      if (remaining <= 0) {
+        els.paymentCountdown.textContent = 'Payment expires in: Token expired';
+        clearInterval(state.countdownInterval);
+        state.countdownInterval = null;
+        return;
+      }
+      const minutes = Math.floor(remaining / 60000);
+      const seconds = Math.floor((remaining % 60000) / 1000);
+      els.paymentCountdown.textContent = `Payment expires in: ${minutes}:${String(seconds).padStart(2, '0')}`;
+    };
+
+    update();
+    state.countdownInterval = setInterval(update, 1000);
+  }
+
+  async function loadMidtransSnapScript(clientKey) {
+    if (window.snap?.pay) return window.snap;
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+      script.setAttribute('data-client-key', clientKey || '');
+      script.onload = () => resolve(window.snap);
+      script.onerror = () => reject(new Error('Gagal memuat script Midtrans Snap.'));
+      document.body.appendChild(script);
+    });
+  }
+
+  async function handlePayNow() {
+    if (!state.order || !els.payNowBtn) return;
+    const response = await window.fetchWithDebug(window.toApiPath('/api/payments/create'), {
+      method: 'POST',
+      body: JSON.stringify({ order_id: state.order.order_code || state.order.id })
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result?.token) throw new Error(result?.message || 'Gagal membuat token pembayaran.');
+
+    const createdAt = result.created_at || new Date().toISOString();
+    localStorage.setItem(getPaymentTimerKey(state.order.id), createdAt);
+    startPaymentCountdown(createdAt);
+
+    const snap = await loadMidtransSnapScript(result.clientKey);
+    if (!snap?.pay) throw new Error('Midtrans Snap tidak tersedia.');
+    window.snap.pay(result.token);
+  }
+
   function openRefundModal() {
     els.refundModal.classList.remove('hidden');
     els.refundModal.setAttribute('aria-hidden', 'false');
@@ -387,6 +447,20 @@
         els.refundSubmitBtn.disabled = false;
       }
     });
+
+    if (els.payNowBtn) {
+      els.payNowBtn.addEventListener('click', async () => {
+        els.payNowBtn.disabled = true;
+        try {
+          await handlePayNow();
+        } catch (error) {
+          console.error('[Order Detail] Failed to start payment:', error);
+          showNotification(error?.message || 'Gagal memulai pembayaran.', true);
+        } finally {
+          els.payNowBtn.disabled = false;
+        }
+      });
+    }
   }
 
   async function initPage() {
@@ -414,6 +488,11 @@
       renderCostSummary(order);
       renderRefundAction(order);
       renderRefundStatus(state.refund);
+      if (normalizeStatus(order.status) === 'pending_payment' && els.payNowBtn) {
+        els.payNowBtn.classList.remove('hidden');
+        const savedCreatedAt = localStorage.getItem(getPaymentTimerKey(order.id));
+        if (savedCreatedAt) startPaymentCountdown(savedCreatedAt);
+      }
 
       els.loading.classList.add('hidden');
       els.content.classList.remove('hidden');
