@@ -1,6 +1,6 @@
 document.addEventListener('alpine:init', () => {
   Alpine.data('headerComponent', () => ({
-    profileLink: "/my-account.html",
+    profileLink: "my-account.html",
 
     get isOnIndexPage() {
       return window.location.pathname.includes("index") ||
