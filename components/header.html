@@ -67,7 +67,7 @@
 </style>
 
 <!-- ================= HEADER ================= -->
-<header x-data="headerComponent()" class="topbar">
+<header x-data="headerComponent" class="topbar">
   <div class="container topbar-inner">
     <div class="brand">
       <a href="index.html">
@@ -110,7 +110,7 @@
 
         <div x-show="open" x-transition class="dropdown-content">
           <template
-            x-for="lang in Object.keys($store.i18n.supportedLangs).filter(l => l !== $store.i18n.lang)"
+            x-for="lang in Object.keys($store.i18n.supportedLangs).filter(l => l !== $store.i18n.lang).slice(0, 1)"
             :key="lang">
 
             <a href="#"
