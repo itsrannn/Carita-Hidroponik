@@ -955,93 +955,56 @@ function checkoutPage() {
             if (!validation.valid) return;
 
             this.isCheckoutLoading = true;
-            this.isSnapPopupActive = true;
 
             try {
-                const checkoutPayload = this.buildCheckoutPayload();
-                const snapSession = await this.createSnapSession(checkoutPayload);
-                await this.openMidtransSnap(snapSession, checkoutPayload);
+                const orderPayload = this.buildCreateOrderPayload();
+                const orderResult = await this.createOrder(orderPayload);
+                localStorage.removeItem('cart');
+                Alpine.store('cart').items = [];
+                window.location.href = window.toAppPath(`order-detail.html?id=${encodeURIComponent(orderResult.order_id)}`);
             } catch (error) {
                 console.error('[Checkout] Checkout flow failed:', error);
                 this.showNotification(error?.message || 'Checkout gagal diproses. Silakan coba lagi.', true);
             } finally {
                 this.isCheckoutLoading = false;
-                this.isSnapPopupActive = false;
                 this.isConfirmModalOpen = false;
             }
         },
 
-        buildCheckoutPayload() {
+        buildCreateOrderPayload() {
             const cartDetails = Alpine.store('cart').details || [];
-            const cart = cartDetails.map((item) => ({
+            const items = cartDetails.map((item) => ({
                 id: String(item.id),
                 name: item.name,
                 quantity: Number(item.quantity),
                 price: Number(item.finalPrice || item.price || 0)
             }));
 
-            const roundedTax = Math.round(this.ppnAmount);
-            const roundedShipping = Math.round(this.ongkir);
-
-            if (roundedTax > 0) {
-                cart.push({
-                    id: 'ppn-tax',
-                    name: 'PPN 11%',
-                    quantity: 1,
-                    price: roundedTax
-                });
-            }
-
-            if (roundedShipping > 0) {
-                cart.push({
-                    id: 'shipping-fee',
-                    name: 'Ongkir Rekomendasi Kami',
-                    quantity: 1,
-                    price: roundedShipping
-                });
-            }
-
-            const totalPrice = cart.reduce((sum, item) => sum + (Number(item.price) * Number(item.quantity)), 0);
-            const normalizedProfile = this.profileDebug.normalizedProfile || this.normalizeProfileData(this.profileSnapshot);
-
             return {
-                cart,
-                totalPrice,
-                customer: {
-                    firstName: normalizedProfile.full_name || 'Pelanggan',
-                    name: normalizedProfile.full_name || 'Pelanggan',
-                    phone: normalizedProfile.phone_number || '',
-                    email: this.getFirstFilledValue(this.profileSnapshot?.email, this.profileSnapshot?.user_email) || 'customer@example.com'
-                }
+                items,
+                total_price: Math.round(this.calculateGrandTotal()),
+                shipping_cost: Math.round(this.ongkir)
             };
         },
 
-        async createSnapSession(payload) {
-            const response = await window.fetchWithDebug(window.toApiPath(SNAP_TOKEN_ENDPOINT), {
+        async createOrder(payload) {
+            const response = await window.fetchWithDebug(window.toApiPath('/api/orders'), {
                 method: 'POST',
                 body: JSON.stringify(payload)
             });
 
             const result = await response.json().catch(() => ({}));
-            const snapToken =
-                result?.token ||
-                result?.snapToken ||
-                result?.snap_token;
 
             if (!response.ok) {
-                console.error('[Checkout] Failed to create snap session:', result);
-                throw new Error(result?.message || 'Gagal membuat token pembayaran Midtrans.');
+                console.error('[Checkout] Failed to create order:', result);
+                throw new Error(result?.message || 'Gagal membuat pesanan.');
             }
 
-            if (!snapToken) {
-                console.error('[Checkout] Token not found:', result);
-                throw new Error('Gagal membuat token pembayaran Midtrans.');
+            if (!result?.success || !result?.order_id) {
+                throw new Error('Gagal membuat pesanan.');
             }
 
-            this.latestSnapSession = result;
-            console.log('[MIDTRANS TOKEN RECEIVED]', snapToken);
-
-            return snapToken;
+            return result;
         },
 
         loadMidtransSnapScript(clientKey) {
