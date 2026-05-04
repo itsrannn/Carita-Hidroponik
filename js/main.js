@@ -43,11 +43,6 @@ window.toApiPath = (relativePath = '') => {
     return `${API_BASE_URL}${path}`;
 };
 
-
-window.headerComponent = window.headerComponent || function () {
-    return {};
-};
-
 // --- GLOBAL ERROR HANDLING ---
 window.onerror = (message, source, lineno, colno, error) => {
     console.error('[GlobalError]', {
@@ -293,22 +288,6 @@ window.calculateDiscount = (product) => {
 
 // --- ALPINE STORES ---
 document.addEventListener('alpine:init', () => {
-    Alpine.data('headerComponent', () => ({
-        profileLink: window.toAppPath('my-account.html'),
-
-        get isOnIndexPage() {
-            return window.location.pathname.includes('index') || window.location.pathname === '/';
-        },
-
-        toggleMobileMenu() {
-            const sidebar = document.getElementById('categorySidebar');
-            if (sidebar) {
-                sidebar.classList.toggle('mobile-active');
-                document.body.classList.toggle('sidebar-open');
-            }
-        }
-    }));
-
     Alpine.store('i18n', {
         lang: 'id',
         ready: false,
