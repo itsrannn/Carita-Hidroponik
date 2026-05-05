@@ -242,3 +242,155 @@ window.AdminOrdersPage = (() => {
 document.addEventListener('DOMContentLoaded', () => {
     window.AdminOrdersPage.init();
 });
+
+function normalizeContentItems(data, preferredKey) {
+    if (Array.isArray(data)) return data;
+    if (!data || typeof data !== 'object') return [];
+    return data?.[preferredKey] || data?.data || data?.items || [];
+}
+
+async function loadContentItems(table, preferredKey, label) {
+    console.log(`[ADMIN CONTENT] Loading ${label}...`);
+    const { data, error } = await supabase.from(table).select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    console.log(`[ADMIN CONTENT] ${label} response:`, data);
+    const items = normalizeContentItems(data, preferredKey);
+    console.log(`[ADMIN CONTENT] ${label} parsed:`, items);
+    return Array.isArray(items) ? items : [];
+}
+
+document.addEventListener('alpine:init', () => {
+    Alpine.data('contentManager', () => ({
+        activeTab: 'products',
+        products: [],
+        news: [],
+        isLoading: {
+            products: false,
+            news: false
+        },
+        errors: {
+            products: '',
+            news: ''
+        },
+        searchQuery: {
+            products: '',
+            news: ''
+        },
+        bulkDiscountPercent: 10,
+
+        init() {
+            this.switchTab('products');
+        },
+
+        async switchTab(tab) {
+            this.activeTab = tab;
+            if (tab === 'products' && this.products.length === 0 && !this.isLoading.products) {
+                await this.loadProducts();
+            }
+            if (tab === 'news' && this.news.length === 0 && !this.isLoading.news) {
+                await this.loadNews();
+            }
+        },
+
+        async loadProducts() {
+            this.isLoading.products = true;
+            this.errors.products = '';
+            try {
+                this.products = await loadContentItems('products', 'products', 'products');
+            } catch (err) {
+                console.error('[PRODUCT LOAD ERROR]', err);
+                this.products = [];
+                this.errors.products = err?.message || 'Gagal memuat produk.';
+            } finally {
+                this.isLoading.products = false;
+            }
+        },
+
+        async loadNews() {
+            this.isLoading.news = true;
+            this.errors.news = '';
+            try {
+                this.news = await loadContentItems('news', 'news', 'news');
+            } catch (err) {
+                console.error('[NEWS LOAD ERROR]', err);
+                this.news = [];
+                this.errors.news = err?.message || 'Gagal memuat berita.';
+            } finally {
+                this.isLoading.news = false;
+            }
+        },
+
+        get filteredProducts() {
+            const query = this.searchQuery.products.trim().toLowerCase();
+            if (!query) return this.products;
+            return this.products.filter((product) => {
+                const name = product?.name?.en || product?.name?.id || product?.name || '';
+                const category = product?.category || '';
+                return String(name).toLowerCase().includes(query) || String(category).toLowerCase().includes(query);
+            });
+        },
+
+        get filteredNews() {
+            const query = this.searchQuery.news.trim().toLowerCase();
+            if (!query) return this.news;
+            return this.news.filter((item) => {
+                const title = item?.title?.en || item?.title?.id || item?.title || '';
+                const excerpt = item?.excerpt?.en || item?.excerpt?.id || item?.excerpt || '';
+                return String(title).toLowerCase().includes(query) || String(excerpt).toLowerCase().includes(query);
+            });
+        },
+
+        async deleteItem(id, imageUrl) {
+            const isNews = this.activeTab === 'news';
+            const table = isNews ? 'news' : 'products';
+            const confirmed = window.confirm(`Hapus ${isNews ? 'berita' : 'produk'} ini?`);
+            if (!confirmed) return;
+
+            const { error } = await supabase.from(table).delete().eq('id', id);
+            if (error) {
+                window.showNotification(`Gagal menghapus data: ${error.message}`, true);
+                return;
+            }
+
+            if (typeof window.deleteImageFromStorage === 'function' && imageUrl) {
+                await window.deleteImageFromStorage(imageUrl);
+            }
+
+            window.showNotification(`${isNews ? 'Berita' : 'Produk'} berhasil dihapus.`);
+            if (isNews) {
+                await this.loadNews();
+            } else {
+                await this.loadProducts();
+            }
+        },
+
+        async applyBulkDiscount() {
+            const percent = Number(this.bulkDiscountPercent);
+            if (!Number.isFinite(percent) || percent < 1 || percent > 90) {
+                window.showNotification('Persentase diskon harus di antara 1 hingga 90.', true);
+                return;
+            }
+
+            const eligibleProducts = this.products.filter((product) => !product?.discount_price);
+            if (eligibleProducts.length === 0) {
+                window.showNotification('Tidak ada produk yang memenuhi syarat untuk diskon massal.');
+                return;
+            }
+
+            for (const product of eligibleProducts) {
+                const discountPrice = Math.max(0, Math.round(product.price * (1 - percent / 100)));
+                const { error } = await supabase
+                    .from('products')
+                    .update({ discount_price: discountPrice })
+                    .eq('id', product.id);
+                if (error) {
+                    window.showNotification(`Gagal menerapkan diskon: ${error.message}`, true);
+                    return;
+                }
+            }
+
+            window.showNotification(`Diskon ${percent}% berhasil diterapkan.`);
+            await this.loadProducts();
+        }
+    }));
+});
