@@ -1,12 +1,12 @@
 window.AdminShippingPage = (() => {
-  let shippingRates = [];
+  const API_BASE_URL = window.location.hostname.includes('localhost') ? 'http://localhost:3000/api' : 'https://caritahidroponik.com/api';
+  let shippingZones = [];
 
   function state() {
     return {
       root: document.getElementById('shipping-admin-root'),
       tbody: document.getElementById('shipping-rates-tbody'),
       notice: document.getElementById('shipping-admin-notice'),
-      toggle: document.getElementById('recommended-shipping-toggle'),
       editId: document.getElementById('editing-rate-id'),
       zoneName: document.getElementById('zone-name'),
       districtMatch: document.getElementById('district-match'),
@@ -14,170 +14,119 @@ window.AdminShippingPage = (() => {
       baseRate: document.getElementById('base-rate'),
       extraRate: document.getElementById('extra-rate'),
       isActive: document.getElementById('rate-active'),
-      saveBtn: document.getElementById('save-rate-btn')
+      saveBtn: document.getElementById('save-rate-btn'),
+      intlRate: document.getElementById('intl-rate'),
+      saveIntlBtn: document.getElementById('save-intl-btn')
     };
   }
 
-  function showNotice(text = 'Perubahan berhasil disimpan.') {
-    const el = document.getElementById('shipping-admin-notice');
-    if (!el) return;
-    el.textContent = text;
-    el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), 2200);
+  const getValue = (id) => document.getElementById(id)?.value || '';
+  function showNotice(text) { const n = document.getElementById('shipping-admin-notice'); if (n) { n.textContent = text; n.classList.add('show'); setTimeout(()=>n.classList.remove('show'),2200);} }
+
+  function validateZonePayload(payload) {
+    if (!payload.zone_name) throw new Error('zone_name wajib diisi');
+    if (!Number.isFinite(payload.base_rate)) throw new Error('base_rate harus angka');
+    if (!Number.isFinite(payload.extra_per_kg)) throw new Error('extra_per_kg harus angka');
+  }
+
+  function renderZones(zones) {
+    const table = document.getElementById('shipping-rates-tbody');
+    if (!table) return;
+    if (!zones.length) {
+      table.innerHTML = '<tr><td colspan="7">Tidak ada data zona</td></tr>';
+      return;
+    }
+    table.innerHTML = zones.map((z) => `
+      <tr>
+        <td>${z.zone_name}</td>
+        <td>${z.district_match || '-'}</td>
+        <td>${z.province_match || '-'}</td>
+        <td>${window.formatRupiah(Number(z.base_rate || 0))}</td>
+        <td>${window.formatRupiah(Number(z.extra_per_kg || 0))}</td>
+        <td>${z.is_active ? 'Aktif' : 'Nonaktif'}</td>
+        <td>
+          <button class="btn-action btn-primary" data-edit-id="${z.id}">Edit</button>
+          <button class="btn-action btn-danger" data-delete-id="${z.id}">Hapus</button>
+        </td>
+      </tr>`).join('');
+  }
+
+  async function loadZones() {
+    const res = await fetch(`${API_BASE_URL}/shipping/zones`);
+    if (!res.ok) throw new Error('Gagal memuat data zona');
+    const data = await res.json();
+    shippingZones = data?.data || [];
+    renderZones(shippingZones);
+  }
+
+  async function saveZone() {
+    const s = state();
+    const payload = {
+      zone_name: getValue('zone-name').trim(),
+      district_match: getValue('district-match').trim(),
+      province_match: getValue('province-match').trim(),
+      base_rate: Number(getValue('base-rate')),
+      extra_per_kg: Number(getValue('extra-rate')),
+      is_active: getValue('rate-active') === 'true'
+    };
+    validateZonePayload(payload);
+
+    const method = s.editId.value ? 'PUT' : 'POST';
+    const endpoint = s.editId.value ? `${API_BASE_URL}/shipping/zones/${s.editId.value}` : `${API_BASE_URL}/shipping/zones`;
+    const res = await fetch(endpoint, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    if (!res.ok) throw new Error('Failed to save zone');
+
+    s.editId.value = '';
+    s.zoneName.value = ''; s.districtMatch.value = ''; s.provinceMatch.value = ''; s.baseRate.value = ''; s.extraRate.value = ''; s.isActive.value = 'true';
+    await loadZones();
+    showNotice('Zona berhasil disimpan');
+  }
+
+  async function deleteZone(id) {
+    const res = await fetch(`${API_BASE_URL}/shipping/zones/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Gagal menghapus zona');
+    await loadZones();
+    showNotice('Zona berhasil dihapus');
   }
 
   async function loadSettings() {
-    const { data, error } = await supabase.from('shipping_settings').select('*').limit(1).maybeSingle();
-    if (error) throw error;
-    const settings = data || { recommended_shipping_enabled: true };
-    const toggle = document.getElementById('recommended-shipping-toggle');
-    if (toggle) toggle.checked = Boolean(settings.recommended_shipping_enabled);
+    const res = await fetch(`${API_BASE_URL}/shipping/settings`);
+    if (!res.ok) throw new Error('Gagal memuat pengaturan internasional');
+    const data = await res.json();
+    if (state().intlRate) state().intlRate.value = Number(data?.data?.international_flat_rate || 0);
   }
 
-  async function saveSettings() {
-    const toggle = document.getElementById('recommended-shipping-toggle');
-    if (!toggle) return;
-
-    const payload = { id: 1, recommended_shipping_enabled: Boolean(toggle.checked), updated_at: new Date().toISOString() };
-    const { error } = await supabase.from('shipping_settings').upsert(payload, { onConflict: 'id' });
-    if (error) throw error;
-    showNotice('Status rekomendasi pengiriman berhasil disimpan.');
-  }
-
-  function clearForm() {
-    const s = state();
-    s.editId.value = '';
-    s.zoneName.value = '';
-    s.districtMatch.value = '';
-    s.provinceMatch.value = '';
-    s.baseRate.value = '';
-    s.extraRate.value = '';
-    s.isActive.value = 'true';
-  }
-
-  function populateForm(rate) {
-    const s = state();
-    s.editId.value = String(rate.id);
-    s.zoneName.value = rate.zone_name || '';
-    s.districtMatch.value = rate.district_match || '';
-    s.provinceMatch.value = rate.province_match || '';
-    s.baseRate.value = Number(rate.base_rate || 0);
-    s.extraRate.value = Number(rate.extra_per_kg || 0);
-    s.isActive.value = String(Boolean(rate.is_active));
-  }
-
-  async function loadRates() {
-    const s = state();
-    const { data, error } = await supabase.from('shipping_rates').select('*').order('id', { ascending: true });
-    if (error) throw error;
-    shippingRates = Array.isArray(data) ? data : [];
-
-    s.tbody.innerHTML = '';
-    shippingRates.forEach((rate) => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${rate.zone_name || '-'}</td>
-        <td>${rate.district_match || '-'}</td>
-        <td>${rate.province_match || '-'}</td>
-        <td>${window.formatRupiah(Number(rate.base_rate || 0))}</td>
-        <td>${window.formatRupiah(Number(rate.extra_per_kg || 0))}</td>
-        <td>${rate.is_active ? 'Aktif' : 'Nonaktif'}</td>
-        <td>
-          <button class="btn-action btn-primary" data-edit-id="${rate.id}">Edit</button>
-          <button class="btn-action btn-danger" data-delete-id="${rate.id}">Hapus</button>
-        </td>
-      `;
-      s.tbody.appendChild(tr);
+  async function saveInternationalRate() {
+    const rate = Number(document.getElementById('intl-rate').value);
+    const res = await fetch(`${API_BASE_URL}/shipping/settings`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ international_flat_rate: rate, is_international_enabled: true })
     });
-  }
-
-  async function saveRate() {
-    const s = state();
-    const editingId = s.editId.value ? Number(s.editId.value) : null;
-
-    const payload = {
-      zone_name: s.zoneName.value.trim(),
-      district_match: s.districtMatch.value.trim() || null,
-      province_match: s.provinceMatch.value.trim() || null,
-      base_rate: Number(s.baseRate.value || 0),
-      extra_per_kg: Number(s.extraRate.value || 0),
-      is_active: s.isActive.value === 'true',
-      updated_at: new Date().toISOString()
-    };
-
-    if (!payload.zone_name) {
-      alert('Zone name wajib diisi.');
-      return;
-    }
-
-    let query = supabase.from('shipping_rates');
-    if (editingId) {
-      const { error } = await query.update(payload).eq('id', editingId);
-      if (error) throw error;
-    } else {
-      const { error } = await query.insert(payload);
-      if (error) throw error;
-    }
-
-    clearForm();
-    await loadRates();
-    showNotice('Zona ongkir berhasil disimpan.');
-  }
-
-  async function deleteRate(id) {
-    if (!window.confirm('Hapus zona ongkir ini?')) return;
-    const { error } = await supabase.from('shipping_rates').delete().eq('id', id);
-    if (error) throw error;
-    await loadRates();
-    showNotice('Zona ongkir berhasil dihapus.');
+    if (!res.ok) throw new Error('Gagal menyimpan tarif internasional');
+    showNotice('Tarif internasional disimpan');
   }
 
   function bindEvents() {
     const s = state();
-    s.saveBtn?.addEventListener('click', async () => {
-      try {
-        await saveRate();
-      } catch (error) {
-        alert(`Gagal menyimpan zona: ${error.message}`);
-      }
-    });
-
-    s.toggle?.addEventListener('change', async () => {
-      try {
-        await saveSettings();
-      } catch (error) {
-        alert(`Gagal menyimpan pengaturan: ${error.message}`);
-      }
-    });
-
+    s.saveBtn?.addEventListener('click', async () => { try { await saveZone(); } catch (e) { alert(e.message); } });
+    s.saveIntlBtn?.addEventListener('click', async () => { try { await saveInternationalRate(); } catch (e) { alert(e.message); } });
     s.tbody?.addEventListener('click', async (event) => {
       const editId = event.target?.dataset?.editId;
       const deleteId = event.target?.dataset?.deleteId;
       if (editId) {
-        const rate = shippingRates.find((item) => Number(item.id) === Number(editId));
-        if (rate) populateForm(rate);
-      }
-
-      if (deleteId) {
-        try {
-          await deleteRate(Number(deleteId));
-        } catch (error) {
-          alert(`Gagal menghapus zona: ${error.message}`);
+        const z = shippingZones.find((zone) => String(zone.id) === String(editId));
+        if (z) {
+          s.editId.value = z.id; s.zoneName.value = z.zone_name || ''; s.districtMatch.value = z.district_match || ''; s.provinceMatch.value = z.province_match || ''; s.baseRate.value = z.base_rate; s.extraRate.value = z.extra_per_kg; s.isActive.value = String(Boolean(z.is_active));
         }
       }
+      if (deleteId && window.confirm('Hapus zona ini?')) { try { await deleteZone(deleteId); } catch (e) { alert(e.message); } }
     });
   }
 
   async function init() {
-    const s = state();
-    if (!s.root) return;
-
+    if (!state().root) return;
     bindEvents();
-    try {
-      await Promise.all([loadSettings(), loadRates()]);
-    } catch (error) {
-      alert(`Gagal memuat data ongkir: ${error.message}`);
-    }
+    await Promise.all([loadZones(), loadSettings()]);
   }
 
   return { init };
