@@ -14,9 +14,21 @@ window.AdminOrdersPage = (() => {
         container.style.display = 'block';
     }
 
+    function safeTranslateStatus(status) {
+        if (typeof window.translateStatus === 'function') {
+            return window.translateStatus(status);
+        }
+        return status || '-';
+    }
+
+    function normalizeOrdersPayload(data) {
+        return data?.orders || data?.data || (Array.isArray(data) ? data : []);
+    }
+
     async function fetchOrders(state) {
+        console.log('[ADMIN] fetch orders start');
         try {
-            const { data: orders, error } = await supabase
+            const { data, error } = await supabase
                 .from('orders')
                 .select(`
                     *,
@@ -25,7 +37,12 @@ window.AdminOrdersPage = (() => {
                         phone_number
                     )
                 `);
+
+            console.log('[ADMIN] API response', { data, error });
             if (error) throw error;
+
+            const orders = normalizeOrdersPayload(data);
+            console.log('[ADMIN] normalized orders', orders);
 
             if (!orders || orders.length === 0) {
                 state.loadingMessage.textContent = 'No orders found.';
@@ -41,6 +58,7 @@ window.AdminOrdersPage = (() => {
             applySortAndFilter(state);
             state.loadingMessage.style.display = 'none';
         } catch (error) {
+            console.error('[ADMIN ERROR]', error);
             state.loadingMessage.textContent = 'Failed to load orders.';
             showAdminMessage(
                 state.adminMessageContainer,
@@ -54,72 +72,88 @@ window.AdminOrdersPage = (() => {
         if (!state.ordersGrid || !state.sortTimeSelect || !state.filterStatusSelect) return;
 
         state.ordersGrid.innerHTML = '';
-        let processedOrders = [...allOrders];
+        let processedOrders = Array.isArray(allOrders) ? [...allOrders] : [];
 
         const statusFilter = state.filterStatusSelect.value;
         if (statusFilter !== 'all') {
-            processedOrders = processedOrders.filter(order => order.status === statusFilter);
+            processedOrders = processedOrders.filter(order => order?.status === statusFilter);
         }
 
         const timeSort = state.sortTimeSelect.value;
         processedOrders.sort((a, b) => {
-            const dateA = new Date(a.created_at);
-            const dateB = new Date(b.created_at);
+            const dateA = new Date(a?.created_at || 0);
+            const dateB = new Date(b?.created_at || 0);
             return timeSort === 'newest' ? dateB - dateA : dateA - dateB;
         });
 
-        renderOrders(state, processedOrders);
+        try {
+            renderOrders(state, processedOrders);
+        } catch (err) {
+            console.error('[ADMIN ORDER RENDER ERROR]', err);
+            showAdminMessage(
+                state.adminMessageContainer,
+                'Order Render Error',
+                'Some order data failed to render. Check console for details.'
+            );
+        }
     }
 
     function renderOrders(state, orders) {
         state.ordersGrid.innerHTML = '';
         const t = Alpine.store('i18n').t;
+        const safeOrders = Array.isArray(orders) ? orders : [];
 
-        if (orders.length === 0) {
+        if (safeOrders.length === 0) {
             state.ordersGrid.innerHTML = `<p>${t('admin.orders.empty')}</p>`;
             return;
         }
 
-        orders.forEach(order => {
-            const card = document.createElement('div');
-            card.className = 'admin-order-card card';
-            card.id = `order-${order.id}`;
+        safeOrders.forEach(order => {
+            try {
+                const card = document.createElement('div');
+                card.className = 'admin-order-card card';
+                card.id = `order-${order?.id || 'unknown'}`;
 
-            let itemsList = `<li>${t('admin.orders.card.noItems')}</li>`;
-            const orderItems = order.order_details || order.items;
-            if (orderItems && orderItems.length > 0) {
-                itemsList = orderItems.map(item => `<li>${item.name} (x${item.quantity})</li>`).join('');
+                let itemsList = `<li>${t('admin.orders.card.noItems')}</li>`;
+                const orderItems = order?.order_details || order?.items;
+                if (Array.isArray(orderItems) && orderItems.length > 0) {
+                    itemsList = orderItems.map(item => `<li>${item?.name || '-'} (x${item?.quantity || 0})</li>`).join('');
+                }
+
+                const profile = order?.profiles;
+                const customerInfo = profile ? `${profile.full_name || 'Name not available'} <br><small>(${profile.phone_number || 'Phone not available'})</small>` : 'Customer not found';
+
+                let addressInfo = 'Address not available';
+                if (order?.shipping_address) {
+                    const addr = order.shipping_address;
+                    const addressParts = [addr.address, addr.village, addr.district, addr.regency, addr.province, addr.postal_code];
+                    addressInfo = addressParts.filter(part => part).join(', ');
+                }
+
+                const orderDate = order?.created_at
+                    ? new Date(order.created_at).toLocaleDateString('en-US', { day: '2-digit', month: 'long', year: 'numeric' })
+                    : '-';
+
+                card.innerHTML = `
+                    <div class="order-header">
+                        <h3>${t('admin.orders.orderIdLabel')} #${order?.order_code || order?.id || '-'}</h3>
+                        <span class="status-badge status-${(order?.status || '').toLowerCase().replace(/\s+/g, '-')}">${safeTranslateStatus(order?.status)}</span>
+                    </div>
+                    <div class="order-body card-content">
+                        <div class="info-group"><label>${t('admin.dashboard.transactions.date')}</label><p>${orderDate}</p></div>
+                        <div class="info-group"><label>${t('admin.dashboard.transactions.customer')}</label><p>${customerInfo}</p></div>
+                        <div class="info-group"><label>${t('admin.orders.card.shippingAddress')}</label><p>${addressInfo}</p></div>
+                        <div class="info-group"><label>${t('admin.orders.card.orderSummary')}</label><ul>${itemsList}</ul></div>
+                    </div>
+                    <div class="order-footer action-buttons"></div>
+                `;
+
+                const actionsContainer = card.querySelector('.action-buttons');
+                addActions(state, actionsContainer, order || {});
+                state.ordersGrid.appendChild(card);
+            } catch (err) {
+                console.error('[ADMIN ORDER ITEM RENDER ERROR]', { err, order });
             }
-
-            const profile = order.profiles;
-            const customerInfo = profile ? `${profile.full_name || 'Name not available'} <br><small>(${profile.phone_number || 'Phone not available'})</small>` : 'Customer not found';
-
-            let addressInfo = 'Address not available';
-            if (order.shipping_address) {
-                const addr = order.shipping_address;
-                const addressParts = [addr.address, addr.village, addr.district, addr.regency, addr.province, addr.postal_code];
-                addressInfo = addressParts.filter(part => part).join(', ');
-            }
-
-            const orderDate = new Date(order.created_at).toLocaleDateString('en-US', { day: '2-digit', month: 'long', year: 'numeric' });
-
-            card.innerHTML = `
-                <div class="order-header">
-                    <h3>${t('admin.orders.orderIdLabel')} #${order.order_code || order.id}</h3>
-                    <span class="status-badge status-${(order.status || '').toLowerCase().replace(/\s+/g, '-')}">${window.translateStatus(order.status)}</span>
-                </div>
-                <div class="order-body card-content">
-                    <div class="info-group"><label>${t('admin.dashboard.transactions.date')}</label><p>${orderDate}</p></div>
-                    <div class="info-group"><label>${t('admin.dashboard.transactions.customer')}</label><p>${customerInfo}</p></div>
-                    <div class="info-group"><label>${t('admin.orders.card.shippingAddress')}</label><p>${addressInfo}</p></div>
-                    <div class="info-group"><label>${t('admin.orders.card.orderSummary')}</label><ul>${itemsList}</ul></div>
-                </div>
-                <div class="order-footer action-buttons"></div>
-            `;
-
-            const actionsContainer = card.querySelector('.action-buttons');
-            addActions(state, actionsContainer, order);
-            state.ordersGrid.appendChild(card);
         });
     }
 
@@ -138,12 +172,12 @@ window.AdminOrdersPage = (() => {
             availableActions.forEach(action => {
                 const buttonClass = action === 'Ditolak' ? 'btn-admin-reject' : 'btn-admin-approve';
                 const actionKey = `admin.orders.status.${action.toLowerCase().replace(/\s+/g, '-')}`;
-                const actionText = t(actionKey, window.translateStatus(action));
+                const actionText = t(actionKey, safeTranslateStatus(action));
                 const actionBtn = createButton(actionText, () => updateOrderStatus(state, order, action), buttonClass);
                 cell.appendChild(actionBtn);
             });
         } else if (order.status === 'Selesai' || order.status === 'Ditolak') {
-            cell.textContent = window.translateStatus(order.status);
+            cell.textContent = safeTranslateStatus(order.status);
         } else {
             cell.textContent = t('admin.orders.card.noActions');
         }

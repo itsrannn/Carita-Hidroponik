@@ -205,6 +205,25 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- UTILITIES ---
+
+window.translateStatus = (status = '') => {
+    const normalized = String(status || '').trim();
+    const map = {
+        'Menunggu Konfirmasi': 'Menunggu Konfirmasi',
+        'Diproses': 'Diproses',
+        'Dalam Pengiriman': 'Dalam Pengiriman',
+        'Selesai': 'Selesai',
+        'Ditolak': 'Ditolak',
+        'pending': 'Menunggu Konfirmasi',
+        'processing': 'Diproses',
+        'shipped': 'Dalam Pengiriman',
+        'completed': 'Selesai',
+        'rejected': 'Ditolak'
+    };
+
+    return map[normalized] || normalized || '-';
+};
+
 window.formatRupiah = (num) => (
     Number.isNaN(Number(num))
         ? 'Rp 0'
