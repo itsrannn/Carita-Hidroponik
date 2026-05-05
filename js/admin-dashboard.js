@@ -3,6 +3,11 @@ window.AdminDashboardPage = (() => {
     let productSalesChart;
     let allOrdersData = [];
 
+    function safeTranslateStatus(status) {
+        if (typeof window.translateStatus === 'function') return window.translateStatus(status);
+        return status || '-';
+    }
+
     async function init() {
         if (!window.supabase || !window.Chart) {
             console.error('Supabase client or Chart.js not found.');
@@ -245,7 +250,7 @@ window.AdminDashboardPage = (() => {
                 const orderDate = new Date(order.created_at).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' });
                 const customerName = order.user_fullname || t('admin.dashboard.transactions.notAvailable', 'N/A');
                 const shortOrderId = order.order_code ? `#${order.order_code}` : (order.id ? `...${order.id.slice(-6)}` : t('admin.dashboard.transactions.notAvailable', 'N/A'));
-                return `<tr><td>${shortOrderId}</td><td>${orderDate}</td><td>${customerName}</td><td>${window.formatRupiah(order.total_amount)}</td><td><span class="status-badge status-${(order.status || '').toLowerCase().replace(' ', '-')}">${window.translateStatus(order.status)}</span></td></tr>`;
+                return `<tr><td>${shortOrderId}</td><td>${orderDate}</td><td>${customerName}</td><td>${window.formatRupiah(order.total_amount)}</td><td><span class="status-badge status-${(order.status || '').toLowerCase().replace(' ', '-')}">${safeTranslateStatus(order.status)}</span></td></tr>`;
             }).join('');
 
             loadingTransactionsEl.style.display = 'none';
