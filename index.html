@@ -8,6 +8,7 @@
 
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/mobile.css" media="(max-width: 768px)" />
+    <link rel="stylesheet" href="css/chat-widget.css" />
 
     <link
       href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Open+Sans:wght@300;400;600&display=swap"
@@ -332,6 +333,11 @@
           }
         }
       }
+    </script>
+
+    <script type="module">
+      import { initChatWidget } from './js/chat-widget/chat-widget.js';
+      document.addEventListener('DOMContentLoaded', initChatWidget);
     </script>
   </body>
 </html>
