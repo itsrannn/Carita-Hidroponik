@@ -1,5 +1,28 @@
-.cw-fab{position:fixed;right:20px;bottom:20px;z-index:9999;background:#2e7d32;color:#fff;border:none;border-radius:999px;padding:14px 16px;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,.16)}
+.cw-fab{position:fixed;right:20px;bottom:20px;z-index:9999;background:linear-gradient(180deg,#27ae60,#1b8f4a);color:#fff;border:none;border-radius:999px;padding:14px 16px;cursor:pointer;box-shadow:0 16px 36px rgba(21,128,61,.35);font-weight:600}
 .cw-badge{background:#ef4444;border-radius:999px;padding:2px 6px;margin-left:6px;font-size:12px}
-.cw-panel{position:fixed;right:20px;bottom:80px;width:min(360px,92vw);height:520px;display:flex;flex-direction:column;background:#fff;border-radius:16px;box-shadow:0 20px 40px rgba(0,0,0,.2);overflow:hidden;z-index:9999;transition:.25s ease;transform:translateY(0);opacity:1}
+.cw-panel{position:fixed;right:16px;bottom:84px;width:min(380px,calc(100vw - 24px));height:min(640px,calc(100vh - 110px));display:flex;flex-direction:column;background:#fff;border-radius:24px;box-shadow:0 30px 60px rgba(15,23,42,.2);overflow:hidden;z-index:9999;transition:.25s ease;transform:translateY(0);opacity:1}
 .cw-panel.closed{opacity:0;transform:translateY(20px);pointer-events:none}
-.cw-header{padding:14px 16px;background:#1b5e20;color:#fff;font-weight:700}.cw-body{flex:1;overflow:auto;padding:12px;background:#f8fafc}.cw-msg{display:flex;margin:8px 0}.cw-msg-user{justify-content:flex-end}.cw-bubble{max-width:80%;padding:8px 12px;border-radius:12px;background:#e2e8f0}.cw-msg-user .cw-bubble{background:#dcfce7}.cw-bubble small{display:block;color:#64748b}.cw-bubble p{margin:0}.cw-faq-list{display:flex;gap:8px;overflow:auto;padding:10px;border-top:1px solid #e5e7eb}.cw-faq-btn{border:1px solid #bbf7d0;background:#fff;border-radius:999px;padding:8px 10px;cursor:pointer;white-space:nowrap}.cw-footer{display:grid;grid-template-columns:1fr auto;gap:8px;padding:10px;border-top:1px solid #e5e7eb}.cw-auth-warning{grid-column:1/-1;color:#ef4444;margin:0;font-size:12px}.cw-input{padding:10px;border:1px solid #cbd5e1;border-radius:8px}.cw-send,.cw-seller-btn{border:none;background:#2e7d32;color:#fff;border-radius:8px;padding:10px 12px;cursor:pointer}.cw-seller-btn{margin:0 10px 10px}
+.cw-header{padding:16px;background:linear-gradient(180deg,#166534,#14532d);color:#fff}
+.cw-header-title{display:block;font-weight:700;font-size:16px}
+.cw-header-subtitle{display:block;font-size:13px;color:#dcfce7;margin-top:2px}
+.cw-body{flex:1;overflow:auto;padding:16px;background:linear-gradient(180deg,#f8fafc 0%,#eef2f7 100%)}
+.cw-empty{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:16px;box-shadow:0 8px 20px rgba(15,23,42,.06);margin-bottom:16px}
+.cw-empty h4{margin:0 0 6px;font-size:15px;color:#0f172a}
+.cw-empty p{margin:0;color:#64748b;font-size:13px;line-height:1.5}
+.cw-msg{display:flex;margin:10px 0}
+.cw-msg-user{justify-content:flex-end}
+.cw-bubble{max-width:82%;padding:10px 12px;border-radius:16px;background:#e5e7eb;box-shadow:0 6px 14px rgba(15,23,42,.06)}
+.cw-msg-user .cw-bubble{background:#dcfce7;border-bottom-right-radius:8px}
+.cw-msg-other .cw-bubble{border-bottom-left-radius:8px}
+.cw-bubble small{display:block;color:#64748b;font-size:11px;margin-bottom:4px}
+.cw-bubble p{margin:0;font-size:14px;line-height:1.45;color:#111827}
+.cw-faq-list{display:grid;gap:10px;padding:0 16px 16px}
+.cw-faq-btn{border:1px solid #d1d5db;background:#fff;border-radius:14px;padding:12px 14px;cursor:pointer;text-align:left;font-size:14px;font-weight:500;color:#0f172a;box-shadow:0 4px 10px rgba(15,23,42,.04)}
+.cw-faq-btn:hover{border-color:#86efac;background:#f0fdf4}
+.cw-footer{display:grid;gap:10px;padding:16px;border-top:1px solid #e5e7eb;background:#fff}
+.cw-auth-warning{color:#ef4444;margin:0;font-size:12px}
+.cw-cta{border:1px solid #bbf7d0;background:#f0fdf4;color:#166534;border-radius:14px;padding:12px 14px;font-weight:600;cursor:pointer;text-align:left}
+.cw-input-wrap{display:grid;grid-template-columns:1fr auto;gap:10px}
+.cw-input{padding:12px 14px;border:1px solid #cbd5e1;border-radius:999px;font-size:14px}
+.cw-send{border:none;background:#2e7d32;color:#fff;border-radius:999px;width:44px;height:44px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 16px rgba(21,128,61,.25)}
+@media (min-width:768px){.cw-panel{right:20px}}
