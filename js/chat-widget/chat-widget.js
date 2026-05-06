@@ -46,8 +46,10 @@ export class ChatPanel {
 
   bindUI() {
     this.bodyEl = this.root.querySelector('.cw-body');
+    this.emptyEl = this.root.querySelector('.cw-empty');
     this.inputEl = this.root.querySelector('.cw-input');
     this.sendEl = this.root.querySelector('.cw-send');
+    this.ctaEl = this.root.querySelector('.cw-cta');
     this.statusEl = this.root.querySelector('.cw-auth-warning');
     this.badgeEl = document.querySelector('.cw-badge');
 
@@ -55,7 +57,7 @@ export class ChatPanel {
     this.faqList = new FAQList(this.root.querySelector('.cw-faq-list'), (q) => this.askFaq(q));
     this.faqList.render();
 
-    this.root.querySelector('.cw-seller-btn').addEventListener('click', () => this.escalateToSeller());
+    this.ctaEl.addEventListener('click', () => this.escalateToSeller());
     this.sendEl.addEventListener('click', () => this.sendLiveMessage());
     this.inputEl.addEventListener('keypress', (e) => e.key === 'Enter' && this.sendLiveMessage());
   }
@@ -64,11 +66,13 @@ export class ChatPanel {
     const unauthorized = !auth.currentUser;
     this.inputEl.disabled = unauthorized || this.state.mode === 'faq';
     this.sendEl.disabled = unauthorized || this.state.mode === 'faq';
+    this.ctaEl.hidden = this.state.mode === 'live';
     this.statusEl.textContent = unauthorized ? 'Silakan login untuk menggunakan fitur chat' : '';
   }
 
   pushMessage(sender, text) {
     this.state.messages.push({ sender, text });
+    if (this.emptyEl) this.emptyEl.hidden = this.state.messages.length > 0;
     this.messageList.render(this.state.messages);
   }
 
@@ -110,15 +114,25 @@ export class ChatPanel {
 
   render() {
     this.root.innerHTML = `
-      <div class="cw-header">Customer Support</div>
-      <div class="cw-body"></div>
+      <div class="cw-header">
+        <span class="cw-header-title">Customer Support</span>
+        <span class="cw-header-subtitle">Online • Respon cepat</span>
+      </div>
+      <div class="cw-body">
+        <div class="cw-empty">
+          <h4>Halo! 👋</h4>
+          <p>Kami siap bantu pertanyaan produk, pengiriman, atau pesanan Anda. Pilih pertanyaan cepat di bawah atau langsung chat dengan penjual.</p>
+        </div>
+      </div>
       <div class="cw-faq-list"></div>
       <div class="cw-footer">
         <p class="cw-auth-warning"></p>
-        <input class="cw-input" placeholder="Tulis pesan..." />
-        <button class="cw-send">Kirim</button>
+        <button class="cw-cta">Chat dengan Penjual</button>
+        <div class="cw-input-wrap">
+          <input class="cw-input" placeholder="Tulis pesan..." />
+          <button class="cw-send" aria-label="Kirim pesan">➤</button>
+        </div>
       </div>
-      <button class="cw-seller-btn">Chat dengan Penjual</button>
     `;
   }
 }
