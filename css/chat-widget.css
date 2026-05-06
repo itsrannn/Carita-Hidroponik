@@ -16,9 +16,14 @@
 .cw-msg-other .cw-bubble{border-bottom-left-radius:8px}
 .cw-bubble small{display:block;color:#64748b;font-size:11px;margin-bottom:4px}
 .cw-bubble p{margin:0;font-size:14px;line-height:1.45;color:#111827}
-.cw-faq-list{display:grid;gap:10px;padding:0 16px 16px}
-.cw-faq-btn{border:1px solid #d1d5db;background:#fff;border-radius:14px;padding:12px 14px;cursor:pointer;text-align:left;font-size:14px;font-weight:500;color:#0f172a;box-shadow:0 4px 10px rgba(15,23,42,.04)}
-.cw-faq-btn:hover{border-color:#86efac;background:#f0fdf4}
+.cw-faq-list{display:grid;gap:8px;padding:0 16px 16px}
+.cw-faq-items{display:grid;gap:10px;overflow:hidden;transition:max-height .25s ease,opacity .2s ease}
+.cw-faq-items.is-collapsed{max-height:56px;opacity:1}
+.cw-faq-items.is-expanded{max-height:320px;opacity:1}
+.cw-faq-btn{width:100%;border:1px solid #d1d5db;background:#fff;border-radius:14px;padding:12px 14px;cursor:pointer;text-align:left;font-size:14px;font-weight:500;color:#0f172a;box-shadow:0 4px 10px rgba(15,23,42,.04);transition:border-color .2s ease,background-color .2s ease,transform .2s ease}
+.cw-faq-btn:hover{border-color:#86efac;background:#f0fdf4;transform:translateY(-1px)}
+.cw-faq-toggle{justify-self:start;padding:0;border:none;background:none;color:#16a34a;font-size:12px;font-weight:600;cursor:pointer;line-height:1.4}
+.cw-faq-toggle:hover{color:#15803d;text-decoration:underline}
 .cw-footer{display:grid;gap:10px;padding:16px;border-top:1px solid #e5e7eb;background:#fff}
 .cw-auth-warning{color:#ef4444;margin:0;font-size:12px}
 .cw-cta{border:1px solid #bbf7d0;background:#f0fdf4;color:#166534;border-radius:14px;padding:12px 14px;font-weight:600;cursor:pointer;text-align:left}

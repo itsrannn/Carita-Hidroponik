@@ -22,10 +22,50 @@ export class MessageList {
 }
 
 export class FAQList {
-  constructor(container, onPick) { this.container = container; this.onPick = onPick; }
+  constructor(container, onPick) {
+    this.container = container;
+    this.onPick = onPick;
+    this.expanded = false;
+  }
+
+  getVisibleFaqs() {
+    return this.expanded ? FAQ_DATA : FAQ_DATA.slice(0, 1);
+  }
+
+  toggleExpanded() {
+    this.expanded = !this.expanded;
+    this.render();
+  }
+
+  collapse() {
+    if (!this.expanded) return;
+    this.expanded = false;
+    this.render();
+  }
+
   render() {
-    this.container.innerHTML = FAQ_DATA.map((f) => `<button class="cw-faq-btn" data-q="${f.q}">${f.q}</button>`).join('');
-    this.container.querySelectorAll('.cw-faq-btn').forEach((btn) => btn.addEventListener('click', () => this.onPick(btn.dataset.q)));
+    const visibleFaqs = this.getVisibleFaqs();
+    const faqButtons = visibleFaqs
+      .map((f) => `<button class="cw-faq-btn" data-q="${f.q}">${f.q}</button>`)
+      .join('');
+
+    const toggleButton = FAQ_DATA.length > 1
+      ? `<button class="cw-faq-toggle" type="button" aria-expanded="${this.expanded}">${this.expanded ? 'Tampilkan lebih sedikit' : 'Lihat pertanyaan lain'}</button>`
+      : '';
+
+    this.container.innerHTML = `
+      <div class="cw-faq-items ${this.expanded ? 'is-expanded' : 'is-collapsed'}">
+        ${faqButtons}
+      </div>
+      ${toggleButton}
+    `;
+
+    this.container.querySelectorAll('.cw-faq-btn').forEach((btn) => {
+      btn.addEventListener('click', () => this.onPick(btn.dataset.q));
+    });
+
+    const toggleEl = this.container.querySelector('.cw-faq-toggle');
+    if (toggleEl) toggleEl.addEventListener('click', () => this.toggleExpanded());
   }
 }
 
@@ -80,6 +120,7 @@ export class ChatPanel {
     const found = FAQ_DATA.find((f) => f.q === question);
     this.pushMessage('user', question);
     this.pushMessage('bot', found?.a || 'Maaf, pertanyaan belum tersedia.');
+    this.faqList.collapse();
   }
 
   async escalateToSeller() {
