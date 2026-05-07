@@ -44,6 +44,7 @@
                 <i data-feather="lock"></i>
                 <i class="password-toggle-icon" data-feather="eye"></i>
               </div>
+              <div id="login-error-message" class="auth-error-message" aria-live="polite"></div>
               <div class="remember-forgot">
                 <label><input type="checkbox" /><span x-text="$store.i18n.t('login.rememberMe')">Remember me</span></label>
                 <a href="#" x-text="$store.i18n.t('login.forgotPassword')">Forgot Password?</a>
@@ -112,7 +113,47 @@
       </div>
     </section>
 
+    <div id="auth-success-modal" class="auth-modal-overlay" aria-hidden="true">
+      <div class="auth-modal-card" role="dialog" aria-modal="true" aria-labelledby="auth-success-title">
+        <p id="auth-success-title">Akun berhasil dibuat</p>
+        <button type="button" id="auth-success-ok" class="btn">OK</button>
+      </div>
+    </div>
+
     <div id="footer-include"></div>
+
+
+    <style>
+      .auth-error-message {
+        min-height: 18px;
+        margin: -4px 4px 10px;
+        font-size: 0.8rem;
+        color: #dc6f6f;
+        text-align: left;
+        visibility: hidden;
+      }
+      .auth-error-message.show { visibility: visible; }
+      .auth-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1200;
+        padding: 16px;
+      }
+      .auth-modal-overlay.show { display: flex; }
+      .auth-modal-card {
+        background: #fff;
+        border-radius: 10px;
+        width: min(92vw, 340px);
+        padding: 24px 20px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+      .auth-modal-card p { margin-bottom: 16px; color: var(--text-color); font-weight: 600; }
+    </style>
 
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js" defer ></script>
@@ -139,6 +180,32 @@
       document.addEventListener('DOMContentLoaded', () => {
         const loginForm = document.querySelector('#login-form form');
         const registerForm = document.querySelector('#register-form form');
+        const loginErrorMessage = document.getElementById('login-error-message');
+        const authSuccessModal = document.getElementById('auth-success-modal');
+        const authSuccessOkBtn = document.getElementById('auth-success-ok');
+
+        const hideLoginError = () => {
+          loginErrorMessage.textContent = '';
+          loginErrorMessage.classList.remove('show');
+        };
+
+        const showLoginError = (message) => {
+          loginErrorMessage.textContent = message;
+          loginErrorMessage.classList.add('show');
+        };
+
+        const showRegisterSuccessModal = () => {
+          authSuccessModal.classList.add('show');
+          authSuccessModal.setAttribute('aria-hidden', 'false');
+        };
+
+        const hideRegisterSuccessModal = () => {
+          authSuccessModal.classList.remove('show');
+          authSuccessModal.setAttribute('aria-hidden', 'true');
+        };
+
+        loginForm.email.addEventListener('input', hideLoginError);
+        loginForm.password.addEventListener('input', hideLoginError);
 
         // --- Role-based redirection logic ---
         const handleRedirect = async (user) => {
@@ -170,8 +237,23 @@
           });
 
           if (error) {
-            alert(`Error: ${error.message}`);
+            let errorMessage = 'Password yang dimasukkan salah.';
+
+            if (error.message && error.message.toLowerCase().includes('invalid login credentials')) {
+              const { data: profileByEmail, error: profileLookupError } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('email', email)
+                .limit(1);
+
+              if (!profileLookupError && (!profileByEmail || profileByEmail.length === 0)) {
+                errorMessage = 'Email belum terdaftar.';
+              }
+            }
+
+            showLoginError(errorMessage);
           } else if (data.user) {
+            hideLoginError();
             const urlParams = new URLSearchParams(window.location.search);
             const redirectUrl = urlParams.get('redirect');
 
@@ -219,15 +301,21 @@
           });
 
           if (error) {
-            alert(`Error: ${error.message}`);
+            errorSpan.textContent = 'Pendaftaran gagal. Coba lagi dengan data yang valid.';
+            errorSpan.style.visibility = 'visible';
           } else {
-            // Show the global notification
-            window.showNotification("Pendaftaran Berhasil");
+            errorSpan.style.visibility = 'hidden';
+            showRegisterSuccessModal();
 
-            // Redirect to login page after a short delay
-            setTimeout(() => {
-              window.location.href = 'login-page.html';
-            }, 2000); // 2-second delay
+            const handleSuccessContinue = () => {
+              hideRegisterSuccessModal();
+              showForm('login-form');
+              loginForm.email.value = email;
+              loginForm.password.focus();
+              authSuccessOkBtn.removeEventListener('click', handleSuccessContinue);
+            };
+
+            authSuccessOkBtn.addEventListener('click', handleSuccessContinue);
           }
         });
       });
