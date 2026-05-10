@@ -2,6 +2,46 @@ const { randomUUID } = require('crypto');
 const midtransService = require('../services/midtrans.service');
 const orderRepository = require('../repositories/order.repository');
 const { generateMidtransSignature, safeCompare } = require('../utils/payment-signature');
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://thetdckuftpzyubvlbju.supabase.co';
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+function mapMidtransTransactionStatus(transactionStatus, fraudStatus) {
+  if (transactionStatus === 'settlement' || (transactionStatus === 'capture' && fraudStatus === 'accept')) {
+    return 'paid';
+  }
+  if (transactionStatus === 'pending') return 'pending_payment';
+  if (transactionStatus === 'expire') return 'expired';
+  if (transactionStatus === 'cancel' || transactionStatus === 'deny') return 'cancelled';
+  return 'pending_payment';
+}
+
+async function updateOrderStatusInSupabase(orderCode, newStatus, isPaid) {
+  if (!SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured on the backend.');
+  }
+
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?order_code=eq.${encodeURIComponent(orderCode)}&select=id,order_code,status,paid_at`, {
+    method: 'PATCH',
+    headers: {
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation'
+    },
+    body: JSON.stringify({
+      status: newStatus,
+      paid_at: isPaid ? new Date().toISOString() : null
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to update order in Supabase: ${response.status} ${errorText}`);
+  }
+
+  const data = await response.json();
+  return Array.isArray(data) && data.length ? data[0] : null;
+}
 
 function normalizeCart(cart) {
   if (!Array.isArray(cart) || cart.length === 0) {
@@ -257,6 +297,60 @@ function webhook(req, res) {
   });
 }
 
+async function midtransNotification(req, res) {
+  console.log('MIDTRANS NOTIFICATION:', req.body);
+  const serverKey = process.env.MIDTRANS_SERVER_KEY;
+  const {
+    transaction_status: transactionStatus,
+    fraud_status: fraudStatus,
+    order_id: orderId,
+    payment_type: paymentType,
+    status_code: statusCode,
+    gross_amount: grossAmount,
+    signature_key: signatureKey
+  } = req.body || {};
+
+  if (!orderId || !transactionStatus || !statusCode || !grossAmount || !signatureKey) {
+    return res.status(400).json({ message: 'Invalid Midtrans notification payload.' });
+  }
+
+  const expectedSignature = generateMidtransSignature({
+    orderId,
+    statusCode,
+    grossAmount,
+    serverKey,
+  });
+
+  if (!safeCompare(expectedSignature, signatureKey)) {
+    return res.status(401).json({ message: 'Invalid signature.' });
+  }
+
+  const newStatus = mapMidtransTransactionStatus(transactionStatus, fraudStatus);
+  const isPaid = newStatus === 'paid';
+
+  try {
+    const updatedOrder = await updateOrderStatusInSupabase(orderId, newStatus, isPaid);
+    console.log('UPDATED ORDER STATUS:', newStatus);
+
+    if (!updatedOrder) {
+      return res.status(404).json({ message: 'Order not found for provided order_id.' });
+    }
+
+    return res.status(200).json({
+      success: true,
+      order_id: orderId,
+      payment_type: paymentType,
+      transaction_status: transactionStatus,
+      fraud_status: fraudStatus || null,
+      status: updatedOrder.status,
+      paid_at: updatedOrder.paid_at
+    });
+  } catch (error) {
+    console.error('[Midtrans Notification] Failed to process:', error);
+    return res.status(500).json({ success: false, message: 'Failed to process Midtrans notification.' });
+  }
+}
+
 function getPaidOrdersForAdmin(_req, res) {
   const orders = orderRepository.listPaidForAdmin();
   return res.status(200).json({ orders });
@@ -268,5 +362,6 @@ module.exports = {
   createSnapToken,
   confirmOrder,
   webhook,
+  midtransNotification,
   getPaidOrdersForAdmin,
 };

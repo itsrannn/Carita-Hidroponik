@@ -5,6 +5,7 @@ const router = express.Router();
 
 router.post('/create-snap-token', paymentController.createSnapToken);
 router.post('/payments/create', paymentController.createPaymentToken);
+router.post('/midtrans-notification', paymentController.midtransNotification);
 router.post('/orders', paymentController.createOrder);
 router.post('/confirm', paymentController.confirmOrder);
 router.post('/webhook', paymentController.webhook);
