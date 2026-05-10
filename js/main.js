@@ -978,9 +978,17 @@ function checkoutPage() {
                 const orderPayload = this.buildCreateOrderPayload();
                 console.log('Sending order payload:', orderPayload);
                 const orderResult = await this.createOrder(orderPayload);
-                localStorage.removeItem('cart');
-                Alpine.store('cart').items = [];
-                window.location.href = window.toAppPath(`order-detail.html?id=${encodeURIComponent(orderResult.order_id)}`);
+                const orderId = orderResult.order_id || orderResult.orderId;
+                const snapToken = orderResult.snapToken || orderResult.snap_token || orderResult.token;
+                if (!orderId || !snapToken) {
+                    throw new Error('Data pembayaran tidak lengkap. Silakan coba lagi.');
+                }
+
+                this.isSnapPopupActive = true;
+                await this.openMidtransSnap(snapToken, {
+                    orderId,
+                    redirectTo: window.toAppPath(`order-detail.html?id=${encodeURIComponent(orderId)}`)
+                });
             } catch (error) {
                 console.error('[Checkout] Checkout flow failed:', error);
                 this.showNotification(error?.message || 'Checkout gagal diproses. Silakan coba lagi.', true);
@@ -1066,7 +1074,7 @@ function checkoutPage() {
             });
         },
 
-        async openMidtransSnap(snapSession, checkoutPayload) {
+        async openMidtransSnap(snapSession, checkoutPayload = {}) {
             const snapMetadata = this.latestSnapSession || {};
             const snap = await this.loadMidtransSnapScript(snapMetadata.clientKey);
             if (!snap?.pay) throw new Error('Midtrans Snap tidak tersedia.');
@@ -1076,16 +1084,29 @@ function checkoutPage() {
             if (!token) throw new Error('Token Midtrans tidak ditemukan');
             console.log('[SNAP PAY START]');
 
-            await new Promise((resolve, reject) => {
-                window.snap.pay(token, {
+            try {
+                await new Promise((resolve, reject) => {
+                    window.snap.pay(token, {
                     onSuccess: async (result) => {
                         await this.confirmPaymentStatus(snapMetadata.orderId, 'success', result?.transaction_id);
                         this.showNotification('Pembayaran berhasil. Pesanan Anda diproses.');
+                        localStorage.removeItem('cart');
+                        Alpine.store('cart').items = [];
+                        if (checkoutPayload.redirectTo) {
+                            window.location.href = checkoutPayload.redirectTo;
+                            return;
+                        }
                         resolve();
                     },
                     onPending: async (result) => {
                         await this.confirmPaymentStatus(snapMetadata.orderId, 'pending', result?.transaction_id);
                         this.showNotification('Pembayaran pending. Silakan selesaikan pembayaran Anda.');
+                        localStorage.removeItem('cart');
+                        Alpine.store('cart').items = [];
+                        if (checkoutPayload.redirectTo) {
+                            window.location.href = checkoutPayload.redirectTo;
+                            return;
+                        }
                         resolve();
                     },
                     onError: async (_result) => {
@@ -1094,10 +1115,19 @@ function checkoutPage() {
                     },
                     onClose: () => {
                         this.showNotification('Popup pembayaran ditutup sebelum selesai.', true);
+                        if (checkoutPayload.redirectTo) {
+                            localStorage.removeItem('cart');
+                            Alpine.store('cart').items = [];
+                            window.location.href = checkoutPayload.redirectTo;
+                            return;
+                        }
                         resolve();
                     }
+                    });
                 });
-            });
+            } finally {
+                this.isSnapPopupActive = false;
+            }
 
             console.info('[Checkout] Midtrans payload sent:', checkoutPayload);
         },
