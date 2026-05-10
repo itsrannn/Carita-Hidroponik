@@ -660,6 +660,8 @@ function checkoutPage() {
             addressLabel: '',
             estimateLabel: '',
             zoneLabel: '',
+            totalWeightLabel: '',
+            isLoading: false,
             error: '',
             couriers: [
                 { id: 'recommendation', name: 'Rekomendasi Kami', available: true, recommended: true, etd: '1-2 hari' },
@@ -678,6 +680,7 @@ function checkoutPage() {
         ppnRate: 0.11,
 
         async init() {
+            this.startShippingAutoRefresh();
             if (this.shippingLoaded) {
                 console.info('[Checkout] init skipped: shipping already loaded.');
                 return;
@@ -1164,6 +1167,17 @@ function checkoutPage() {
             });
         },
 
+        retryShipping() {
+            return this.calculateShipping('retry-button', { force: true, debounceMs: 0 });
+        },
+
+        startShippingAutoRefresh() {
+            if (this._shippingWatcher) return;
+            this._shippingWatcher = setInterval(() => {
+                if (this.shouldRefreshShipping()) this.calculateShipping('auto-refresh', { debounceMs: 250 });
+            }, 900);
+        },
+
         shouldRefreshShipping() {
             if (!this.shippingLoaded) return true;
             return this.buildShippingRequestKey() !== this.lastShippingRequestKey;
@@ -1195,6 +1209,7 @@ function checkoutPage() {
 
             this.isCalculatingShipping = true;
             this.isCheckoutLoading = true;
+            this.shipping.isLoading = true;
             this.shippingRequestController = new AbortController();
             const timeoutId = setTimeout(() => this.shippingRequestController?.abort(), timeoutMs);
 
@@ -1202,19 +1217,17 @@ function checkoutPage() {
                 this.shipping.error = '';
                 const cartStore = Alpine.store('cart');
                 const totalWeight = Number(cartStore?.totalWeight || 0);
-                const quantity = Number(cartStore?.quantity || 0);
-                const courier = this.shipping.selectedMethod === 'rekomendasi-kami'
-                    ? 'jne'
-                    : this.shipping.selectedMethod;
+                const profile = this.profileDebug.normalizedProfile || this.normalizeProfileData(this.profileSnapshot);
 
                 const res = await window.fetchWithDebug(window.toApiPath('/api/shipping/cost'), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        courier,
-                        weight: totalWeight,
-                        quantity,
-                        totalWeight
+                        province: profile?.province || '',
+                        regency: profile?.city_or_regency || '',
+                        district: profile?.district || '',
+                        country: 'ID',
+                        totalWeight: Number((totalWeight / 1000).toFixed(2))
                     }),
                     signal: this.shippingRequestController.signal
                 });
@@ -1236,8 +1249,9 @@ function checkoutPage() {
                     zone_name: result?.zone_name || result?.data?.zone_name || ''
                 };
 
-                this.shipping.zoneLabel = recommendation.zone_name || '';
-                this.shipping.estimateLabel = `${recommendation.etd || '1-4 hari kerja'} • Zona ${this.shipping.zoneLabel || '-'}`;
+                this.shipping.zoneLabel = recommendation.zone_name || result?.zone_name || '';
+                this.shipping.totalWeightLabel = `${Number((totalWeight / 1000)).toFixed(2)} kg`;
+                this.shipping.estimateLabel = recommendation.etd || result?.etd || '1-4 hari kerja';
                 this.updateShippingCost(nextCost);
                 this.shippingLoaded = true;
                 this.lastShippingRequestKey = requestKey;
@@ -1245,7 +1259,7 @@ function checkoutPage() {
                 return nextCost;
             } catch (error) {
                 this.updateShippingCost(0);
-                this.shipping.error = 'Gagal mengambil ongkir';
+                this.shipping.error = 'Gagal mengambil estimasi pengiriman.';
                 this.shipping.zoneLabel = '';
                 this.shipping.estimateLabel = '';
                 if (error?.name !== 'AbortError') {
@@ -1257,6 +1271,7 @@ function checkoutPage() {
                 this.shippingRequestController = null;
                 this.isCheckoutLoading = false;
                 this.isCalculatingShipping = false;
+                this.shipping.isLoading = false;
             }
         }
     };
