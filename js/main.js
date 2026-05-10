@@ -978,11 +978,12 @@ function checkoutPage() {
                 const orderPayload = this.buildCreateOrderPayload();
                 console.log('Sending order payload:', orderPayload);
                 const orderResult = await this.createOrder(orderPayload);
-                const orderId = orderResult.order_id || orderResult.orderId;
-                const snapToken = orderResult.snapToken || orderResult.snap_token || orderResult.token;
-                if (!orderId || !snapToken) {
-                    throw new Error('Data pembayaran tidak lengkap. Silakan coba lagi.');
+                const orderId = orderResult?.order?.id || orderResult?.order?.order_code || orderResult.order_id || orderResult.orderId;
+                if (!orderResult?.snapToken) {
+                    throw new Error('Snap token missing');
                 }
+                const snapToken = orderResult.snapToken;
+                if (!orderId) throw new Error('Data pesanan tidak lengkap. Silakan coba lagi.');
 
                 this.isSnapPopupActive = true;
                 await this.openMidtransSnap(snapToken, {
@@ -1046,8 +1047,12 @@ function checkoutPage() {
                 throw new Error(result?.message || 'Checkout gagal');
             }
 
-            if (!result?.success || !result?.order_id) {
-                throw new Error('Gagal membuat pesanan.');
+            if (!result?.success) {
+                throw new Error(result?.message || 'Checkout gagal diproses.');
+            }
+
+            if (!result?.snapToken) {
+                throw new Error('Snap token missing');
             }
 
             return result;
@@ -1077,6 +1082,7 @@ function checkoutPage() {
         async openMidtransSnap(snapSession, checkoutPayload = {}) {
             const snapMetadata = this.latestSnapSession || {};
             const snap = await this.loadMidtransSnapScript(snapMetadata.clientKey);
+            if (!window.snap) throw new Error('Midtrans Snap SDK not loaded');
             if (!snap?.pay) throw new Error('Midtrans Snap tidak tersedia.');
             const token = typeof snapSession === 'string'
                 ? snapSession
