@@ -135,23 +135,28 @@
                   </div>
                 </div>
 
+                <div class="summary-item" style="margin-top: 0.5rem; font-size: 0.85rem;" x-show="shipping.zoneLabel">
+                  <span>Zona</span>
+                  <span x-text="shipping.zoneLabel"></span>
+                </div>
                 <div class="summary-item" style="margin-top: 0.5rem; font-size: 0.85rem;" x-show="shipping.estimateLabel">
                   <span>Estimasi</span>
                   <span x-text="shipping.estimateLabel"></span>
                 </div>
-
-                <div class="summary-item" style="margin-top: 1rem; font-size: 0.85rem;">
+                <div class="summary-item" style="margin-top: 0.5rem; font-size: 0.85rem;" x-show="shipping.totalWeightLabel">
                   <span x-text="$store.i18n.t('cart.summary.weight')">Total Weight</span>
-                  <span x-text="`${($store.cart.totalWeight / 1000).toFixed(2)} kg`"></span>
+                  <span x-text="shipping.totalWeightLabel"></span>
                 </div>
               </div>
 
               <div class="summary-item">
                 <span x-text="$store.i18n.t('cart.summary.shipping')">Shipping</span>
-                <span id="summary-shipping" x-text="window.formatRupiah(ongkir)"></span>
+                <span id="summary-shipping" x-show="!shipping.isLoading" x-text="window.formatRupiah(ongkir)"></span>
+                <span x-show="shipping.isLoading">Menghitung...</span>
               </div>
 
               <p style="margin: 0.5rem 0 0; font-size: 0.85rem; color: #c62828;" x-show="shipping.error" x-text="shipping.error"></p>
+              <button class="btn btn-secondary" style="margin-top:0.5rem;" x-show="shipping.error" @click="retryShipping()">Coba lagi</button>
 
               <div class="summary-total">
                 <span x-text="$store.i18n.t('cart.summary.total')">Total</span>
