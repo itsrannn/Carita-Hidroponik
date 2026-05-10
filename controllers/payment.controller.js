@@ -68,6 +68,7 @@ async function createOrder(req, res) {
 
   const order = orderRepository.create({
     orderId,
+    order_code: orderId,
     status: 'pending_payment',
     totalAmount,
     shippingCost: shipping,
@@ -76,7 +77,38 @@ async function createOrder(req, res) {
     updatedAt: new Date().toISOString(),
   });
 
-  return res.status(201).json({ success: true, order_id: order.orderId });
+  try {
+    const snapToken = await midtransService.createSnapToken({
+      orderId: order.order_code,
+      grossAmount: order.totalAmount,
+      itemDetails: order.orderDetails,
+      customerDetails: order.customer || { first_name: 'Customer', email: 'customer@example.com', phone: '' },
+    });
+
+    console.log('SNAP TOKEN:', snapToken);
+
+    const updatedOrder = orderRepository.updateByOrderId(order.orderId, {
+      payment_token: snapToken,
+      payment_token_created_at: new Date().toISOString(),
+    });
+
+    return res.status(201).json({
+      success: true,
+      order: {
+        id: updatedOrder?.orderId || order.orderId,
+        order_code: updatedOrder?.order_code || order.order_code,
+        status: updatedOrder?.status || order.status,
+        total_amount: updatedOrder?.totalAmount || order.totalAmount,
+      },
+      snapToken
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to create Midtrans token',
+      error
+    });
+  }
 }
 
 async function createPaymentToken(req, res) {
