@@ -15,6 +15,30 @@ function mapMidtransTransactionStatus(transactionStatus, fraudStatus) {
   return 'pending_payment';
 }
 
+
+async function findOrderByCodeInSupabase(orderCode) {
+  if (!SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured on the backend.');
+  }
+
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?order_code=eq.${encodeURIComponent(orderCode)}&select=id,order_code,status,paid_at&limit=1`, {
+    method: 'GET',
+    headers: {
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to query order in Supabase: ${response.status} ${errorText}`);
+  }
+
+  const data = await response.json();
+  return Array.isArray(data) && data.length ? data[0] : null;
+}
+
 async function updateOrderStatusInSupabase(orderCode, newStatus, isPaid) {
   if (!SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured on the backend.');
@@ -298,7 +322,9 @@ function webhook(req, res) {
 }
 
 async function midtransNotification(req, res) {
-  console.log('MIDTRANS NOTIFICATION:', req.body);
+  console.log('==== MIDTRANS WEBHOOK RECEIVED ====');
+  console.log(JSON.stringify(req.body, null, 2));
+
   const serverKey = process.env.MIDTRANS_SERVER_KEY;
   const {
     transaction_status: transactionStatus,
@@ -310,7 +336,12 @@ async function midtransNotification(req, res) {
     signature_key: signatureKey
   } = req.body || {};
 
+  console.log('ORDER ID:', orderId);
+  console.log('TRANSACTION STATUS:', transactionStatus);
+  console.log('FRAUD STATUS:', fraudStatus);
+
   if (!orderId || !transactionStatus || !statusCode || !grossAmount || !signatureKey) {
+    console.error('MIDTRANS WEBHOOK INVALID PAYLOAD');
     return res.status(400).json({ message: 'Invalid Midtrans notification payload.' });
   }
 
@@ -322,18 +353,52 @@ async function midtransNotification(req, res) {
   });
 
   if (!safeCompare(expectedSignature, signatureKey)) {
+    console.error('MIDTRANS SIGNATURE VERIFICATION FAILED');
     return res.status(401).json({ message: 'Invalid signature.' });
   }
 
   const newStatus = mapMidtransTransactionStatus(transactionStatus, fraudStatus);
-  const isPaid = newStatus === 'paid';
 
   try {
-    const updatedOrder = await updateOrderStatusInSupabase(orderId, newStatus, isPaid);
-    console.log('UPDATED ORDER STATUS:', newStatus);
+    const order = await findOrderByCodeInSupabase(orderId);
+    console.log('FOUND ORDER:', order);
 
-    if (!updatedOrder) {
-      return res.status(404).json({ message: 'Order not found for provided order_id.' });
+    if (!order) {
+      return res.status(200).json({
+        success: true,
+        message: 'Order not found for provided order_id.',
+        order_id: orderId
+      });
+    }
+
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?order_code=eq.${encodeURIComponent(orderId)}&select=id,order_code,status,paid_at`, {
+      method: 'PATCH',
+      headers: {
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation'
+      },
+      body: JSON.stringify({
+        status: newStatus,
+        paid_at: newStatus === 'paid' ? new Date().toISOString() : null
+      })
+    });
+
+    let data = null;
+    let error = null;
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      error = new Error(`Failed to update order in Supabase: ${response.status} ${errorText}`);
+    } else {
+      data = await response.json();
+    }
+
+    console.log('UPDATED ORDER:', data);
+    if (error) {
+      console.error('UPDATE ERROR:', error);
+      return res.status(500).json({ success: false, message: 'Failed to process Midtrans notification.' });
     }
 
     return res.status(200).json({
@@ -342,14 +407,15 @@ async function midtransNotification(req, res) {
       payment_type: paymentType,
       transaction_status: transactionStatus,
       fraud_status: fraudStatus || null,
-      status: updatedOrder.status,
-      paid_at: updatedOrder.paid_at
+      status: Array.isArray(data) && data[0] ? data[0].status : newStatus,
+      paid_at: Array.isArray(data) && data[0] ? data[0].paid_at : null
     });
   } catch (error) {
     console.error('[Midtrans Notification] Failed to process:', error);
     return res.status(500).json({ success: false, message: 'Failed to process Midtrans notification.' });
   }
 }
+
 
 function getPaidOrdersForAdmin(_req, res) {
   const orders = orderRepository.listPaidForAdmin();
