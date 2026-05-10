@@ -319,7 +319,9 @@
     const snap = await loadMidtransSnapScript(result.clientKey);
     if (!snap?.pay) throw new Error('Midtrans Snap tidak tersedia.');
     window.snap.pay(snapToken, {
-      onSuccess: () => window.location.reload(),
+      onSuccess: () => {
+        window.location.href = `order-detail.html?id=${encodeURIComponent(state.order.id)}`;
+      },
       onPending: () => window.location.reload(),
       onClose: () => showNotification('Popup pembayaran ditutup. Anda bisa coba lagi lewat tombol Pay Now.', true)
     });
@@ -493,10 +495,18 @@
       renderCostSummary(order);
       renderRefundAction(order);
       renderRefundStatus(state.refund);
-      if (normalizeStatus(order.status) === 'pending_payment' && els.payNowBtn) {
-        els.payNowBtn.classList.remove('hidden');
-        const savedCreatedAt = localStorage.getItem(getPaymentTimerKey(order.id));
-        if (savedCreatedAt) startPaymentCountdown(savedCreatedAt);
+      if (els.payNowBtn) {
+        const normalizedStatus = normalizeStatus(order.status);
+        if (normalizedStatus === 'pending_payment') {
+          els.payNowBtn.classList.remove('hidden');
+          const savedCreatedAt = localStorage.getItem(getPaymentTimerKey(order.id));
+          if (savedCreatedAt) startPaymentCountdown(savedCreatedAt);
+        } else {
+          els.payNowBtn.classList.add('hidden');
+          if (els.paymentCountdown) {
+            els.paymentCountdown.textContent = '';
+          }
+        }
       }
 
       els.loading.classList.add('hidden');

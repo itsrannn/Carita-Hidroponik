@@ -20,6 +20,7 @@ app.options('*', cors(corsOptions));
 app.use(express.json());
 
 app.use('/api/payment', paymentRoutes);
+app.use('/api/payments', paymentRoutes);
 app.use('/api/order', paymentRoutes);
 app.use('/api', profileRoutes);
 app.use('/api/shipping', shippingRoutes);
