@@ -92,11 +92,6 @@
                 <span id="summary-subtotal" x-text="window.formatRupiah($store.cart.total)"></span>
               </div>
 
-              <div class="summary-item">
-                <span x-text="$store.i18n.t('cart.summary.tax')">Tax (PPN 11%)</span>
-                <span x-text="window.formatRupiah(ppnAmount)"></span>
-              </div>
-
               <div class="shipping-form" x-show="$store.cart.items.length > 0">
                 <h4 x-text="$store.i18n.t('account.address.title')">Shipping Address</h4>
                 <p style="font-size: 0.85rem; margin-bottom: 0.75rem;" x-show="shipping.addressLabel" x-text="shipping.addressLabel"></p>

@@ -677,7 +677,6 @@ function checkoutPage() {
         lastShippingDebounceToken: null,
         shippingRequestController: null,
         isCheckoutLoading: false,
-        ppnRate: 0.11,
 
         async init() {
             this.startShippingAutoRefresh();
@@ -690,10 +689,6 @@ function checkoutPage() {
 
         get subtotal() {
             return Number(Alpine.store('cart')?.total || 0);
-        },
-
-        get ppnAmount() {
-            return this.subtotal * this.ppnRate;
         },
 
         get ongkir() {
@@ -912,7 +907,7 @@ function checkoutPage() {
         },
 
         calculateGrandTotal() {
-            return this.subtotal + this.ppnAmount + this.ongkir;
+            return this.subtotal + this.ongkir;
         },
 
         async validateCheckout() {
