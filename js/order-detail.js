@@ -304,12 +304,13 @@
 
   async function handlePayNow() {
     if (!state.order || !els.payNowBtn) return;
-    const response = await window.fetchWithDebug(window.toApiPath('/api/payments/create'), {
-      method: 'POST',
-      body: JSON.stringify({ order_id: state.order.order_code || state.order.id })
+    const orderId = state.order.id;
+    const response = await window.fetchWithDebug(window.toApiPath(`/api/orders/${encodeURIComponent(orderId)}/pay-now`), {
+      method: 'POST'
     });
     const result = await response.json().catch(() => ({}));
-    if (!response.ok || !result?.token) throw new Error(result?.message || 'Gagal membuat token pembayaran.');
+    const snapToken = result?.snapToken || result?.snap_token || result?.token;
+    if (!response.ok || !snapToken) throw new Error(result?.message || 'Gagal membuat token pembayaran.');
 
     const createdAt = result.created_at || new Date().toISOString();
     localStorage.setItem(getPaymentTimerKey(state.order.id), createdAt);
@@ -317,7 +318,11 @@
 
     const snap = await loadMidtransSnapScript(result.clientKey);
     if (!snap?.pay) throw new Error('Midtrans Snap tidak tersedia.');
-    window.snap.pay(result.token);
+    window.snap.pay(snapToken, {
+      onSuccess: () => window.location.reload(),
+      onPending: () => window.location.reload(),
+      onClose: () => showNotification('Popup pembayaran ditutup. Anda bisa coba lagi lewat tombol Pay Now.', true)
+    });
   }
 
   function openRefundModal() {
