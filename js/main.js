@@ -970,6 +970,7 @@ function checkoutPage() {
         },
 
         async confirmAndProcessCheckout() {
+            console.log('Checkout button clicked');
             const validation = await this.validateCheckout();
             if (!validation.valid) return;
 
@@ -977,6 +978,7 @@ function checkoutPage() {
 
             try {
                 const orderPayload = this.buildCreateOrderPayload();
+                console.log('Sending order payload:', orderPayload);
                 const orderResult = await this.createOrder(orderPayload);
                 localStorage.removeItem('cart');
                 Alpine.store('cart').items = [];
@@ -993,30 +995,49 @@ function checkoutPage() {
         buildCreateOrderPayload() {
             const cartDetails = Alpine.store('cart').details || [];
             const items = cartDetails.map((item) => ({
-                id: String(item.id),
-                name: item.name,
+                product_id: item.id,
                 quantity: Number(item.quantity),
-                price: Number(item.finalPrice || item.price || 0)
             }));
+
+            if (!Array.isArray(items) || items.length === 0) {
+                throw new Error('Keranjang belanja kosong. Tambahkan produk terlebih dahulu.');
+            }
+
+            const shippingCost = Math.round(this.ongkir);
+            if (!Number.isFinite(shippingCost) || shippingCost <= 0) {
+                throw new Error('Biaya pengiriman belum tersedia.');
+            }
 
             return {
                 items,
-                total_price: Math.round(this.calculateGrandTotal()),
-                shipping_cost: Math.round(this.ongkir)
+                shipping_cost: shippingCost
             };
         },
 
         async createOrder(payload) {
+            const { data, error } = await window.supabase.auth.getSession();
+            if (error) {
+                throw new Error(error.message || 'Gagal membaca sesi login.');
+            }
+            const token = data?.session?.access_token;
+            if (!token) {
+                throw new Error('Sesi login tidak ditemukan. Silakan login ulang.');
+            }
+
             const response = await window.fetchWithDebug(window.toApiPath('/api/orders'), {
                 method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${token}`
+                },
                 body: JSON.stringify(payload)
             });
 
             const result = await response.json().catch(() => ({}));
+            console.log('Order response:', result);
 
             if (!response.ok) {
-                console.error('[Checkout] Failed to create order:', result);
-                throw new Error(result?.message || 'Gagal membuat pesanan.');
+                console.error('Checkout failed:', result);
+                throw new Error(result?.message || 'Checkout gagal');
             }
 
             if (!result?.success || !result?.order_id) {
