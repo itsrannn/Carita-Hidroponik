@@ -4,63 +4,37 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>My Grow Lab | Carita Hidroponik</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/my-grow-lab.css" />
 </head>
 <body x-data="growLabPage" x-init="init()">
-  <div id="header-include"></div>
-  <main class="grow-lab-page container">
-    <section class="hero glass"><h1>Carita Garden Companion</h1><p>Dashboard hidroponik eksklusif untuk benih yang sudah dibeli.</p></section>
-    <section class="glass">
-      <h2>Purchased Seeds</h2>
-      <div x-show="loading" class="skeleton-grid"><div class="skeleton" x-for="i in 3"></div></div>
-      <div x-show="!loading && products.length===0" class="empty-state">Belum ada produk eligible. <button @click="fetchProducts">Retry</button></div>
-      <div class="product-grid">
-        <template x-for="p in products" :key="p.id">
-          <article class="card glass">
-            <h3 x-text="p.name"></h3>
-            <p x-text="p.is_activated ? `Day ${p.current_day} • ${p.current_phase}` : 'Belum diaktifkan'"></p>
-            <div class="progress"><span :style="`width:${p.progress_percent||0}%`"></span></div>
-            <button x-show="!p.is_activated" @click="activate(p.id)">Activate Grow Lab</button>
-            <button x-show="p.is_activated" @click="loadSecret(p.id)">Open Secret Recipes</button>
-          </article>
-        </template>
-      </div>
-    </section>
-    <section class="glass">
-      <h2>Interactive Timeline</h2>
-      <div class="timeline-cards">
-        <template x-for="item in activeTimeline" :key="item.day_number">
-          <div class="card"><strong x-text="`Day ${item.day_number}`"></strong><span class="badge" x-text="item.phase"></span><h4 x-text="item.title"></h4><p x-text="item.description"></p><small x-text="`Target: ${item.nutrient_ppm||0} ppm • Reminder: ${item.reminder_type||'-'}`"></small></div>
-        </template>
-      </div>
-    </section>
-    <section class="glass">
-      <h2>The Secret Recipes</h2>
-      <div x-show="secretLocked">Terkunci. Beli benih eligible untuk membuka konten.</div>
-      <div x-show="!secretLocked"><template x-for="s in secrets" :key="s.id"><article class="card"><h4 x-text="s.title"></h4><p x-text="s.content"></p></article></template></div>
-    </section>
-    <section class="glass">
-      <h2>Smart Nutrient Calculator</h2>
-      <div class="calc-grid">
-        <label>Water (L)<input type="number" min="0" step="0.1" x-model.number="waterVolume"></label>
-        <label>Target PPM<input type="number" min="0" step="10" x-model.number="targetPpm"></label>
-      </div>
-      <p x-text="`AB Mix A: ${requiredMl.toFixed(2)} ml`"></p>
-      <p x-text="`AB Mix B: ${requiredMl.toFixed(2)} ml`"></p>
-      <a class="btn" :href="nutrientProductLink">Add Nutrient Product to Cart</a>
-    </section>
-    <section class="glass">
-      <h2>QR Activation (Placeholder)</h2>
-      <input x-model="activationCode" placeholder="Masukkan activation code"/>
-      <button @click="activateByCode">Activate by Code</button>
-    </section>
+<div class="app-shell">
+  <aside class="left-sidebar" :class="{open:mobileSidebar}">
+    <div class="brand">🌿 Carita OS</div>
+    <nav>
+      <template x-for="item in leftMenu" :key="item"><a href="#" class="menu-item" :class="{'active':item==='My Grow Lab'}" x-text="item"></a></template>
+    </nav>
+    <div class="side-widgets"><div class="points">Carita Points <strong x-text="stats.total_days || 0"></strong></div><div class="join-card">Join Community</div></div>
+  </aside>
+  <main class="content-area">
+    <header class="top-nav"><button class="mobile-toggle" @click="mobileSidebar=!mobileSidebar">☰</button><div>Carita Hidroponik</div><div class="nav-links"><span>Shop</span><span>Articles</span><span>Community</span><span class="active">My Lab</span></div><div>🔔 👤 <span class="badge">Lv 7</span></div></header>
+    <section class="hero"><h1>Welcome back, <span x-text="username"></span> 🌶️</h1><p>Grow like a professional with your exclusive intelligence dashboard.</p><div class="hero-cards"><div class="metric"><small>Current Day</small><strong x-text="dashboard.currentDay"></strong></div><div class="metric"><small>Current Phase</small><strong x-text="dashboard.currentPhase"></strong></div><div class="metric"><small>Harvest Countdown</small><strong x-text="dashboard.harvestCountdown"></strong></div><div class="metric"><small>Target PPM</small><strong x-text="dashboard.targetPpm"></strong></div></div></section>
+    <section class="journey card"><h3>Buddy's Habanero Journey</h3><div class="steps"><template x-for="(phase,idx) in phases" :key="phase"><div class="step" :class="stepClass(idx)"><span x-text="phase"></span></div></template></div></section>
+    <section class="seeds-grid"><template x-for="seed in seeds" :key="seed.id"><article class="seed-card"><img :src="seed.image_url || 'img/general/Cabai-Habanero.png'"><h4 x-text="seed.name"></h4><p x-text="`Purchased: ${seed.purchase_date || '-'}`"></p><p x-text="`${seed.grow_duration_days} days • ${seed.grow_difficulty}`"></p><span class="status" :class="seed.status.toLowerCase().replace(' ','-')" x-text="seed.status"></span><button @click="seedAction(seed)" x-text="seed.button"></button></article></template></section>
+    <section class="timeline card"><h3>Interactive Timeline</h3><div class="timeline-list"><template x-for="item in timeline" :key="item.id"><article class="timeline-item" :class="item.state"><div class="dot"></div><div><h4 x-text="`Day ${item.day_number} - ${item.title}`"></h4><p x-text="item.description"></p><small x-text="`${item.phase} • ${item.nutrient_ppm||0} ppm • ${item.reminder_type||'-'}`"></small></div></article></template></div></section>
   </main>
-  <div id="footer-include"></div>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script src="js/supabase-client.js"></script>
-  <script src="js/main.js"></script>
-  <script src="js/my-grow-lab.js"></script>
+  <aside class="right-sidebar">
+    <div class="widget"><h4>Smart Nutrient Calculator</h4><input type="number" x-model.number="liters" placeholder="Liters"><input type="number" x-model.number="targetPpm" placeholder="Target PPM"><p x-text="`AB Mix A: ${mixMl} ml`"></p><p x-text="`AB Mix B: ${mixMl} ml`"></p></div>
+    <div class="widget"><h4>Next Tasks</h4><label><input type="checkbox"> Moisture check</label><label><input type="checkbox"> Topping reminder</label><label><input type="checkbox"> Nutrient dose</label></div>
+    <div class="widget"><h4>Featured Supplies</h4><p>Nutrient AB Mix</p><p>TDS Meter</p><button>Add to Cart</button></div>
+    <div class="widget"><button class="cta">AI Plant Health Check</button></div>
+  </aside>
+</div>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/my-grow-lab.js"></script>
 </body>
 </html>
