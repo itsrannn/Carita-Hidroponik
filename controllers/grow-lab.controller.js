@@ -1,72 +1,59 @@
-const { sb, getMyProducts, PAID_STATUSES } = require('../services/grow-lab.service');
+const { sb, PAID_STATUSES } = require('../services/grow-lab.service');
 
-async function myProducts(req, res) {
-  try {
-    const data = await getMyProducts(req.user.id);
-    res.json({ products: data });
-  } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch grow lab products.', error: error.message });
-  }
+const phases = [
+  { name: 'Germination', until: 14 },
+  { name: 'Vegetative', until: 45 },
+  { name: 'Flowering', until: 80 },
+  { name: 'Fruiting', until: 120 },
+  { name: 'Harvest', until: 9999 }
+];
+
+const parseName = (name) => (typeof name === 'object' ? (name.en || name.id || Object.values(name)[0]) : name);
+
+async function paidProductIds(userId) {
+  const or = PAID_STATUSES.map((s) => `status.eq.${s}`).join(',');
+  const orders = await (await sb(`orders?user_id=eq.${userId}&or=(${or})&select=order_details,status`)).json();
+  return [...new Set(orders.flatMap((o) => (Array.isArray(o.order_details) ? o.order_details.map((i) => i.id || i.product_id) : [])).filter(Boolean))];
 }
 
-async function activate(req, res) {
-  const { product_id: productId } = req.body || {};
-  if (!productId) return res.status(400).json({ message: 'product_id is required.' });
-
+async function mySeeds(req, res) {
   try {
-    const products = await getMyProducts(req.user.id);
-    const eligible = products.find((p) => p.id === productId);
-    if (!eligible) return res.status(403).json({ message: 'Product is not eligible for activation.' });
-    if (eligible.is_activated) return res.status(409).json({ message: 'Grow Lab already activated for this product.' });
-
-    const duration = Number(eligible.grow_duration_days || 120);
-    const activatedAt = new Date();
-    const estimatedHarvestDate = new Date(activatedAt.getTime() + duration * 86400000);
-
-    const response = await sb('grow_lab_activations?select=*', {
-      method: 'POST',
-      headers: { Prefer: 'return=representation' },
-      body: JSON.stringify([{ user_id: req.user.id, product_id: productId, activated_at: activatedAt.toISOString(), current_day: 1, current_phase: 'Germination', estimated_harvest_date: estimatedHarvestDate.toISOString() }])
-    });
-    const created = await response.json();
-    res.status(201).json({ activation: created[0] });
-  } catch (error) {
-    res.status(500).json({ message: 'Failed to activate grow lab.', error: error.message });
-  }
+    const productIds = await paidProductIds(req.user.id);
+    if (!productIds.length) return res.json({ seeds: [] });
+    const products = await (await sb(`products?id=in.(${productIds.join(',')})&select=id,name,image_url,grow_duration_days,grow_difficulty`)).json();
+    const activations = await (await sb(`grow_lab_activations?user_id=eq.${req.user.id}&product_id=in.(${productIds.join(',')})&select=*`)).json();
+    const amap = new Map(activations.map((a) => [a.product_id, a]));
+    const seeds = products.map((p) => ({ ...p, name: parseName(p.name), activation_id: amap.get(p.id)?.id || null, status: amap.get(p.id) ? 'ACTIVE' : 'NOT ACTIVATED', button: amap.get(p.id) ? 'Continue Growing' : 'Activate Grow Lab' }));
+    res.json({ seeds });
+  } catch (e) { res.status(500).json({ message: 'Failed to load seeds.', error: e.message }); }
 }
 
-async function secret(req, res) {
-  const { productId } = req.params;
+async function dashboard(req, res) {
   try {
-    const products = await getMyProducts(req.user.id);
-    const owned = products.some((p) => p.id === productId);
-    if (!owned) return res.status(403).json({ message: 'Secret content locked.' });
-
-    const result = await sb(`grow_secret_contents?product_id=eq.${productId}&select=id,title,content,created_at&order=created_at.asc`);
-    res.json({ secrets: await result.json() });
-  } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch secret content.', error: error.message });
-  }
+    const acts = await (await sb(`grow_lab_activations?user_id=eq.${req.user.id}&is_completed=eq.false&select=*&order=activated_at.desc&limit=1`)).json();
+    const a = acts[0];
+    const day = a ? Math.max(1, Math.floor((Date.now() - Date.parse(a.activated_at)) / 86400000) + 1) : 0;
+    const phase = phases.find((p) => day <= p.until)?.name || 'Germination';
+    const harvestCountdown = a?.estimated_harvest_date ? Math.max(0, Math.ceil((Date.parse(a.estimated_harvest_date) - Date.now()) / 86400000)) : '-';
+    const statsRows = await (await sb(`grow_stats?user_id=eq.${req.user.id}&select=*&limit=1`)).json();
+    res.json({ dashboard: { currentDay: day || '-', currentPhase: phase, harvestCountdown, targetPpm: 800 }, stats: statsRows[0] || { total_days: 0 } });
+  } catch (e) { res.status(500).json({ message: 'Failed to load dashboard.', error: e.message }); }
 }
 
-async function activateByCode(req, res) {
-  const { activation_code: code } = req.body || {};
-  if (!code) return res.status(400).json({ message: 'activation_code is required.' });
-
+async function timeline(req, res) {
   try {
-    const orderRes = await sb(`orders?user_id=eq.${req.user.id}&activation_code=eq.${encodeURIComponent(code)}&select=id,status,order_details&limit=1`);
-    const rows = await orderRes.json();
-    const order = rows[0];
-    if (!order) return res.status(404).json({ message: 'Activation code not found.' });
-    if (!PAID_STATUSES.includes(order.status)) return res.status(403).json({ message: 'Order is not paid yet.' });
-    const firstItem = Array.isArray(order.order_details) ? order.order_details[0] : null;
-    if (!firstItem?.id) return res.status(400).json({ message: 'Order has no eligible product.' });
-
-    req.body.product_id = firstItem.id;
-    return activate(req, res);
-  } catch (error) {
-    return res.status(500).json({ message: 'Failed to activate by code.', error: error.message });
-  }
+    const act = await (await sb(`grow_lab_activations?id=eq.${req.params.activationId}&user_id=eq.${req.user.id}&select=*&limit=1`)).json();
+    if (!act[0]) return res.status(404).json({ message: 'Activation not found.' });
+    const day = Math.max(1, Math.floor((Date.now() - Date.parse(act[0].activated_at)) / 86400000) + 1);
+    const rows = await (await sb(`grow_timelines?product_id=eq.${act[0].product_id}&select=*&order=day_number.asc`)).json();
+    res.json({ timeline: rows.map((r) => ({ ...r, state: r.day_number < day ? 'completed' : r.day_number === day ? 'current' : 'future' })) });
+  } catch (e) { res.status(500).json({ message: 'Failed to load timeline.', error: e.message }); }
 }
 
-module.exports = { myProducts, activate, secret, activateByCode };
+async function secret(req, res) { try { const owned = (await paidProductIds(req.user.id)).includes(req.params.productId); if (!owned) return res.status(403).json({ message: 'Secret recipes require valid purchase.' }); const secrets = await (await sb(`grow_secret_contents?product_id=eq.${req.params.productId}&select=*`)).json(); res.json({ secrets }); } catch (e) { res.status(500).json({ message: 'Failed to fetch secret.', error: e.message }); } }
+
+async function activate(req, res) { try { const { product_id } = req.body || {}; if (!product_id) return res.status(400).json({ message: 'product_id is required.' }); const owned = (await paidProductIds(req.user.id)).includes(product_id); if (!owned) return res.status(403).json({ message: 'Activation only allowed for paid orders.' }); const existing = await (await sb(`grow_lab_activations?user_id=eq.${req.user.id}&product_id=eq.${product_id}&select=id&limit=1`)).json(); if (existing[0]) return res.status(409).json({ message: 'Already activated.' }); const created = await (await sb('grow_lab_activations?select=*', { method: 'POST', headers: { Prefer: 'return=representation' }, body: JSON.stringify([{ user_id: req.user.id, product_id, activation_code: null, current_phase: 'Germination', progress_percent: 0 }]) })).json(); res.status(201).json({ activation: created[0] }); } catch (e) { res.status(500).json({ message: 'Failed to activate.', error: e.message }); } }
+
+async function completeTask(req, res) { try { const { task_id } = req.body || {}; if (!task_id) return res.status(400).json({ message: 'task_id is required.' }); const updated = await (await sb(`grow_tasks?id=eq.${task_id}&select=*`, { method: 'PATCH', headers: { Prefer: 'return=representation' }, body: JSON.stringify({ is_completed: true }) })).json(); res.json({ task: updated[0] || null }); } catch (e) { res.status(500).json({ message: 'Failed to complete task.', error: e.message }); } }
+
+module.exports = { dashboard, mySeeds, timeline, secret, activate, completeTask };
