@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My Grow Lab | Carita Hidroponik</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/my-grow-lab.css" />
+</head>
+<body x-data="growLabPage" x-init="init()">
+  <div id="header-include"></div>
+  <main class="grow-lab-page container">
+    <section class="hero glass"><h1>Carita Garden Companion</h1><p>Dashboard hidroponik eksklusif untuk benih yang sudah dibeli.</p></section>
+    <section class="glass">
+      <h2>Purchased Seeds</h2>
+      <div x-show="loading" class="skeleton-grid"><div class="skeleton" x-for="i in 3"></div></div>
+      <div x-show="!loading && products.length===0" class="empty-state">Belum ada produk eligible. <button @click="fetchProducts">Retry</button></div>
+      <div class="product-grid">
+        <template x-for="p in products" :key="p.id">
+          <article class="card glass">
+            <h3 x-text="p.name"></h3>
+            <p x-text="p.is_activated ? `Day ${p.current_day} • ${p.current_phase}` : 'Belum diaktifkan'"></p>
+            <div class="progress"><span :style="`width:${p.progress_percent||0}%`"></span></div>
+            <button x-show="!p.is_activated" @click="activate(p.id)">Activate Grow Lab</button>
+            <button x-show="p.is_activated" @click="loadSecret(p.id)">Open Secret Recipes</button>
+          </article>
+        </template>
+      </div>
+    </section>
+    <section class="glass">
+      <h2>Interactive Timeline</h2>
+      <div class="timeline-cards">
+        <template x-for="item in activeTimeline" :key="item.day_number">
+          <div class="card"><strong x-text="`Day ${item.day_number}`"></strong><span class="badge" x-text="item.phase"></span><h4 x-text="item.title"></h4><p x-text="item.description"></p><small x-text="`Target: ${item.nutrient_ppm||0} ppm • Reminder: ${item.reminder_type||'-'}`"></small></div>
+        </template>
+      </div>
+    </section>
+    <section class="glass">
+      <h2>The Secret Recipes</h2>
+      <div x-show="secretLocked">Terkunci. Beli benih eligible untuk membuka konten.</div>
+      <div x-show="!secretLocked"><template x-for="s in secrets" :key="s.id"><article class="card"><h4 x-text="s.title"></h4><p x-text="s.content"></p></article></template></div>
+    </section>
+    <section class="glass">
+      <h2>Smart Nutrient Calculator</h2>
+      <div class="calc-grid">
+        <label>Water (L)<input type="number" min="0" step="0.1" x-model.number="waterVolume"></label>
+        <label>Target PPM<input type="number" min="0" step="10" x-model.number="targetPpm"></label>
+      </div>
+      <p x-text="`AB Mix A: ${requiredMl.toFixed(2)} ml`"></p>
+      <p x-text="`AB Mix B: ${requiredMl.toFixed(2)} ml`"></p>
+      <a class="btn" :href="nutrientProductLink">Add Nutrient Product to Cart</a>
+    </section>
+    <section class="glass">
+      <h2>QR Activation (Placeholder)</h2>
+      <input x-model="activationCode" placeholder="Masukkan activation code"/>
+      <button @click="activateByCode">Activate by Code</button>
+    </section>
+  </main>
+  <div id="footer-include"></div>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/my-grow-lab.js"></script>
+</body>
+</html>

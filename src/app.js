@@ -6,6 +6,7 @@ const app = express();
 const paymentRoutes = require('../routes/payment.routes');
 const profileRoutes = require('../routes/profile.routes');
 const shippingRoutes = require('../routes/shipping.routes');
+const growLabRoutes = require('../routes/grow-lab.routes');
 
 const corsOptions = {
   origin: 'https://itsrannn.github.io',
@@ -24,6 +25,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/order', paymentRoutes);
 app.use('/api', profileRoutes);
 app.use('/api/shipping', shippingRoutes);
+app.use('/api/grow-lab', growLabRoutes);
 
 app.get('/', (req, res) => {
   res.json({ status: 'online' });
