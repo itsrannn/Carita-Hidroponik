@@ -5,148 +5,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Content Editor | Carita Hidroponik</title>
     <link rel="icon" type="image/x-icon" href="img/Logo.jpg" />
-    <!-- Quill CSS -->
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/mobile.css" media="(max-width: 768px)" />
     <style>
         body { background-color: #f8f9fa; }
-        .ql-editor { min-height: 200px; }
-        .editor-header {
-            padding: 1.5rem;
-            background-color: white;
-            border-bottom: 1px solid #dee2e6;
-            margin-bottom: 2rem;
-        }
+        .editor-header { padding: 1.5rem; background-color: white; border-bottom: 1px solid #dee2e6; margin-bottom: 2rem; border-radius: 12px; }
         .editor-header h1 { margin: 0; }
-        .back-link {
-            display: block;
-            margin-bottom: 1rem;
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 600;
-        }
-        .back-link:hover {
-            text-decoration: underline;
-        }
-        .content-card {
-            background-color: #fff;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-            border: 1px solid rgba(0,0,0,0.08);
-            padding: 2rem;
-        }
+        .back-link { display: block; margin-bottom: 1rem; color: var(--primary); text-decoration: none; font-weight: 600; }
+        .content-card { background-color: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.08); padding: 2rem; }
         .form-footer { padding-top: 1.5rem; border-top: 1px solid #dee2e6; display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; }
         .btn-cancel { border: 1px solid #ccc; background-color: #fff; color: #333; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; }
-        .btn-submit { background-color: var(--primary); color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        .btn-submit { background-color: #15803d; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
         .form-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
         @media (min-width: 768px) { .form-grid { grid-template-columns: repeat(2, 1fr); } .grid-col-span-2 { grid-column: span 2; } }
         .form-group { display: flex; flex-direction: column; }
         .form-group label { font-weight: 600; margin-bottom: 0.5rem; color: #333; }
         .form-group input, .form-group select, .form-group textarea { padding: 0.75rem; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
-        .form-group textarea { min-height: 120px; resize: vertical; }
-        .btn-submit {
-            background-color: #15803d; /* Solid green */
-            transition: background-color 0.2s;
-        }
-        .btn-submit:hover {
-            background-color: #14532d; /* Darker green on hover */
-        }
-        .form-check { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0; }
-        .form-check-input { width: 1.25em; height: 1.25em; margin: 0; accent-color: var(--primary); }
-        .form-check-label { font-weight: normal; user-select: none; }
-        .discount-options { border-left: 3px solid #15803d; padding-left: 1.5rem; margin-top: 1rem; }
-
+        .form-group textarea { min-height: 140px; resize: vertical; }
         .related-news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.6rem 1rem; max-height: 260px; overflow: auto; border: 1px solid #e5e7eb; border-radius: 10px; padding: 0.8rem; background: #fafafa; }
         .related-news-item { display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.9rem; line-height: 1.4; }
-        .related-news-item input { margin-top: 0.2rem; }
     </style>
 </head>
 <body x-data="editorPage" x-init="init(); $store.i18n.init()">
-
     <div id="header-include"></div>
-
     <main class="main-content">
         <div class="container">
             <div class="editor-header">
-                <a href="admin-products.html" class="back-link" x-html="`&larr; ${$store.i18n.t('admin.productEditor.backLink')}`">Back to Content Management</a>
-                <h1 x-text="$store.i18n.t(title)">Loading...</h1>
+                <a href="admin-products.html" class="back-link">&larr; Back to Content Management</a>
+                <h1 x-text="title">Loading...</h1>
             </div>
-
             <div class="content-card">
-                <template x-if="isError">
-                    <div class="text-center" style="padding: 2rem;">
-                        <p x-text="$store.i18n.t('admin.productEditor.notFound')"></p>
-                        <a href="admin-products.html" class="btn-submit" style="text-decoration: none;" x-text="$store.i18n.t('admin.productEditor.backLink')"></a>
-                    </div>
-                </template>
-
+                <template x-if="isError"><div class="text-center" style="padding: 2rem;"><p>Data tidak ditemukan atau gagal dimuat.</p><a href="admin-products.html" class="btn-submit" style="text-decoration: none;">Kembali</a></div></template>
+                <p x-show="isLoading && !isError">Loading...</p>
                 <form id="editor-form" @submit.prevent="submitForm" x-show="!isError && !isLoading">
-                    <!-- Product Fields -->
-                    <div class="form-grid">
-                        <div class="form-group"><label for="product-name_en" x-text="$store.i18n.t('admin.productEditor.nameEn')">Product Name (English)</label><input id="product-name_en" type="text" x-model="item.name_en" required></div>
-                        <div class="form-group"><label for="product-name_id" x-text="$store.i18n.t('admin.productEditor.nameId')">Product Name (Bahasa Indonesia)</label><input id="product-name_id" type="text" x-model="item.name_id" required></div>
-                        <div class="form-group"><label for="product-category" x-text="$store.i18n.t('admin.productEditor.category')">Category</label><select id="product-category" x-model="item.category" required><option value="" disabled x-text="$store.i18n.t('admin.productEditor.selectCategory')">Select Category</option><option value="benih" x-text="$store.i18n.t('categories.seeds')">Seeds</option><option value="nutrisi" x-text="$store.i18n.t('categories.nutrition')">Nutrition</option><option value="media" x-text="$store.i18n.t('categories.media')">Growing Media</option><option value="peralatan" x-text="$store.i18n.t('categories.equipment')">Equipment</option><option value="promo" x-text="$store.i18n.t('categories.promos')">Promo</option></select></div>
-                        <div class="form-group"><label for="product-price" x-text="$store.i18n.t('admin.productEditor.price')">Price (IDR)</label><input id="product-price" type="number" x-model="item.price" required></div>
-                        <div class="form-group">
-                            <label x-text="$store.i18n.t('admin.productEditor.discount')">Discount</label>
-                            <div class="discount-options">
-                                <div style="display: flex; gap: 1.5rem; margin-bottom: 0.75rem;">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="discount-type" id="discount-percent" value="percent" x-model="discount_type">
-                                        <label class="form-check-label" for="discount-percent" x-text="$store.i18n.t('admin.productEditor.discountPercent')"></label>
-                                    </div>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="discount-type" id="discount-price" value="price" x-model="discount_type">
-                                        <label class="form-check-label" for="discount-price" x-text="$store.i18n.t('admin.productEditor.discountPrice')"></label>
-                                    </div>
-                                </div>
-                                <input id="product-discount-value" type="number" x-model.number="discount_value" x-bind:placeholder="$store.i18n.t('admin.productEditor.discountValue')">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="product-image_url" x-text="$store.i18n.t('admin.productEditor.imageUrl')">Image URL</label>
-                            <input id="product-image_url" type="text" x-model="item.image_url" @input="imagePreviewUrl = item.image_url">
-                            <img :src="imagePreviewUrl" x-show="imagePreviewUrl" alt="Image Preview" style="max-width: 200px; margin-top: 1rem; border-radius: 8px;">
-                        </div>
-                        <div class="form-group grid-col-span-2"><label for="product-char_en" x-text="$store.i18n.t('admin.productEditor.characteristicsEn')">Characteristics (English)</label><textarea id="product-char_en" x-model="item.char_en" x-bind:placeholder="$store.i18n.t('admin.productEditor.characteristicsEnPlaceholder')"></textarea></div>
-                        <div class="form-group grid-col-span-2"><label for="product-char_id" x-text="$store.i18n.t('admin.productEditor.characteristicsId')">Characteristics (Bahasa Indonesia)</label><textarea id="product-char_id" x-model="item.char_id" x-bind:placeholder="$store.i18n.t('admin.productEditor.characteristicsIdPlaceholder')"></textarea></div>
-                        <div class="form-group grid-col-span-2"><label for="product-description_en" x-text="$store.i18n.t('admin.productEditor.descriptionEn')">Full Description (English)</label><textarea id="product-description_en" x-model="item.description_en" required></textarea></div>
-                        <div class="form-group grid-col-span-2"><label for="product-description_id" x-text="$store.i18n.t('admin.productEditor.descriptionId')">Full Description (Bahasa Indonesia)</label><textarea id="product-description_id" x-model="item.description_id" required></textarea></div>
-
-                        <div class="form-group grid-col-span-2">
-                            <label for="related-news" x-text="$store.i18n.t('admin.productEditor.relatedNews') || 'Related News'">Related News</label>
-                            <p style="margin: 0 0 0.6rem; color: #6b7280; font-size: 0.88rem;" x-text="$store.i18n.t('admin.productEditor.relatedNewsHint') || 'Pilih berita yang akan menampilkan produk ini pada widget Related Product.'">Pilih berita yang akan menampilkan produk ini pada widget Related Product.</p>
-                            <div id="related-news" class="related-news-grid">
-                                <template x-if="allNews.length === 0">
-                                    <p style="margin: 0; color: #6b7280;">Belum ada berita tersedia.</p>
-                                </template>
-                                <template x-for="news in allNews" :key="news.id">
-                                    <label class="related-news-item">
-                                        <input type="checkbox" :value="news.id" x-model="relatedNewsIds">
-                                        <span x-text="(news.title && (news.title[$store.i18n.lang] || news.title.id || news.title.en)) || 'Untitled News'"></span>
-                                    </label>
-                                </template>
-                            </div>
-                        </div>
+                    <div class="form-grid" x-show="type === 'product'">
+                        <div class="form-group"><label for="product-name_en">Nama Produk (English)</label><input id="product-name_en" type="text" x-model="item.name_en"></div>
+                        <div class="form-group"><label for="product-name_id">Nama Produk (Indonesia) *</label><input id="product-name_id" type="text" x-model="item.name_id"></div>
+                        <div class="form-group"><label for="product-category">Kategori</label><select id="product-category" x-model="item.category"><option value="">Pilih Kategori</option><option value="benih">Benih</option><option value="nutrisi">Nutrisi</option><option value="media">Media Tanam</option><option value="peralatan">Peralatan</option><option value="promo">Promo</option></select></div>
+                        <div class="form-group"><label for="product-price">Harga (IDR) *</label><input id="product-price" type="number" min="0" x-model.number="item.price"></div>
+                        <div class="form-group"><label for="product-stock">Stok *</label><input id="product-stock" type="number" min="0" x-model.number="item.stock"></div>
+                        <div class="form-group"><label for="product-image_url">Image URL</label><input id="product-image_url" type="text" x-model="item.image_url" @input="imagePreviewUrl = item.image_url"><img :src="imagePreviewUrl" x-show="imagePreviewUrl" alt="Preview" style="max-width: 200px; margin-top: 1rem; border-radius: 8px;"></div>
+                        <div class="form-group"><label>Diskon</label><select x-model="discount_type"><option value="percent">Persen</option><option value="price">Harga Diskon</option></select><input type="number" min="0" x-model.number="discount_value" placeholder="Nilai diskon" style="margin-top:.5rem;"></div>
+                        <div class="form-group grid-col-span-2"><label>Karakteristik (EN)</label><textarea x-model="item.char_en"></textarea></div>
+                        <div class="form-group grid-col-span-2"><label>Karakteristik (ID)</label><textarea x-model="item.char_id"></textarea></div>
+                        <div class="form-group grid-col-span-2"><label>Deskripsi (EN)</label><textarea x-model="item.description_en"></textarea></div>
+                        <div class="form-group grid-col-span-2"><label>Deskripsi (ID)</label><textarea x-model="item.description_id"></textarea></div>
+                        <div class="form-group grid-col-span-2"><label>Related News</label><div class="related-news-grid"><template x-if="allNews.length === 0"><p>Belum ada berita.</p></template><template x-for="news in allNews" :key="news.id"><label class="related-news-item"><input type="checkbox" :value="news.id" x-model="relatedNewsIds"><span x-text="(news.title && (news.title[$store.i18n.lang] || news.title.id || news.title.en)) || 'Untitled News'"></span></label></template></div></div>
                     </div>
-
-                    <div class="form-footer">
-                        <a href="admin-products.html" class="btn-cancel" x-text="$store.i18n.t('admin.productEditor.cancel')">Cancel</a>
-                        <button type="button" @click="submitForm()" class="btn-submit" x-text="$store.i18n.t(submitButtonText)"></button>
+                    <div class="form-grid" x-show="type === 'news'">
+                        <div class="form-group"><label for="news-title_en">Judul (English)</label><input id="news-title_en" type="text" x-model="item.title_en"></div>
+                        <div class="form-group"><label for="news-title_id">Judul (Indonesia) *</label><input id="news-title_id" type="text" x-model="item.title_id"></div>
+                        <div class="form-group grid-col-span-2"><label for="news-image_url">Image URL</label><input id="news-image_url" type="text" x-model="item.image_url" @input="imagePreviewUrl = item.image_url"><img :src="imagePreviewUrl" x-show="imagePreviewUrl" alt="Preview" style="max-width: 200px; margin-top: 1rem; border-radius: 8px;"></div>
+                        <div class="form-group"><label>Excerpt (EN)</label><textarea x-model="item.excerpt_en"></textarea></div>
+                        <div class="form-group"><label>Excerpt (ID)</label><textarea x-model="item.excerpt_id"></textarea></div>
+                        <div class="form-group grid-col-span-2"><label>Konten (EN)</label><textarea x-model="item.body_en"></textarea></div>
+                        <div class="form-group grid-col-span-2"><label>Konten (ID) *</label><textarea x-model="item.body_id"></textarea></div>
+                        <div class="form-group grid-col-span-2"><label>Related Products</label><div class="related-news-grid"><template x-if="allProducts.length === 0"><p>Belum ada produk.</p></template><template x-for="product in allProducts" :key="product.id"><label class="related-news-item"><input type="checkbox" :value="product.id" x-model="relatedProductIds"><span x-text="(product.name && (product.name[$store.i18n.lang] || product.name.id || product.name.en)) || 'Untitled Product'"></span></label></template></div></div>
                     </div>
+                    <div class="form-footer"><a href="admin-products.html" class="btn-cancel">Cancel</a><button type="submit" class="btn-submit" x-text="submitButtonText">Save</button></div>
                 </form>
             </div>
         </div>
     </main>
-
     <div id="footer-include"></div>
-
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js?nounit=true" defer></script>
-    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-
     <script src="js/supabase-client.js"></script>
     <script src="js/admin-auth.js"></script>
     <script src="js/main.js"></script>

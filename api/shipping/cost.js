@@ -28,21 +28,37 @@ async function fetchShippingConfig() {
   return { zones: Array.isArray(zones) ? zones : [], settings: settingsData?.[0] || null };
 }
 
-function findMatchingZone(address, zones) {
-  const city = String(address?.city || address?.district || '').toLowerCase();
-  const province = String(address?.province || '').toLowerCase();
-
-  return zones.find((z) => city.includes(String(z.district_match || '').toLowerCase())
-      && province.includes(String(z.province_match || '').toLowerCase())
-      && z.is_active);
+function text(value) {
+  return String(value || '').toLowerCase();
 }
 
-function calculateShipping(address, weightKg, zones, settings) {
+function zonePrice(zone) {
+  return Number(zone?.price ?? zone?.base_rate ?? 0);
+}
+
+function findZoneByCode(zones, code) {
+  return zones.find((zone) => String(zone.zone_code || '') === String(code));
+}
+
+function findMatchingZone(address, zones) {
+  const district = text(address?.district || address?.kecamatan || address?.city);
+  const regency = text(address?.regency || address?.kabupaten || address?.city);
+  const province = text(address?.province || address?.provinsi);
+  const country = text(address?.country || address?.negara || 'Indonesia');
+
+  if (country && country !== 'indonesia') return findZoneByCode(zones, '98');
+  if (district.includes('turen')) return findZoneByCode(zones, '11');
+  if (regency.includes('malang')) return findZoneByCode(zones, '24');
+  if (province.includes('jawa timur') || province.includes('east java')) return findZoneByCode(zones, '37');
+  return findZoneByCode(zones, '62') || zones.find((zone) => text(zone.region_name || zone.zone_name).includes('indonesia'));
+}
+
+function calculateShipping(address, _weightKg, zones, settings) {
   const zone = findMatchingZone(address, zones);
-  if (zone) return { cost: zone.base_rate + (weightKg * zone.extra_per_kg), zone };
+  if (zone) return { cost: zonePrice(zone), zone };
   return {
-    cost: Number(settings?.international_flat_rate || 0),
-    zone: { zone_name: 'International Flat Rate', is_international: true }
+    cost: Number(settings?.international_flat_rate || 2),
+    zone: { zone_code: '98', region_name: 'Luar Negeri', zone_name: 'Luar Negeri', currency: 'USD', is_international: true }
   };
 }
 
@@ -68,7 +84,9 @@ module.exports = async function handler(req, res) {
       recommendation: {
         courier: 'rekomendasi-kami',
         cost: Number(shipping.cost),
-        zone_name: shipping.zone.zone_name || 'Unknown'
+        zone_name: shipping.zone.region_name || shipping.zone.zone_name || 'Unknown',
+        zone_code: shipping.zone.zone_code || null,
+        currency: shipping.zone.currency || 'IDR'
       }
     });
   } catch (error) {
