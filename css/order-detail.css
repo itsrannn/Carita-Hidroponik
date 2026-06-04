@@ -133,7 +133,7 @@
 
 .refund-badge { background-color: #0f766e; }
 .status-default { background: #6b7280; }
-.status-created { background: #f59e0b; }
+.status-pending-payment { background: #f59e0b; }
 .status-paid { background-color: #2d5a27; }
 .status-processing { background-color: #3b82f6; }
 .status-shipped { background-color: #6366f1; }
@@ -308,9 +308,26 @@
 }
 
 .product-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.9rem;
   color: #5a7163;
   font-size: 0.92rem;
-  margin-top: 0.3rem;
+  margin: 0.35rem 0 0;
+}
+
+.product-meta div {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.product-meta dt,
+.product-meta dd {
+  margin: 0;
+}
+
+.product-meta dt {
+  font-weight: 800;
 }
 
 .product-subtotal {
@@ -342,6 +359,13 @@
   background: #fff7f7;
   border-radius: 16px;
   padding: 1rem;
+}
+
+.payment-action-content .btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  transform: none;
+  box-shadow: none;
 }
 
 .countdown-box {
