@@ -2,6 +2,7 @@ const SUPABASE_URL = process.env.SUPABASE_URL || 'https://thetdckuftpzyubvlbju.s
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const ALLOWED_PROFILE_FIELDS = new Set([
+  'email',
   'full_name',
   'phone_number',
   'address',
@@ -178,6 +179,7 @@ async function updateProfile(req, res) {
 
     const normalizedPayload = {
       ...pick(rawPayload, 'user_id'),
+      email: toText(rawPayload?.email),
       full_name: toText(rawPayload?.full_name),
       phone_number: toText(rawPayload?.phone_number),
       address: toText(rawPayload?.address),

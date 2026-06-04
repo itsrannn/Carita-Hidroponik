@@ -118,7 +118,27 @@ window.ensureSupabaseProfile = async (user) => {
         throw new Error('Gagal memeriksa data profil.');
     }
 
-    if (ownProfile.data) return ownProfile.data;
+    if (ownProfile.data) {
+        const profileEmail = String(ownProfile.data.email || '').trim();
+        const authEmail = String(user.email || metadata.email || '').trim();
+        if (!profileEmail && authEmail) {
+            const repairedProfile = await window.supabase
+                .from('profiles')
+                .update({ email: authEmail })
+                .eq('id', user.id)
+                .select('*')
+                .single();
+
+            if (repairedProfile.error) {
+                console.error('[Auth] Failed to sync Google email to existing profile:', repairedProfile.error);
+                return { ...ownProfile.data, email: authEmail };
+            }
+
+            return repairedProfile.data || { ...ownProfile.data, email: authEmail };
+        }
+
+        return ownProfile.data;
+    }
 
     const insertProfile = async (payload) => window.supabase
         .from('profiles')

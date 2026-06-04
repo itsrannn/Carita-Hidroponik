@@ -8,6 +8,7 @@ document.addEventListener('alpine:init', () => {
     editAddressMode: false,
     orders: [],
     profile: {
+      email: '',
       full_name: '',
       phone_number: '',
       address: '',
@@ -96,14 +97,41 @@ document.addEventListener('alpine:init', () => {
 
       if (!data) return;
 
+      const repairedProfile = await this.repairMissingProfileEmail(data);
+
       this.profile = {
         ...this.profile,
-        ...data
+        ...(repairedProfile || data)
       };
 
-      await this.hydrateAddressSelections(data);
+      await this.hydrateAddressSelections(this.profile);
 
       this.syncMapWithProfile();
+    },
+
+    async repairMissingProfileEmail(profile = {}) {
+      const authEmail = String(this.user?.email || '').trim();
+      if (!authEmail || String(profile?.email || '').trim()) return profile;
+
+      try {
+        const { data, error } = await window.supabase
+          .from('profiles')
+          .update({ email: authEmail })
+          .eq('id', this.user.id)
+          .select('*')
+          .single();
+
+        if (error) {
+          console.error('[Account] Failed to auto-repair profile email:', error);
+          return { ...profile, email: authEmail };
+        }
+
+        console.info('[Account] Auto-repaired missing profile email from auth session.');
+        return data || { ...profile, email: authEmail };
+      } catch (error) {
+        console.error('[Account] Error while auto-repairing profile email:', error);
+        return { ...profile, email: authEmail };
+      }
     },
 
     resolveRegionId(options, preferredId, preferredName) {
@@ -234,6 +262,7 @@ document.addEventListener('alpine:init', () => {
       this.loading = true;
       try {
         const payload = {
+          email: this.profile.email || this.user?.email || null,
           full_name: this.profile.full_name || null,
           phone_number: this.profile.phone_number || null
         };
@@ -286,6 +315,7 @@ document.addEventListener('alpine:init', () => {
 
         const requestBody = {
           user_id: this.user.id,
+          email: this.profile.email || this.user?.email || null,
           province: getSelectedText('#province'),
           regency: getSelectedText('#regency'),
           district: getSelectedText('#district'),
@@ -295,7 +325,8 @@ document.addEventListener('alpine:init', () => {
           postal_code: getInputValue('#postalCode'),
           longitude: Number.isFinite(parsedLongitude) ? parsedLongitude : null,
           latitude: Number.isFinite(parsedLatitude) ? parsedLatitude : null,
-          full_name: getInputValue('#fullName')
+          full_name: getInputValue('#fullName'),
+          phone_number: this.profile.phone_number || null
         };
         if (!requestBody.village_id) {
           throw new Error('Village belum dipilih');
@@ -418,7 +449,7 @@ document.addEventListener('alpine:init', () => {
       const response = await fetch(endpointUrl, {
         method: 'POST',
         headers: requestHeaders,
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify({ data: requestBody })
       });
 
       const rawText = await response.text();
