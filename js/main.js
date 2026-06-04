@@ -54,6 +54,133 @@ window.toApiPath = (relativePath = '') => {
     return `${API_BASE_URL}${path}`;
 };
 
+window.getSafeAppRedirect = (redirectValue = '') => {
+    const raw = String(redirectValue || '').trim();
+    if (!raw) return null;
+
+    try {
+        const currentOrigin = window.location.origin;
+        const candidateUrl = new URL(raw, window.location.href);
+        if (candidateUrl.origin !== currentOrigin) return null;
+
+        const normalizedBasePath = APP_BASE_PATH.replace(/\/$/, '');
+        const isInsideApp = !normalizedBasePath
+            || candidateUrl.pathname === `${normalizedBasePath}/`
+            || candidateUrl.pathname.startsWith(`${normalizedBasePath}/`);
+        if (!isInsideApp) return null;
+
+        return `${candidateUrl.pathname}${candidateUrl.search}${candidateUrl.hash}`;
+    } catch (error) {
+        console.warn('[Auth] Unsafe redirect ignored:', { redirectValue, error });
+        return null;
+    }
+};
+
+window.showSiteNotification = (message, isError = false) => {
+    const text = String(message || '').trim();
+    if (!text) return;
+
+    let notification = document.getElementById('notification');
+    if (!notification) {
+        notification = document.createElement('div');
+        notification.id = 'notification';
+        notification.className = 'notification';
+        notification.setAttribute('role', 'status');
+        notification.setAttribute('aria-live', 'polite');
+        document.body.appendChild(notification);
+    }
+
+    notification.textContent = text;
+    notification.style.backgroundColor = isError ? '#c62828' : 'var(--accent)';
+    notification.classList.add('show');
+    setTimeout(() => notification.classList.remove('show'), 3000);
+};
+
+window.ensureSupabaseProfile = async (user) => {
+    if (!window.supabase || !user?.id) return null;
+
+    const metadata = user.user_metadata || {};
+    const profilePayload = {
+        id: user.id,
+        email: user.email || metadata.email || null,
+        full_name: metadata.full_name || metadata.name || user.email || '',
+        avatar_url: metadata.avatar_url || metadata.picture || null
+    };
+
+    const ownProfile = await window.supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+
+    if (ownProfile.error) {
+        console.error('[Auth] Failed to check profile by user id:', ownProfile.error);
+        throw new Error('Gagal memeriksa data profil.');
+    }
+
+    if (ownProfile.data) return ownProfile.data;
+
+    const insertProfile = async (payload) => window.supabase
+        .from('profiles')
+        .insert(payload)
+        .select('*')
+        .single();
+
+    let createdProfile = await insertProfile(profilePayload);
+    if (createdProfile.error && /avatar_url|email/i.test(createdProfile.error.message || '')) {
+        const fallbackPayload = { ...profilePayload };
+        delete fallbackPayload.avatar_url;
+        createdProfile = await insertProfile(fallbackPayload);
+    }
+
+    if (createdProfile.error) {
+        console.error('[Auth] Failed to create missing OAuth profile:', createdProfile.error);
+        throw new Error('Session valid, tetapi profil belum tersedia. Silakan coba lagi.');
+    }
+
+    return createdProfile.data;
+};
+
+window.handleOAuthRedirectResult = async () => {
+    if (!window.supabase?.auth?.getSession) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const oauthError = params.get('error_description')
+        || params.get('error')
+        || hashParams.get('error_description')
+        || hashParams.get('error');
+
+    if (oauthError) {
+        sessionStorage.removeItem('carita.oauth.redirect');
+        window.showSiteNotification('Login Google dibatalkan atau gagal. Silakan coba lagi.', true);
+        return;
+    }
+
+    const hasOAuthCallbackParams = params.has('code') || hashParams.has('access_token') || hashParams.has('refresh_token');
+    const pendingRedirect = sessionStorage.getItem('carita.oauth.redirect');
+    if (!hasOAuthCallbackParams && !pendingRedirect) return;
+
+    try {
+        const { data, error } = await window.supabase.auth.getSession();
+        if (error) throw error;
+
+        const session = data?.session;
+        if (!session?.user) {
+            throw new Error('Session Google tidak ditemukan. Silakan login ulang.');
+        }
+
+        await window.ensureSupabaseProfile(session.user);
+        sessionStorage.removeItem('carita.oauth.redirect');
+
+        const safeRedirect = window.getSafeAppRedirect(pendingRedirect);
+        window.location.replace(safeRedirect || window.toAppPath('index.html'));
+    } catch (error) {
+        console.error('[Auth] OAuth redirect handling failed:', error);
+        window.showSiteNotification(error?.message || 'Login Google gagal diproses. Silakan coba lagi.', true);
+    }
+};
+
 // --- GLOBAL ERROR HANDLING ---
 window.onerror = (message, source, lineno, colno, error) => {
     console.error('[GlobalError]', {
@@ -202,6 +329,7 @@ async function initLayout() {
 
 document.addEventListener('DOMContentLoaded', () => {
     initLayout();
+    window.handleOAuthRedirectResult?.();
 });
 
 // --- UTILITIES ---
