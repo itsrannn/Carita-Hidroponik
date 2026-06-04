@@ -1,13 +1,13 @@
 (function () {
   const ORDER_STEPS = [
-    { key: 'created', label: 'Dibuat', description: 'Pesanan berhasil dibuat dan menunggu pembayaran.' },
+    { key: 'pending_payment', label: 'Menunggu Pembayaran', description: 'Pesanan dibuat dan menunggu pembayaran.' },
     { key: 'paid', label: 'Dibayar', description: 'Pembayaran Midtrans berhasil diterima.' },
     { key: 'processing', label: 'Diproses', description: 'Pesanan sedang diproses oleh admin.' },
     { key: 'shipped', label: 'Dikirim', description: 'Pesanan sudah diserahkan ke kurir.' },
     { key: 'completed', label: 'Selesai', description: 'Pesanan telah selesai.' }
   ];
+  const ALLOWED_ORDER_STATUSES = ['pending_payment', 'paid', 'processing', 'shipped', 'completed', 'cancelled', 'rejected'];
   const REFUND_BANK_METHODS = ['BCA', 'Mandiri', 'BRI', 'BNI', 'SeaBank', 'Bank Lainnya'];
-  const PAYMENT_EXPIRY_MS = 60 * 60 * 1000;
   const FALLBACK_IMAGE = 'img/coming-soon.jpg';
 
   const state = {
@@ -73,6 +73,7 @@
   };
 
   const normalizeStatus = (status = '') => String(status || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+  const isPlainObject = (value) => value && typeof value === 'object' && !Array.isArray(value);
   const escapeHtml = (value = '') => String(value ?? '').replace(/[&<>'"]/g, (char) => ({
     '&': '&amp;',
     '<': '&lt;',
@@ -101,6 +102,27 @@
     return '';
   }
 
+  function asObject(value) {
+    if (isPlainObject(value)) return value;
+    if (typeof value === 'string') {
+      try {
+        const parsed = JSON.parse(value);
+        return isPlainObject(parsed) ? parsed : {};
+      } catch (_error) {
+        return {};
+      }
+    }
+    return {};
+  }
+
+  function firstObject(...values) {
+    for (const value of values) {
+      const objectValue = asObject(value);
+      if (Object.keys(objectValue).length) return objectValue;
+    }
+    return {};
+  }
+
   function asArray(value) {
     if (Array.isArray(value)) return value;
     if (typeof value === 'string') {
@@ -116,38 +138,12 @@
 
   function canonicalStatus(status = '') {
     const normalized = normalizeStatus(status);
-    const map = {
-      created: 'created',
-      pending: 'created',
-      pending_payment: 'created',
-      unpaid: 'created',
-      menunggu_konfirmasi: 'created',
-      paid: 'paid',
-      dibayar: 'paid',
-      processing: 'processing',
-      processed: 'processing',
-      diproses: 'processing',
-      proses_admin: 'processing',
-      shipped: 'shipped',
-      delivered: 'shipped',
-      dikirim: 'shipped',
-      dalam_pengiriman: 'shipped',
-      completed: 'completed',
-      selesai: 'completed',
-      cancelled: 'cancelled',
-      canceled: 'cancelled',
-      dibatalkan: 'cancelled',
-      expired: 'cancelled',
-      rejected: 'rejected',
-      ditolak: 'rejected',
-      denied: 'rejected'
-    };
-    return map[normalized] || normalized || 'created';
+    return ALLOWED_ORDER_STATUSES.includes(normalized) ? normalized : 'pending_payment';
   }
 
   function translateStatus(status = '') {
     const map = {
-      created: 'Menunggu Pembayaran',
+      pending_payment: 'Menunggu Pembayaran',
       paid: 'Dibayar',
       processing: 'Diproses',
       shipped: 'Dikirim',
@@ -162,8 +158,8 @@
     return `status-${canonicalStatus(status).replace(/_/g, '-') || 'default'}`;
   }
 
-  function isCreatedStatus(status = '') {
-    return canonicalStatus(status) === 'created';
+  function isPendingPaymentStatus(status = '') {
+    return canonicalStatus(status) === 'pending_payment';
   }
 
   function isRefundAllowed(status = '') {
@@ -178,10 +174,15 @@
     return ORDER_STEPS.findIndex((step) => step.key === canonicalStatus(status));
   }
 
+  function getPaymentDeadline(order = {}) {
+    const candidate = firstString(order.payment_deadline, order.paymentDeadline, order.payment_expired_at, order.payment_expiry);
+    const timestamp = candidate ? new Date(candidate).getTime() : NaN;
+    return Number.isFinite(timestamp) ? timestamp : null;
+  }
+
   function readOrderIdFromUrl() {
     const params = new URLSearchParams(window.location.search);
     const orderId = params.get('id') || params.get('order_id') || params.get('order_code');
-    console.log('Order ID from URL:', orderId);
     return orderId;
   }
 
@@ -195,7 +196,7 @@
   }
 
   function normalizeItem(item = {}) {
-    const product = item.product || item.products || item.product_detail || {};
+    const product = firstObject(item.product, item.products, item.product_detail);
     const name = firstString(
       item.name,
       item.product_name,
@@ -220,6 +221,7 @@
       item.image,
       item.img,
       item.thumbnail,
+      item.product_image,
       product.image_url,
       product.image,
       product.img,
@@ -252,7 +254,7 @@
   function getSpecialReason(order = {}) {
     const status = canonicalStatus(order.status);
     if (status === 'rejected') {
-      return firstString(order.rejection_reason, order.rejected_reason, order.admin_reason, order.reason, order.notes, 'Alasan belum tersedia.');
+      return firstString(order.reject_reason, order.rejection_reason, order.rejected_reason, order.admin_reason, order.reason, order.notes, 'Alasan belum tersedia.');
     }
     return firstString(order.cancel_reason, order.cancellation_reason, order.cancelled_reason, order.expired_reason, order.reason, order.notes, 'Pembayaran melewati batas waktu atau dibatalkan sistem.');
   }
@@ -395,7 +397,7 @@
   function renderStatusDetail(order) {
     const status = canonicalStatus(order.status);
     if (status === 'cancelled' || status === 'rejected') {
-      const title = status === 'cancelled' ? 'Dibatalkan' : 'Ditolak';
+      const title = status === 'cancelled' ? 'Pesanan Dibatalkan' : 'Pesanan Ditolak';
       els.statusDetail.innerHTML = `
         <article class="special-status-card status-${status}">
           <span>Status Pesanan:</span>
@@ -441,7 +443,10 @@
         <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" loading="lazy" onerror="this.onerror=null; this.src=window.toAppPath ? window.toAppPath('img/coming-soon.jpg') : 'img/coming-soon.jpg'" />
         <div class="product-copy">
           <div class="product-title">${escapeHtml(item.name)}</div>
-          <div class="product-meta">Qty: ${escapeHtml(item.quantity)} · ${escapeHtml(formatRupiah(item.price))}</div>
+          <dl class="product-meta">
+            <div><dt>Qty</dt><dd>${escapeHtml(item.quantity)}</dd></div>
+            <div><dt>Harga</dt><dd>${escapeHtml(formatRupiah(item.price))}</dd></div>
+          </dl>
         </div>
         <div class="product-subtotal">
           <span>Subtotal</span>
@@ -463,16 +468,16 @@
   }
 
   function renderShippingInfo(order) {
-    const address = order.shipping_address || order.address || {};
+    const address = firstObject(order.shipping_address, order.address);
     const addressParts = [
-      address.recipient_name || address.name,
-      address.phone || address.phone_number,
-      address.address,
-      address.village,
-      address.district,
-      address.regency || address.city,
-      address.province,
-      address.postal_code
+      address.recipient_name || address.name || order.recipient_name || order.customer_name,
+      address.phone || address.phone_number || order.phone_number || order.customer_phone,
+      address.address || firstString(order.shipping_address, order.address),
+      address.village || order.village,
+      address.district || order.district,
+      address.regency || address.city || order.regency || order.city,
+      address.province || order.province,
+      address.postal_code || order.postal_code
     ].map((part) => firstString(part)).filter(Boolean);
     const resi = getTrackingNumber(order);
 
@@ -494,19 +499,22 @@
 
   function renderPaymentAction(order) {
     if (!els.paymentActionCard) return;
-    if (!isCreatedStatus(order.status)) {
+    if (!isPendingPaymentStatus(order.status)) {
       els.paymentActionCard.classList.add('hidden');
       if (state.countdownInterval) clearInterval(state.countdownInterval);
+      state.countdownInterval = null;
       return;
     }
 
     els.paymentActionCard.classList.remove('hidden');
+    els.paymentActionContent?.classList.remove('is-expired');
+    state.paymentExpired = false;
     if (els.payNowBtn) {
       els.payNowBtn.textContent = 'Bayar Sekarang';
       els.payNowBtn.classList.remove('hidden');
       els.payNowBtn.disabled = false;
     }
-    startPaymentCountdown(order.created_at);
+    startPaymentCountdown(order);
   }
 
   function renderRefundStatus(refundStatus) {
@@ -538,38 +546,46 @@
     }
   }
 
-  function startPaymentCountdown(createdAt) {
+  function startPaymentCountdown(order) {
     if (!els.paymentCountdown || !state.order) return;
     if (state.countdownInterval) clearInterval(state.countdownInterval);
 
-    const baseTime = new Date(createdAt).getTime();
-    const expiryTime = Number.isFinite(baseTime) ? baseTime + PAYMENT_EXPIRY_MS : Date.now();
+    const expiryTime = getPaymentDeadline(order);
+
+    if (!expiryTime) {
+      state.paymentExpired = false;
+      els.paymentCountdown.textContent = '-';
+      if (els.payNowBtn) {
+        els.payNowBtn.disabled = false;
+        els.payNowBtn.textContent = 'Bayar Sekarang';
+      }
+      return;
+    }
 
     const update = () => {
       const remaining = expiryTime - Date.now();
       if (remaining <= 0) {
         state.paymentExpired = true;
-        els.paymentCountdown.textContent = '00:00';
-        els.orderStatus.className = 'status-badge status-cancelled';
-        els.orderStatus.textContent = 'Pesanan Dibatalkan';
+        els.paymentCountdown.textContent = 'Expired';
         if (els.paymentActionContent) els.paymentActionContent.classList.add('is-expired');
         if (els.payNowBtn) {
           els.payNowBtn.disabled = true;
-          els.payNowBtn.textContent = 'Pembayaran Kedaluwarsa';
+          els.payNowBtn.textContent = 'Pembayaran Expired';
         }
-        renderStatusDetail({ ...state.order, status: 'cancelled', cancel_reason: 'Pembayaran melewati batas waktu.' });
         clearInterval(state.countdownInterval);
         state.countdownInterval = null;
         return;
       }
 
-      const minutes = Math.floor(remaining / 60000);
+      state.paymentExpired = false;
+      const hours = Math.floor(remaining / 3600000);
+      const minutes = Math.floor((remaining % 3600000) / 60000);
       const seconds = Math.floor((remaining % 60000) / 1000);
-      els.paymentCountdown.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      els.paymentCountdown.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     };
 
     update();
-    state.countdownInterval = setInterval(update, 1000);
+    if (!state.paymentExpired) state.countdownInterval = setInterval(update, 1000);
   }
 
   async function loadMidtransSnapScript(clientKey) {
@@ -592,57 +608,35 @@
     });
   }
 
+  function extractSnapPayload(result = {}) {
+    const payload = result?.data || result?.payment || result;
+    const snapToken = firstString(payload.snapToken, payload.snap_token, payload.token, result.snapToken, result.snap_token, result.token);
+    const clientKey = firstString(payload.clientKey, payload.client_key, result.clientKey, result.client_key);
+    return snapToken ? { ...payload, snapToken, clientKey } : null;
+  }
+
   async function requestPaymentToken(order) {
     const authHeader = state.session?.access_token ? { Authorization: `Bearer ${state.session.access_token}` } : {};
-    const endpoints = [
-      `/api/orders/${encodeURIComponent(order.id)}/pay-now`,
-      '/api/payment/payments/create',
-      '/api/payments/payments/create',
-      '/api/order/payments/create'
-    ];
-    const summary = computeSummary(order);
-    const payload = {
-      order_id: order.order_code || order.id,
-      order_code: order.order_code || order.id,
-      totalPrice: summary.total,
-      cart: state.items.map((item) => ({
-        id: item.id || item.name,
-        name: item.name,
-        quantity: item.quantity,
-        price: item.price
-      })),
-      customer: {
-        first_name: firstString(order.customer_name, order.recipient_name, 'Customer'),
-        email: state.session?.user?.email || '',
-        phone: firstString(order.customer_phone, order.phone_number, '')
-      }
-    };
+    const response = await window.fetchWithDebug(window.toApiPath(`/api/orders/${encodeURIComponent(order.id)}/retry-payment`), {
+      method: 'POST',
+      headers: authHeader,
+      body: JSON.stringify({ order_id: order.id, order_code: order.order_code || order.id })
+    });
+    const result = await response.json().catch(() => ({}));
 
-    for (const path of endpoints) {
-      try {
-        const response = await window.fetchWithDebug(window.toApiPath(path), {
-          method: 'POST',
-          headers: authHeader,
-          body: JSON.stringify(payload)
-        });
-        const result = await response.json().catch(() => ({}));
-        if (!response.ok) continue;
-        const snapToken = result?.snapToken || result?.snap_token || result?.token;
-        if (snapToken) return { ...result, snapToken };
-      } catch (error) {
-        console.warn('[Order Detail] Payment token endpoint failed:', path, error?.message || error);
-      }
+    if (!response.ok) {
+      throw new Error(firstString(result.message, result.error, 'Gagal membuat token pembayaran terbaru.'));
     }
 
-    throw new Error('Gagal membuat token pembayaran terbaru.');
+    const snapPayload = extractSnapPayload(result);
+    if (!snapPayload) throw new Error('Token pembayaran tidak tersedia.');
+    return snapPayload;
   }
 
   async function handlePayNow() {
     if (!state.order || !els.payNowBtn || state.paymentExpired) return;
     const result = await requestPaymentToken(state.order);
     state.payment = result;
-    console.log('PAYMENT STATUS', state.payment);
-
     const snap = await loadMidtransSnapScript(result.clientKey || result.client_key);
     if (!snap?.pay) throw new Error('Midtrans Snap tidak tersedia.');
     window.snap.pay(result.snapToken, {
@@ -770,10 +764,6 @@
     const tableItems = embeddedItems.length ? [] : await fetchOrderItemsFromTable(order);
     state.items = [...embeddedItems, ...tableItems].map(normalizeItem);
     state.refund = await fetchRefundStatus(order);
-
-    console.log('ORDER DETAIL', order);
-    console.log('ORDER ITEMS', state.items);
-    console.log('PAYMENT STATUS', state.payment);
 
     renderOrderHeader(order);
     renderOrderInfo(order);

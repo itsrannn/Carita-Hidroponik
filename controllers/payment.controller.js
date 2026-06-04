@@ -10,11 +10,19 @@ function mapMidtransTransactionStatus(transactionStatus, fraudStatus) {
     return 'paid';
   }
   if (transactionStatus === 'pending') return 'pending_payment';
-  if (transactionStatus === 'expire') return 'expired';
+  if (transactionStatus === 'expire') return 'cancelled';
   if (transactionStatus === 'cancel' || transactionStatus === 'deny') return 'cancelled';
   return 'pending_payment';
 }
 
+
+function getSupabaseHeaders() {
+  return {
+    apikey: SUPABASE_SERVICE_ROLE_KEY,
+    Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+    'Content-Type': 'application/json'
+  };
+}
 
 async function findOrderByCodeInSupabase(orderCode) {
   if (!SUPABASE_SERVICE_ROLE_KEY) {
@@ -23,11 +31,7 @@ async function findOrderByCodeInSupabase(orderCode) {
 
   const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?order_code=eq.${encodeURIComponent(orderCode)}&select=id,order_code,status,paid_at&limit=1`, {
     method: 'GET',
-    headers: {
-      apikey: SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-      'Content-Type': 'application/json'
-    }
+    headers: getSupabaseHeaders()
   });
 
   if (!response.ok) {
@@ -47,9 +51,7 @@ async function updateOrderStatusInSupabase(orderCode, newStatus, isPaid) {
   const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?order_code=eq.${encodeURIComponent(orderCode)}&select=id,order_code,status,paid_at`, {
     method: 'PATCH',
     headers: {
-      apikey: SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-      'Content-Type': 'application/json',
+      ...getSupabaseHeaders(),
       Prefer: 'return=representation'
     },
     body: JSON.stringify({
@@ -196,6 +198,140 @@ async function createPaymentToken(req, res) {
   }
 }
 
+function parseJsonArray(value) {
+  if (Array.isArray(value)) return value;
+  if (typeof value !== 'string') return [];
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_error) {
+    return [];
+  }
+}
+
+function toNumber(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function firstText(...values) {
+  for (const value of values) {
+    if (typeof value === 'string' || typeof value === 'number') {
+      const text = String(value).trim();
+      if (text && text !== 'undefined' && text !== 'null' && text !== '[object Object]') return text;
+    }
+  }
+  return '';
+}
+
+async function fetchSupabaseRows(path) {
+  if (!SUPABASE_SERVICE_ROLE_KEY) return null;
+
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    method: 'GET',
+    headers: getSupabaseHeaders()
+  });
+
+  if (!response.ok) return null;
+  const data = await response.json();
+  return Array.isArray(data) ? data : [];
+}
+
+async function findSupabaseOrderByIdOrCode(orderIdOrCode) {
+  const encoded = encodeURIComponent(orderIdOrCode);
+  const byCode = await fetchSupabaseRows(`orders?order_code=eq.${encoded}&select=*&limit=1`);
+  if (byCode?.length) return byCode[0];
+
+  const byId = await fetchSupabaseRows(`orders?id=eq.${encoded}&select=*&limit=1`);
+  return byId?.length ? byId[0] : null;
+}
+
+async function getSupabaseOrderItems(order) {
+  if (!order?.id) return [];
+  const rows = await fetchSupabaseRows(`order_items?order_id=eq.${encodeURIComponent(order.id)}&select=*`);
+  return rows || [];
+}
+
+function getOrderTotal(order = {}, items = []) {
+  const explicitTotal = toNumber(order.total_amount || order.totalAmount || order.grand_total || order.total);
+  if (explicitTotal > 0) return Math.round(explicitTotal);
+
+  const itemsTotal = items.reduce((sum, item) => {
+    const quantity = toNumber(item.quantity || item.qty || 1) || 1;
+    const price = toNumber(item.price || item.unit_price || item.product_price || item.amount);
+    return sum + (quantity * price);
+  }, 0);
+  const shipping = toNumber(order.shipping_cost || order.ongkir || order.shippingCost);
+  return Math.round(itemsTotal + shipping);
+}
+
+function buildMidtransItemDetails(order, items, grossAmount) {
+  const normalizedItems = items.map((item) => {
+    const quantity = toNumber(item.quantity || item.qty || 1) || 1;
+    const price = toNumber(item.price || item.unit_price || item.product_price || item.amount);
+    return {
+      id: firstText(item.product_id, item.id, order.order_code, order.id, 'order-item'),
+      name: firstText(item.product_name, item.name, item.title, 'Produk'),
+      quantity,
+      price: Math.round(price)
+    };
+  }).filter((item) => item.id && item.name && item.quantity > 0 && item.price > 0);
+
+  const itemTotal = normalizedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  if (normalizedItems.length && itemTotal === grossAmount) return normalizedItems;
+
+  return [{
+    id: firstText(order.order_code, order.id, 'order'),
+    name: `Pembayaran Pesanan ${firstText(order.order_code, order.id, '')}`.trim(),
+    quantity: 1,
+    price: grossAmount
+  }];
+}
+
+async function retryPayment(req, res) {
+  const orderId = firstText(req.params?.id, req.body?.order_id, req.body?.order_code);
+  if (!orderId) return res.status(400).json({ message: 'order id is required.' });
+
+  const order = await findSupabaseOrderByIdOrCode(orderId) || orderRepository.findByOrderId(orderId);
+  if (!order) return res.status(404).json({ message: 'Order not found.' });
+  if (order.status !== 'pending_payment') return res.status(409).json({ message: 'Payment retry is only available for pending_payment orders.' });
+
+  const embeddedItems = [
+    ...parseJsonArray(order.order_items),
+    ...parseJsonArray(order.items),
+    ...parseJsonArray(order.order_details),
+    ...parseJsonArray(order.details)
+  ];
+  const orderItems = embeddedItems.length ? embeddedItems : (await getSupabaseOrderItems(order));
+  const grossAmount = getOrderTotal(order, orderItems);
+  if (!Number.isInteger(grossAmount) || grossAmount <= 0) {
+    return res.status(400).json({ message: 'Order total is invalid.' });
+  }
+
+  try {
+    const snapToken = await midtransService.createSnapToken({
+      orderId: firstText(order.order_code, order.id, orderId),
+      grossAmount,
+      itemDetails: buildMidtransItemDetails(order, orderItems, grossAmount),
+      customerDetails: {
+        first_name: firstText(order.customer_name, order.recipient_name, 'Customer'),
+        email: firstText(order.customer_email, order.email, 'customer@example.com'),
+        phone: firstText(order.customer_phone, order.phone_number, '')
+      },
+    });
+
+    return res.status(201).json({
+      snapToken,
+      clientKey: process.env.MIDTRANS_CLIENT_KEY,
+      order_id: order.id || orderId,
+      order_code: order.order_code || orderId
+    });
+  } catch (_error) {
+    return res.status(502).json({ message: 'Failed to create Midtrans transaction token.' });
+  }
+}
+
+
 async function confirmOrder(req, res) {
   const { order_code: orderCode, transaction_id: transactionId, payment_status: paymentStatus } = req.body || {};
 
@@ -210,7 +346,7 @@ async function confirmOrder(req, res) {
 
   if (order) {
     orderRepository.updateByOrderId(orderCode, {
-      status: paymentStatus === 'success' ? 'paid' : (paymentStatus === 'pending' ? 'pending' : 'failed'),
+      status: paymentStatus === 'success' ? 'paid' : (paymentStatus === 'pending' ? 'pending_payment' : 'cancelled'),
       transactionId: transactionId || order.transactionId,
       updatedAt: new Date().toISOString(),
     });
@@ -247,7 +383,7 @@ async function createSnapToken(req, res) {
 
   const order = orderRepository.create({
     orderId,
-    status: 'pending',
+    status: 'pending_payment',
     totalAmount: grossAmount,
     orderDetails: normalized.itemDetails,
     customer: {
@@ -274,7 +410,7 @@ async function createSnapToken(req, res) {
       orderId: order.orderId,
     });
   } catch (_error) {
-    orderRepository.updateByOrderId(order.orderId, { status: 'failed' });
+    orderRepository.updateByOrderId(order.orderId, { status: 'cancelled' });
     return res.status(502).json({ message: 'Failed to create Midtrans transaction token.' });
   }
 }
@@ -306,7 +442,7 @@ function webhook(req, res) {
   const isPaid = transactionStatus === 'settlement' || (transactionStatus === 'capture' && fraudStatus === 'accept');
 
   const updatedOrder = orderRepository.updateByOrderId(orderId, {
-    status: isPaid ? 'paid' : 'pending',
+    status: isPaid ? 'paid' : 'pending_payment',
     paidAt: isPaid ? new Date().toISOString() : null,
     transactionStatus,
     statusCode,
@@ -374,9 +510,7 @@ async function midtransNotification(req, res) {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?order_code=eq.${encodeURIComponent(orderId)}&select=id,order_code,status,paid_at`, {
       method: 'PATCH',
       headers: {
-        apikey: SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        'Content-Type': 'application/json',
+        ...getSupabaseHeaders(),
         Prefer: 'return=representation'
       },
       body: JSON.stringify({
@@ -427,6 +561,7 @@ module.exports = {
   createPaymentToken,
   createSnapToken,
   confirmOrder,
+  retryPayment,
   webhook,
   midtransNotification,
   getPaidOrdersForAdmin,
