@@ -134,16 +134,21 @@ document.addEventListener('alpine:init', () => {
       }
     },
 
+    getFirstFilledValue(...values) {
+      const filledValue = values.find((value) => value !== null && value !== undefined && String(value).trim() !== '');
+      return filledValue === undefined ? '' : String(filledValue).trim();
+    },
+
     resolveRegionId(options, preferredId, preferredName) {
       if (!Array.isArray(options) || options.length === 0) return '';
 
-      if (preferredId !== null && preferredId !== undefined && String(preferredId) !== '') {
-        const byId = options.find((item) => String(item.id) === String(preferredId));
+      if (preferredId !== null && preferredId !== undefined && String(preferredId).trim() !== '') {
+        const byId = options.find((item) => String(item.id) === String(preferredId).trim());
         if (byId) return String(byId.id);
       }
 
-      if (preferredName) {
-        const normalizedName = String(preferredName).trim().toLowerCase();
+      const normalizedName = this.getFirstFilledValue(preferredName).toLowerCase();
+      if (normalizedName) {
         const byName = options.find((item) => String(item.name).trim().toLowerCase() === normalizedName);
         if (byName) return String(byName.id);
       }
@@ -152,10 +157,15 @@ document.addEventListener('alpine:init', () => {
     },
 
     async hydrateAddressSelections(data = {}) {
+      const savedProvinceName = this.getFirstFilledValue(data.province, data.provinsi);
+      const savedRegencyName = this.getFirstFilledValue(data.regency, data.city, data.kota, data.city_or_regency);
+      const savedDistrictName = this.getFirstFilledValue(data.district, data.kecamatan);
+      const savedVillageName = this.getFirstFilledValue(data.village, data.kelurahan);
+
       this.selectedProvince = this.resolveRegionId(
         this.provinces,
         data.province_id !== null && data.province_id !== undefined ? String(data.province_id) : data.province_id,
-        data.province
+        savedProvinceName
       );
       this.profile.province_id = this.selectedProvince;
 
@@ -169,15 +179,13 @@ document.addEventListener('alpine:init', () => {
         return;
       }
 
-      // 1) Load provinces, 2) set province, 3) load cities, 4) set city,
-      // 5) load districts, 6) set district, 7) load villages, 8) set village.
+      // Profile hydration must be strictly sequential because each child select
+      // depends on the parent option list being available first.
       await this.fetchRegencies(false);
       this.selectedRegency = this.resolveRegionId(
         this.regencies,
-        data.city_id !== null && data.city_id !== undefined
-          ? String(data.city_id)
-          : (data.regency_id !== null && data.regency_id !== undefined ? String(data.regency_id) : data.regency_id),
-        data.city ?? data.regency
+        this.getFirstFilledValue(data.regency_id, data.city_id),
+        savedRegencyName
       );
       this.profile.city_id = this.selectedRegency;
       this.profile.regency_id = this.selectedRegency;
@@ -194,7 +202,7 @@ document.addEventListener('alpine:init', () => {
       this.selectedDistrict = this.resolveRegionId(
         this.districts,
         data.district_id !== null && data.district_id !== undefined ? String(data.district_id) : data.district_id,
-        data.district
+        savedDistrictName
       );
       this.profile.district_id = this.selectedDistrict;
 
@@ -210,15 +218,12 @@ document.addEventListener('alpine:init', () => {
       }
 
       await this.fetchVillages(false);
-      if (this.villages.length === 0 && data.district_id && String(data.district_id) !== String(this.selectedDistrict)) {
-        await this.fetchVillages(false, String(data.district_id));
-      }
       this.selectedVillage = String(data.village_id || '');
       if (this.selectedVillage && !this.villages.find((item) => String(item.id) === this.selectedVillage)) {
-        this.selectedVillage = this.resolveRegionId(this.villages, data.village_id, data.village);
+        this.selectedVillage = this.resolveRegionId(this.villages, data.village_id, savedVillageName);
       }
-      if (!this.selectedVillage && data.village) {
-        const normalizedVillage = String(data.village).trim();
+      if (!this.selectedVillage && savedVillageName) {
+        const normalizedVillage = savedVillageName;
         const villageByName = this.villages.find(
           (item) => String(item.name).trim().toLowerCase() === normalizedVillage.toLowerCase()
         );
@@ -491,7 +496,8 @@ document.addEventListener('alpine:init', () => {
     },
 
     async fetchRegencies(reset = true) {
-      if (!this.selectedProvince) {
+      const provinceId = this.getFirstFilledValue(this.selectedProvince);
+      if (!provinceId) {
         this.regencies = [];
         return;
       }
@@ -505,19 +511,24 @@ document.addEventListener('alpine:init', () => {
       }
 
       try {
-        const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${this.selectedProvince}.json`);
+        const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${provinceId}.json`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        this.regencies = await response.json();
-        const match = this.provinces.find((item) => String(item.id) === String(this.selectedProvince));
+        const regenciesResult = await response.json();
+        if (String(this.selectedProvince) !== provinceId) return;
+
+        this.regencies = Array.isArray(regenciesResult) ? regenciesResult : [];
+        const match = this.provinces.find((item) => String(item.id) === provinceId);
         this.profile.province = match?.name || '';
       } catch (error) {
+        if (String(this.selectedProvince) !== provinceId) return;
         console.error('[Account] Failed to fetch regencies:', error);
         this.regencies = [];
       }
     },
 
     async fetchDistricts(reset = true) {
-      if (!this.selectedRegency) {
+      const regencyId = this.getFirstFilledValue(this.selectedRegency);
+      if (!regencyId) {
         this.districts = [];
         return;
       }
@@ -529,24 +540,26 @@ document.addEventListener('alpine:init', () => {
       }
 
       try {
-        const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/${this.selectedRegency}.json`);
+        const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/${regencyId}.json`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        this.districts = await response.json();
-        const match = this.regencies.find((item) => String(item.id) === String(this.selectedRegency));
+        const districtsResult = await response.json();
+        if (String(this.selectedRegency) !== regencyId) return;
+
+        this.districts = Array.isArray(districtsResult) ? districtsResult : [];
+        const match = this.regencies.find((item) => String(item.id) === regencyId);
         this.profile.city = match?.name || '';
         this.profile.regency = this.profile.city;
       } catch (error) {
+        if (String(this.selectedRegency) !== regencyId) return;
         console.error('[Account] Failed to fetch districts:', error);
         this.districts = [];
       }
     },
 
     async fetchVillages(reset = true, districtId = this.selectedDistrict) {
-      console.log('[DEBUG] fetchVillages districtId:', districtId);
-      const normalizedDistrictId = districtId !== null && districtId !== undefined ? String(districtId).trim() : '';
+      const normalizedDistrictId = this.getFirstFilledValue(districtId);
       if (!normalizedDistrictId) {
         this.villages = [];
-        console.log('[DEBUG] villages result:', this.villages);
         return;
       }
 
@@ -558,18 +571,19 @@ document.addEventListener('alpine:init', () => {
         const response = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/villages/${normalizedDistrictId}.json`);
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const villagesResult = await response.json();
+        if (String(this.selectedDistrict) !== normalizedDistrictId) return;
+
         this.villages = Array.isArray(villagesResult) ? villagesResult : [];
         const match = this.districts.find((item) => String(item.id) === normalizedDistrictId);
         this.profile.district = match?.name || '';
-        console.log('[DEBUG] villages result:', this.villages);
       } catch (error) {
+        if (String(this.selectedDistrict) !== normalizedDistrictId) return;
         console.error('[Account] Failed to fetch villages:', {
           districtId: normalizedDistrictId,
           message: error?.message || String(error),
           error
         });
         this.villages = [];
-        console.log('[DEBUG] villages result:', this.villages);
       }
     },
 
