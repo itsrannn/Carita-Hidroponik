@@ -1,169 +1,59 @@
 <style>
-    .dashboard-header {
-        padding: var(--spacing-lg);
-        background-color: #fff;
-        border-bottom: 1px solid #dee2e6;
-    }
-
-    .dashboard-header .page-title,
-    .dashboard-header p {
-        margin: 0;
-    }
-
-    .dashboard-header p {
-        margin-top: var(--spacing-xs);
-        color: #6c757d;
-    }
-
-    .order-management-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: var(--spacing-md);
-    }
-
-    .admin-order-card {
-        background-color: #fff;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        border: 1px solid rgba(0,0,0,0.08);
-        display: flex;
-        flex-direction: column;
-    }
-
-    .admin-order-card .order-header {
-        padding: var(--spacing-md);
-        border-bottom: 1px solid #eee;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: var(--spacing-sm);
-    }
-
-    .admin-order-card .order-header h3 {
-        margin: 0;
-    }
-
-    .admin-order-card .order-body {
-        padding: var(--spacing-md);
-        flex-grow: 1;
-    }
-
-    .admin-order-card .order-footer {
-        padding: var(--spacing-md);
-        background-color: #f8f9fa;
-        border-top: 1px solid #eee;
-    }
-
-    .info-group {
-        margin-bottom: var(--spacing-sm);
-    }
-
-    .info-group:last-child {
-        margin-bottom: 0;
-    }
-
-    .info-group label {
-        display: block;
-        font-size: 0.8rem;
-        color: #666;
-        font-weight: 600;
-        margin-bottom: var(--spacing-xs);
-    }
-
-    .info-group p,
-    .info-group ul {
-        margin: 0;
-    }
-
-    .action-buttons {
-        display: flex;
-        flex-wrap: wrap;
-        gap: var(--spacing-xs);
-        align-items: center;
-    }
-
-    .btn-admin {
-        border: none;
-        padding: 0.6rem 1rem;
-        border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .btn-admin-approve { background-color: var(--accent); color: white; }
-    .btn-admin-approve:hover { background-color: var(--green); transform: translateY(-2px); }
-    .btn-admin-reject { background-color: #fce8e6; color: #c5221f; }
-    .btn-admin-reject:hover { background-color: #f7d5d2; transform: translateY(-2px); }
-
-    .status-badge {
-        font-weight: 600;
-        padding: 0.3rem 0.8rem;
-        border-radius: 50px;
-        font-size: 0.85em;
-        color: #fff;
-        text-transform: capitalize;
-    }
-
-    .filter-container {
-        background-color: #fff;
-        padding: var(--spacing-md);
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        border: 1px solid rgba(0,0,0,0.06);
-    }
-
-    .filter-group {
-        display: flex;
-        flex-direction: column;
-        gap: var(--spacing-xs);
-    }
-
-    .filter-group label {
-        font-size: 0.8rem;
-        color: #666;
-        font-weight: 600;
-    }
-
-    .filter-select {
-        padding: 0.6rem 1rem;
-        border-radius: 8px;
-        border: 1px solid #ccc;
-        background-color: #f8f9fa;
-        font-weight: 500;
-        min-width: 200px;
-    }
+    .dashboard-header { padding: var(--spacing-lg, 24px); background-color: #fff; border-bottom: 1px solid #dee2e6; border-radius: 12px; margin-bottom: 1rem; }
+    .dashboard-header .page-title, .dashboard-header p { margin: 0; }
+    .dashboard-header p { margin-top: var(--spacing-xs, 8px); color: #6c757d; }
+    .order-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.9rem; margin: 1rem 0; }
+    .order-stat-card { background: #fff; border: 1px solid #e6ebf2; border-radius: 14px; padding: 1rem; box-shadow: 0 6px 18px rgba(15,23,42,.06); }
+    .order-stat-card span { display: block; color: #64748b; font-size: .85rem; font-weight: 700; }
+    .order-stat-card strong { display: block; color: #0f172a; font-size: 1.7rem; margin-top: .25rem; }
+    .filter-container { background-color: #fff; padding: 1rem; border-radius: 14px; margin-bottom: 1rem; box-shadow: 0 6px 18px rgba(15,23,42,.05); border: 1px solid #e6ebf2; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .9rem; align-items: end; }
+    .filter-group { display: flex; flex-direction: column; gap: .35rem; }
+    .filter-group label { font-size: .8rem; color: #475569; font-weight: 700; }
+    .filter-select, .filter-input { padding: .72rem .9rem; border-radius: 999px; border: 1px solid #d8dee4; background: #f8fafc; font-weight: 600; min-width: 0; }
+    .reset-filter-btn { border: 0; border-radius: 999px; background: #e8f5e9; color: #1b5e20; padding: .78rem 1rem; font-weight: 800; cursor: pointer; }
+    .order-management-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 1rem; margin-bottom: 3rem; }
+    .admin-order-card { background: #fff; border: 1px solid #e6ebf2; border-radius: 16px; box-shadow: 0 8px 24px rgba(15,23,42,.07); overflow: hidden; }
+    .order-summary-toggle { width: 100%; border: 0; background: #fff; padding: 1rem; display: flex; justify-content: space-between; gap: .8rem; text-align: left; cursor: pointer; }
+    .order-summary-toggle:hover { background: #f8fafc; }
+    .order-code { color: #0f172a; font-weight: 800; font-size: .98rem; overflow-wrap: anywhere; }
+    .order-customer { color: #334155; font-weight: 700; margin-top: .35rem; }
+    .order-date { color: #64748b; font-size: .9rem; margin-top: .2rem; }
+    .status-badge { align-self: flex-start; white-space: nowrap; font-weight: 800; padding: .35rem .75rem; border-radius: 999px; font-size: .78rem; color: #fff; background: #64748b; }
+    .status-pending { background: #f59e0b; } .status-diproses { background: #0ea5e9; } .status-dikirim { background: #6366f1; } .status-selesai { background: #16a34a; } .status-dibatalkan { background: #dc2626; }
+    .order-detail-panel { border-top: 1px solid #e6ebf2; padding: 1rem; background: #fbfdff; }
+    .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .8rem; }
+    .detail-box { background: #fff; border: 1px solid #edf2f7; border-radius: 12px; padding: .9rem; margin-bottom: .8rem; }
+    .detail-box h4 { margin: 0 0 .55rem; color: #0f172a; }
+    .detail-box p { margin: .35rem 0; color: #334155; }
+    .order-items-table-wrap { overflow-x: auto; }
+    .order-items-table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+    .order-items-table th, .order-items-table td { padding: .55rem; border-bottom: 1px solid #e5e7eb; text-align: left; }
+    .order-items-table tfoot td { font-weight: 800; }
+    .status-editor-box label { display: block; font-weight: 800; margin-bottom: .45rem; }
+    .order-status-select { width: 100%; max-width: 260px; border: 1px solid #d8dee4; border-radius: 999px; padding: .65rem .9rem; background: #fff; font-weight: 700; }
+    .admin-inline-message { padding: 1rem; background-color: #fff8e1; border: 1px solid #ffe082; border-radius: 12px; margin-bottom: 1rem; } .admin-inline-message.error { background: #fef2f2; border-color: #fecaca; color: #991b1b; } .admin-inline-message h4, .admin-inline-message p { margin: 0 0 .35rem; }
+    .empty-state { grid-column: 1 / -1; padding: 1rem; background: #fff; border-radius: 12px; border: 1px dashed #cbd5e1; color: #64748b; }
 </style>
-<div class="container content-wrapper">
+<div class="container content-wrapper" id="orders-admin-root">
     <div class="dashboard-header section">
-        <h1 class="page-title section-title" x-text="$store.i18n.t('admin.orders.title')">Order Management</h1>
-        <p x-text="$store.i18n.t('admin.orders.description')">Manage and update the status of incoming orders.</p>
+        <h1 class="page-title">Manajemen Pesanan</h1>
+        <p>Kelola pesanan masuk dengan data langsung dari database.</p>
     </div>
-
-    <div id="admin-message-container" class="message-container section" style="display: none;"></div>
-
-    <div class="filter-container filter-bar section">
-        <div class="filter-group">
-            <label for="sort-time" x-text="$store.i18n.t('admin.orders.filter.sortByTime')">Sort by Time</label>
-            <select id="sort-time" class="filter-select">
-                <option value="newest" x-text="$store.i18n.t('admin.orders.filter.newest')">Newest</option>
-                <option value="oldest" x-text="$store.i18n.t('admin.orders.filter.oldest')">Oldest</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label for="filter-status" x-text="$store.i18n.t('admin.orders.filter.filterByStatus')">Filter by Status</label>
-            <select id="filter-status" class="filter-select">
-                <option value="all" x-text="$store.i18n.t('admin.orders.filter.allStatuses')">All Statuses</option>
-                <option value="Menunggu Konfirmasi" x-text="$store.i18n.t('admin.orders.filter.status.awaiting')">Awaiting Confirmation</option>
-                <option value="Diproses" x-text="$store.i18n.t('admin.orders.filter.status.processing')">Processing</option>
-                <option value="Dalam Pengiriman" x-text="$store.i18n.t('admin.orders.filter.status.shipped')">Shipped</option>
-                <option value="Selesai" x-text="$store.i18n.t('admin.orders.filter.status.completed')">Completed</option>
-                <option value="Ditolak" x-text="$store.i18n.t('admin.orders.filter.status.rejected')">Rejected</option>
-            </select>
-        </div>
+    <div id="admin-message-container" class="message-container" style="display: none;"></div>
+    <div class="order-stats-grid" aria-label="Statistik pesanan">
+        <div class="order-stat-card"><span>Total Orders</span><strong data-order-stat="total">0</strong></div>
+        <div class="order-stat-card"><span>Pending Orders</span><strong data-order-stat="pending">0</strong></div>
+        <div class="order-stat-card"><span>Diproses</span><strong data-order-stat="processing">0</strong></div>
+        <div class="order-stat-card"><span>Dikirim</span><strong data-order-stat="shipped">0</strong></div>
+        <div class="order-stat-card"><span>Selesai</span><strong data-order-stat="completed">0</strong></div>
     </div>
-
-    <div id="orders-grid" class="order-management-grid card-container section"></div>
-
-    <p id="loading-message" x-text="$store.i18n.t('admin.orders.loading')">Loading orders...</p>
+    <div class="filter-container">
+        <div class="filter-group"><label for="search-order-id">Search Order ID</label><input id="search-order-id" class="filter-input" type="search" placeholder="#CARITA..."></div>
+        <div class="filter-group"><label for="search-customer">Search Customer</label><input id="search-customer" class="filter-input" type="search" placeholder="Nama customer"></div>
+        <div class="filter-group"><label for="filter-status">Filter Status</label><select id="filter-status" class="filter-select"><option value="all">Semua Status</option><option value="Pending">Pending</option><option value="Diproses">Diproses</option><option value="Dikirim">Dikirim</option><option value="Selesai">Selesai</option><option value="Dibatalkan">Dibatalkan</option></select></div>
+        <div class="filter-group"><label for="sort-time">Sort By Date</label><select id="sort-time" class="filter-select"><option value="newest">Terbaru</option><option value="oldest">Terlama</option></select></div>
+        <button type="button" id="reset-order-filters" class="reset-filter-btn">Reset Filter</button>
+    </div>
+    <div id="orders-grid" class="order-management-grid"></div>
+    <p id="loading-message">Memuat pesanan...</p>
 </div>

@@ -206,8 +206,16 @@
                     <div class="value" id="total-revenue" x-text="$store.i18n.t('admin.dashboard.kpi.loading')">Loading...</div>
                 </div>
                 <div class="kpi-card card">
-                    <div class="label" x-text="$store.i18n.t('admin.dashboard.kpi.completedOrders')">Completed Orders</div>
+                    <div class="label" >Total Orders</div>
                     <div class="value" id="total-orders" x-text="$store.i18n.t('admin.dashboard.kpi.loading')">Loading...</div>
+                </div>
+                <div class="kpi-card card">
+                    <div class="label">Pending Orders</div>
+                    <div class="value" id="pending-orders">Loading...</div>
+                </div>
+                <div class="kpi-card card">
+                    <div class="label">Completed Orders</div>
+                    <div class="value" id="completed-orders">Loading...</div>
                 </div>
                 <div class="kpi-card card">
                     <div class="label" x-text="$store.i18n.t('admin.dashboard.kpi.bestSelling')">Best Selling Product</div>

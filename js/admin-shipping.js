@@ -1,126 +1,100 @@
 window.AdminShippingPage = (() => {
-  const API_BASE_URL = window.location.hostname.includes('localhost') ? 'http://localhost:3000/api' : 'https://caritahidroponik.com/api';
-  let shippingZones = [];
+  const DEFAULT_ZONES = [
+    { zone_code: '11', region_name: 'Kecamatan Turen', price: 8000, currency: 'IDR' },
+    { zone_code: '24', region_name: 'Kabupaten Malang', price: 10000, currency: 'IDR' },
+    { zone_code: '37', region_name: 'Provinsi Jawa Timur', price: 15000, currency: 'IDR' },
+    { zone_code: '62', region_name: 'Indonesia', price: 30000, currency: 'IDR' },
+    { zone_code: '98', region_name: 'Luar Negeri', price: 2, currency: 'USD' }
+  ];
+  let zones = [];
 
-  const fmtIdr = (n) => `Rp${Number(n || 0).toLocaleString('id-ID')}`;
-  const fmtUsd = (n) => `$${Number(n || 0).toLocaleString('en-US')}/kg`;
+  const el = (id) => document.getElementById(id);
+  const fmt = (z) => `${z.currency || 'IDR'} ${Number(z.price ?? z.base_rate ?? 0).toLocaleString((z.currency || 'IDR') === 'USD' ? 'en-US' : 'id-ID')}`;
+  const notice = (text, isError = false) => {
+    const n = el('shipping-admin-notice'); if (!n) return;
+    n.textContent = text; n.className = `shipping-notice show ${isError ? 'error' : ''}`;
+    setTimeout(() => n.classList.remove('show'), 3000);
+  };
 
-  function el(id) { return document.getElementById(id); }
-  function showNotice(text, isError = false) {
-    const n = el('shipping-admin-notice');
-    if (!n) return;
-    n.textContent = text;
-    n.className = `shipping-notice show ${isError ? 'error' : ''}`;
-    setTimeout(() => n.classList.remove('show'), 2500);
-  }
-
-  function getPayload() {
+  function normalizeZone(z) {
     return {
-      type: el('zone-type').value,
-      province: el('province').value.trim(),
-      regency: el('regency').value.trim(),
-      district: el('district').value.trim(),
-      price_per_kg: Number(el('price-per-kg').value),
-      estimate: el('estimate').value.trim(),
-      is_international: el('is-international').checked
+      id: z.id,
+      zone_code: z.zone_code || zoneCodeFromOld(z),
+      region_name: z.region_name || z.zone_name || [z.district_match, z.province_match].filter(Boolean).join(', ') || '-',
+      price: Number(z.price ?? z.base_rate ?? 0),
+      currency: z.currency || (z.is_international ? 'USD' : 'IDR'),
+      updated_at: z.updated_at
     };
   }
-
-  function renderZones() {
-    const tbody = el('shipping-rates-tbody');
-    if (!tbody) return;
-    if (!shippingZones.length) {
-      tbody.innerHTML = '<tr><td colspan="5">Belum ada zona ongkir.</td></tr>';
-      return;
-    }
-    tbody.innerHTML = shippingZones.map((z, i) => {
-      const wilayah = [z.district, z.regency, z.province].filter(Boolean).join(', ') || '-';
-      const price = z.is_international ? fmtUsd(z.price_per_kg) : fmtIdr(z.price_per_kg);
-      return `<tr>
-        <td>${i + 1}</td>
-        <td>${wilayah}</td>
-        <td>${price}</td>
-        <td>${z.estimate || '-'}</td>
-        <td>
-          <button class="btn-action btn-primary" data-edit-id="${z.id}">Edit</button>
-          <button class="btn-action btn-danger" data-delete-id="${z.id}">Hapus</button>
-        </td>
-      </tr>`;
-    }).join('');
+  function zoneCodeFromOld(z) {
+    const name = String(z.zone_name || '').toLowerCase();
+    if (name.includes('turen')) return '11'; if (name.includes('malang')) return '24'; if (name.includes('jawa timur')) return '37'; if (name.includes('indonesia')) return '62'; if (z.is_international) return '98'; return String(z.id || '');
   }
 
   async function loadZones() {
-    const res = await fetch(`${API_BASE_URL}/admin/shipping-zones`);
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(json?.message || 'Gagal memuat data ongkir.');
-    shippingZones = json?.data || json || [];
+    const { data, error } = await window.supabase.from('shipping_zones').select('*').order('zone_code', { ascending: true });
+    if (error) throw error;
+    zones = (data || []).map(normalizeZone);
     renderZones();
   }
 
-  function openModal(editId = null) {
-    const modal = el('shipping-modal');
-    const title = el('shipping-modal-title');
-    el('editing-rate-id').value = editId || '';
-    if (editId) {
-      const z = shippingZones.find((x) => String(x.id) === String(editId));
-      if (z) {
-        el('zone-type').value = z.type || 'district';
-        el('province').value = z.province || '';
-        el('regency').value = z.regency || '';
-        el('district').value = z.district || '';
-        el('price-per-kg').value = z.price_per_kg || 0;
-        el('estimate').value = z.estimate || '';
-        el('is-international').checked = Boolean(z.is_international);
+  function filteredZones() {
+    const query = (el('shipping-zone-search')?.value || '').toLowerCase().trim();
+    const sort = el('shipping-zone-sort')?.value || 'asc';
+    return zones
+      .filter((z) => !query || z.zone_code.includes(query) || z.region_name.toLowerCase().includes(query))
+      .sort((a, b) => sort === 'desc' ? Number(b.zone_code) - Number(a.zone_code) : Number(a.zone_code) - Number(b.zone_code));
+  }
+
+  function renderZones() {
+    const tbody = el('shipping-rates-tbody'); if (!tbody) return;
+    const list = filteredZones();
+    tbody.innerHTML = list.length ? list.map((z) => `<tr>
+      <td><strong>${z.zone_code}</strong></td>
+      <td>${z.region_name}</td>
+      <td><div class="price-editor"><select data-currency-id="${z.id}"><option value="IDR" ${z.currency === 'IDR' ? 'selected' : ''}>IDR</option><option value="USD" ${z.currency === 'USD' ? 'selected' : ''}>USD</option></select><input type="number" min="0" step="${z.currency === 'USD' ? '0.01' : '1'}" value="${z.price}" data-price-id="${z.id}"></div><small>${fmt(z)}</small></td>
+      <td>${z.updated_at ? new Date(z.updated_at).toLocaleString('id-ID') : '-'}</td>
+      <td><button class="btn-action btn-primary" data-save-id="${z.id}">Save</button></td>
+    </tr>`).join('') : '<tr><td colspan="5">Belum ada zona ongkir. Jalankan migration seed shipping_zones.</td></tr>';
+  }
+
+  async function saveZone(id) {
+    const zone = zones.find((z) => String(z.id) === String(id)); if (!zone) return;
+    const price = Number(document.querySelector(`[data-price-id="${id}"]`)?.value);
+    const currency = document.querySelector(`[data-currency-id="${id}"]`)?.value || zone.currency;
+    if (!Number.isFinite(price) || price < 0) throw new Error('Harga tidak valid.');
+    const payload = { zone_code: zone.zone_code, region_name: zone.region_name, price, currency, updated_at: new Date().toISOString() };
+    const { error } = await window.supabase.from('shipping_zones').update(payload).eq('id', id);
+    if (error) throw error;
+    zone.price = price; zone.currency = currency; zone.updated_at = payload.updated_at;
+    renderZones(); notice('Harga ongkir berhasil disimpan.');
+  }
+
+  async function seedDefaults() {
+    for (const zone of DEFAULT_ZONES) {
+      const exists = zones.some((z) => z.zone_code === zone.zone_code);
+      if (!exists) {
+        const { error } = await window.supabase.from('shipping_zones').insert({ ...zone, updated_at: new Date().toISOString() });
+        if (error) throw error;
       }
-      title.textContent = 'Edit Zona Ongkir';
-    } else {
-      el('shipping-form').reset();
-      title.textContent = 'Tambah Zona Ongkir';
     }
-    modal.style.display = 'flex';
-  }
-
-  function closeModal() { el('shipping-modal').style.display = 'none'; }
-
-  async function saveZone() {
-    const id = el('editing-rate-id').value;
-    const payload = getPayload();
-    const endpoint = id ? `${API_BASE_URL}/admin/shipping-zones/${id}` : `${API_BASE_URL}/admin/shipping-zones`;
-    const method = id ? 'PUT' : 'POST';
-    const res = await fetch(endpoint, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(json?.message || 'Gagal menyimpan zona ongkir.');
-    closeModal();
-    await loadZones();
-    showNotice('Zona ongkir berhasil disimpan.');
-  }
-
-  async function deleteZone(id) {
-    const res = await fetch(`${API_BASE_URL}/admin/shipping-zones/${id}`, { method: 'DELETE' });
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(json?.message || 'Gagal menghapus zona ongkir.');
-    await loadZones();
-    showNotice('Zona ongkir berhasil dihapus.');
+    await loadZones(); notice('Zona default berhasil dibuat.');
   }
 
   function bindEvents() {
-    el('open-shipping-modal-btn')?.addEventListener('click', () => openModal());
-    el('close-shipping-modal-btn')?.addEventListener('click', closeModal);
-    el('save-rate-btn')?.addEventListener('click', async () => { try { await saveZone(); } catch (e) { showNotice(e.message, true); } });
-    el('shipping-rates-tbody')?.addEventListener('click', async (e) => {
-      const editId = e.target?.dataset?.editId;
-      const deleteId = e.target?.dataset?.deleteId;
-      if (editId) openModal(editId);
-      if (deleteId && window.confirm('Hapus zona ongkir ini?')) {
-        try { await deleteZone(deleteId); } catch (err) { showNotice(err.message, true); }
-      }
+    el('shipping-rates-tbody')?.addEventListener('click', async (event) => {
+      const id = event.target?.dataset?.saveId;
+      if (id) { try { await saveZone(id); } catch (e) { notice(e.message, true); } }
     });
+    el('shipping-zone-search')?.addEventListener('input', renderZones);
+    el('shipping-zone-sort')?.addEventListener('change', renderZones);
+    el('seed-shipping-zones-btn')?.addEventListener('click', async () => { try { await seedDefaults(); } catch (e) { notice(e.message, true); } });
   }
 
   async function init() {
-    if (!el('shipping-admin-root')) return;
+    if (!el('shipping-admin-root') || !window.supabase) return;
     bindEvents();
-    try { await loadZones(); } catch (e) { showNotice(e.message, true); }
+    try { await loadZones(); } catch (e) { notice(e.message, true); }
   }
   return { init };
 })();

@@ -29,23 +29,28 @@ function parseIntField(value, fieldName, required = true) {
 }
 
 function normalizeZonePayload(body = {}) {
-  const zone_name = String(body.zone_name || '').trim();
-  if (!zone_name) throw new Error('zone_name is required');
+  const regionName = String(body.region_name || body.zone_name || '').trim();
+  if (!regionName) throw new Error('region_name is required');
+  const price = parseIntField(body.price ?? body.base_rate, 'price');
 
   return {
-    zone_name,
+    zone_code: body.zone_code ? String(body.zone_code).trim() : null,
+    region_name: regionName,
+    price,
+    currency: String(body.currency || 'IDR').trim().toUpperCase(),
+    zone_name: regionName,
     district_match: body.district_match ? String(body.district_match).trim() : null,
     province_match: body.province_match ? String(body.province_match).trim() : null,
-    base_rate: parseIntField(body.base_rate, 'base_rate'),
-    extra_per_kg: parseIntField(body.extra_per_kg, 'extra_per_kg'),
-    is_active: Boolean(body.is_active)
+    base_rate: price,
+    extra_per_kg: parseIntField(body.extra_per_kg, 'extra_per_kg', false) || 0,
+    is_active: body.is_active === undefined ? true : Boolean(body.is_active)
   };
 }
 
 router.get('/zones', async (_req, res, next) => {
   if (!requireServiceKey(res)) return;
   try {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/shipping_zones?select=*&order=created_at.asc`, {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/shipping_zones?select=*&order=zone_code.asc`, {
       headers: supabaseHeaders()
     });
     const data = await response.json();
