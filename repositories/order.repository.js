@@ -23,6 +23,10 @@ function updateByOrderId(orderId, patch) {
   return updatedOrder;
 }
 
+function listAll() {
+  return [...orders.values()];
+}
+
 function listPaidForAdmin() {
   return [...orders.values()].filter((order) => order.status === 'paid');
 }
@@ -31,5 +35,6 @@ module.exports = {
   create,
   findByOrderId,
   updateByOrderId,
+  listAll,
   listPaidForAdmin,
 };

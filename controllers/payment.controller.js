@@ -14,7 +14,11 @@ function getPaymentExpiresAt(order = {}) {
 
 function isPaymentExpired(order = {}) {
   const expiresAt = getPaymentExpiresAt(order);
-  return Number.isFinite(expiresAt) && Date.now() >= expiresAt;
+  return Number.isFinite(expiresAt) && Date.now() > expiresAt;
+}
+
+function isPendingPayment(order = {}) {
+  return order?.status === 'pending_payment';
 }
 
 function mapMidtransTransactionStatus(transactionStatus, fraudStatus) {
@@ -60,7 +64,7 @@ async function updateOrderStatusInSupabase(orderCode, newStatus, isPaid) {
     throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured on the backend.');
   }
 
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?order_code=eq.${encodeURIComponent(orderCode)}&select=id,order_code,status,paid_at`, {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?order_code=eq.${encodeURIComponent(orderCode)}&select=*`, {
     method: 'PATCH',
     headers: {
       ...getSupabaseHeaders(),
@@ -210,6 +214,62 @@ async function createPaymentToken(req, res) {
   }
 }
 
+async function cancelExpiredSupabaseOrder(order) {
+  if (!SUPABASE_SERVICE_ROLE_KEY) return null;
+
+  const filters = [];
+  if (order?.order_code) filters.push(`order_code.eq.${encodeURIComponent(order.order_code)}`);
+  if (order?.id !== undefined && order?.id !== null) filters.push(`id.eq.${encodeURIComponent(order.id)}`);
+  if (!filters.length) return null;
+
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?or=(${filters.join(',')})&select=*`, {
+    method: 'PATCH',
+    headers: {
+      ...getSupabaseHeaders(),
+      Prefer: 'return=representation'
+    },
+    body: JSON.stringify({
+      status: 'cancelled',
+      cancel_reason: 'Payment timeout',
+      paid_at: null
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to cancel expired order in Supabase: ${response.status} ${errorText}`);
+  }
+
+  const data = await response.json();
+  return Array.isArray(data) && data.length ? data[0] : null;
+}
+
+async function validateOrderExpiration(order) {
+  if (!order || !isPendingPayment(order) || !isPaymentExpired(order)) return order;
+
+  if (order.orderId) {
+    return orderRepository.updateByOrderId(order.orderId, {
+      status: 'cancelled',
+      cancel_reason: 'Payment timeout',
+      paid_at: null,
+      paidAt: null
+    }) || { ...order, status: 'cancelled', cancel_reason: 'Payment timeout', paid_at: null, paidAt: null };
+  }
+
+  try {
+    const updatedOrder = await cancelExpiredSupabaseOrder(order);
+    if (updatedOrder) return updatedOrder;
+  } catch (error) {
+    console.warn('Failed to cancel expired Supabase order:', error?.message || error);
+  }
+
+  return { ...order, status: 'cancelled', cancel_reason: 'Payment timeout', paid_at: null };
+}
+
+async function validateOrdersExpiration(orders = []) {
+  return Promise.all((Array.isArray(orders) ? orders : []).map((order) => validateOrderExpiration(order)));
+}
+
 function parseJsonArray(value) {
   if (Array.isArray(value)) return value;
   if (typeof value !== 'string') return [];
@@ -304,20 +364,11 @@ async function retryPayment(req, res) {
   const orderId = firstText(req.params?.id, req.body?.order_id, req.body?.order_code);
   if (!orderId) return res.status(400).json({ message: 'order id is required.' });
 
-  const order = await findSupabaseOrderByIdOrCode(orderId) || orderRepository.findByOrderId(orderId);
-  if (!order) return res.status(404).json({ message: 'Order not found.' });
-  if (order.status !== 'pending_payment') return res.status(409).json({ message: 'Payment retry is only available for pending_payment orders.' });
-  if (isPaymentExpired(order)) {
-    if (order.order_code || order.id || order.orderId) {
-      try {
-        if (order.order_code) await updateOrderStatusInSupabase(order.order_code, 'cancelled', false);
-      } catch (error) {
-        console.warn('Failed to cancel expired Supabase order:', error?.message || error);
-      }
-      if (order.orderId) orderRepository.updateByOrderId(order.orderId, { status: 'cancelled', updatedAt: new Date().toISOString() });
-    }
-    return res.status(410).json({ message: 'Payment window has expired.' });
-  }
+  const foundOrder = await findSupabaseOrderByIdOrCode(orderId) || orderRepository.findByOrderId(orderId);
+  if (!foundOrder) return res.status(404).json({ message: 'Order not found.' });
+
+  const order = await validateOrderExpiration(foundOrder);
+  if (order.status !== 'pending_payment') return res.status(409).json({ message: 'Payment retry is only available for pending_payment orders.', order });
 
   const embeddedItems = [
     ...parseJsonArray(order.order_items),
@@ -530,7 +581,7 @@ async function midtransNotification(req, res) {
       });
     }
 
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?order_code=eq.${encodeURIComponent(orderId)}&select=id,order_code,status,paid_at`, {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/orders?order_code=eq.${encodeURIComponent(orderId)}&select=*`, {
       method: 'PATCH',
       headers: {
         ...getSupabaseHeaders(),
@@ -574,8 +625,29 @@ async function midtransNotification(req, res) {
 }
 
 
-function getPaidOrdersForAdmin(_req, res) {
-  const orders = orderRepository.listPaidForAdmin();
+async function getOrderDetail(req, res) {
+  const orderId = firstText(req.params?.id, req.query?.id);
+  if (!orderId) return res.status(400).json({ message: 'order id is required.' });
+
+  const order = await findSupabaseOrderByIdOrCode(orderId) || orderRepository.findByOrderId(orderId);
+  if (!order) return res.status(404).json({ message: 'Order not found.' });
+
+  const updatedOrder = await validateOrderExpiration(order);
+  return res.status(200).json({ order: updatedOrder });
+}
+
+async function getCustomerOrders(req, res) {
+  if (SUPABASE_SERVICE_ROLE_KEY && req.query?.user_id) {
+    const orders = await fetchSupabaseRows(`orders?user_id=eq.${encodeURIComponent(req.query.user_id)}&select=*&order=created_at.desc`);
+    return res.status(200).json({ orders: await validateOrdersExpiration(orders || []) });
+  }
+
+  const orders = orderRepository.listAll();
+  return res.status(200).json({ orders: await validateOrdersExpiration(orders) });
+}
+
+async function getPaidOrdersForAdmin(_req, res) {
+  const orders = await validateOrdersExpiration(orderRepository.listAll());
   return res.status(200).json({ orders });
 }
 
@@ -587,5 +659,8 @@ module.exports = {
   retryPayment,
   webhook,
   midtransNotification,
+  getOrderDetail,
+  getCustomerOrders,
   getPaidOrdersForAdmin,
+  validateOrderExpiration,
 };
