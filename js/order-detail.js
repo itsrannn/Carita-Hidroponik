@@ -312,21 +312,19 @@
       return null;
     }
 
-    let query = window.supabase
-      .from('orders')
-      .select('*')
-      .eq('user_id', userId)
-      .limit(1);
+    const response = await window.fetchWithDebug(window.toApiPath(`/api/orders/${encodeURIComponent(orderId)}`), {
+      method: 'GET',
+      skipJsonContentType: true
+    });
+    const result = await response.json().catch(() => ({}));
 
-    if (/^\d+$/.test(String(orderId))) {
-      query = query.or(`id.eq.${orderId},order_code.eq.${orderId}`);
-    } else {
-      query = query.eq('order_code', orderId);
+    if (!response.ok) {
+      throw new Error(result?.message || 'Gagal mengambil detail pesanan.');
     }
 
-    const { data: orderData, error: orderError } = await query.maybeSingle();
-    if (orderError) throw orderError;
-    return orderData || null;
+    const orderData = result?.order || null;
+    if (orderData?.user_id && orderData.user_id !== userId) return null;
+    return orderData;
   }
 
   async function fetchRefundStatus(order = {}) {
