@@ -245,21 +245,7 @@ async function cancelExpiredSupabaseOrder(order) {
 }
 
 async function validateOrderExpiration(order) {
-  if (order) {
-    console.log(
-      '[AUTO EXPIRE CHECK]',
-      order.id || order.orderId,
-      order.status,
-      order.created_at || order.createdAt
-    );
-  }
-
   if (!order || !isPendingPayment(order) || !isPaymentExpired(order)) return order;
-
-  console.log(
-    '[AUTO EXPIRE EXECUTED]',
-    order.id || order.orderId
-  );
 
   if (order.orderId) {
     return orderRepository.updateByOrderId(order.orderId, {
@@ -281,13 +267,7 @@ async function validateOrderExpiration(order) {
 }
 
 async function validateOrdersExpiration(orders = []) {
-  const results = [];
-
-  for (const order of (Array.isArray(orders) ? orders : [])) {
-    results.push(await validateOrderExpiration(order));
-  }
-
-  return results;
+  return Promise.all((Array.isArray(orders) ? orders : []).map((order) => validateOrderExpiration(order)));
 }
 
 function parseJsonArray(value) {
