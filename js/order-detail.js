@@ -17,7 +17,8 @@
     session: null,
     payment: null,
     countdownInterval: null,
-    paymentExpired: false
+    paymentExpired: false,
+    expirationRefreshRequested: false
   };
 
   const els = {
@@ -175,9 +176,8 @@
   }
 
   function getPaymentDeadline(order = {}) {
-    const candidate = firstString(order.payment_deadline, order.paymentDeadline, order.payment_expired_at, order.payment_expiry);
-    const timestamp = candidate ? new Date(candidate).getTime() : NaN;
-    return Number.isFinite(timestamp) ? timestamp : null;
+    const createdAtMs = new Date(order.created_at).getTime();
+    return createdAtMs + (24 * 60 * 60 * 1000);
   }
 
   function readOrderIdFromUrl() {
@@ -501,18 +501,23 @@
     if (!els.paymentActionCard) return;
     if (!isPendingPaymentStatus(order.status)) {
       els.paymentActionCard.classList.add('hidden');
+      state.expirationRefreshRequested = false;
       if (state.countdownInterval) clearInterval(state.countdownInterval);
       state.countdownInterval = null;
       return;
     }
 
+    const expiryTime = getPaymentDeadline(order);
+    const isExpired = Number.isFinite(expiryTime) && expiryTime <= Date.now();
+
     els.paymentActionCard.classList.remove('hidden');
-    els.paymentActionContent?.classList.remove('is-expired');
-    state.paymentExpired = false;
+    els.paymentActionContent?.classList.toggle('is-expired', isExpired);
+    state.paymentExpired = isExpired;
+    if (!isExpired) state.expirationRefreshRequested = false;
     if (els.payNowBtn) {
-      els.payNowBtn.textContent = 'Bayar Sekarang';
-      els.payNowBtn.classList.remove('hidden');
-      els.payNowBtn.disabled = false;
+      els.payNowBtn.textContent = isExpired ? 'Pembayaran Expired' : 'Bayar Sekarang';
+      els.payNowBtn.classList.toggle('hidden', isExpired);
+      els.payNowBtn.disabled = isExpired;
     }
     startPaymentCountdown(order);
   }
@@ -546,6 +551,20 @@
     }
   }
 
+  async function refreshOrderStatusAfterExpiration() {
+    if (!state.order || state.expirationRefreshRequested) return;
+    state.expirationRefreshRequested = true;
+    try {
+      const orderId = firstString(state.order.order_code, state.order.id);
+      const refreshedOrder = orderId ? await fetchOrderById(orderId) : null;
+      if (!refreshedOrder) return;
+      state.order = refreshedOrder;
+      await renderOrder(refreshedOrder);
+    } catch (error) {
+      console.warn('[Order Detail] Failed to refresh expired order status:', error?.message || error);
+    }
+  }
+
   function startPaymentCountdown(order) {
     if (!els.paymentCountdown || !state.order) return;
     if (state.countdownInterval) clearInterval(state.countdownInterval);
@@ -571,9 +590,11 @@
         if (els.payNowBtn) {
           els.payNowBtn.disabled = true;
           els.payNowBtn.textContent = 'Pembayaran Expired';
+          els.payNowBtn.classList.add('hidden');
         }
         clearInterval(state.countdownInterval);
         state.countdownInterval = null;
+        refreshOrderStatusAfterExpiration();
         return;
       }
 

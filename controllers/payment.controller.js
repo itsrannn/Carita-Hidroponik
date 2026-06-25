@@ -4,6 +4,18 @@ const orderRepository = require('../repositories/order.repository');
 const { generateMidtransSignature, safeCompare } = require('../utils/payment-signature');
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://thetdckuftpzyubvlbju.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const PAYMENT_EXPIRATION_MS = 24 * 60 * 60 * 1000;
+
+function getPaymentExpiresAt(order = {}) {
+  const createdAt = order.created_at || order.createdAt;
+  const createdAtMs = new Date(createdAt).getTime();
+  return Number.isFinite(createdAtMs) ? createdAtMs + PAYMENT_EXPIRATION_MS : null;
+}
+
+function isPaymentExpired(order = {}) {
+  const expiresAt = getPaymentExpiresAt(order);
+  return Number.isFinite(expiresAt) && Date.now() >= expiresAt;
+}
 
 function mapMidtransTransactionStatus(transactionStatus, fraudStatus) {
   if (transactionStatus === 'settlement' || (transactionStatus === 'capture' && fraudStatus === 'accept')) {
@@ -295,6 +307,17 @@ async function retryPayment(req, res) {
   const order = await findSupabaseOrderByIdOrCode(orderId) || orderRepository.findByOrderId(orderId);
   if (!order) return res.status(404).json({ message: 'Order not found.' });
   if (order.status !== 'pending_payment') return res.status(409).json({ message: 'Payment retry is only available for pending_payment orders.' });
+  if (isPaymentExpired(order)) {
+    if (order.order_code || order.id || order.orderId) {
+      try {
+        if (order.order_code) await updateOrderStatusInSupabase(order.order_code, 'cancelled', false);
+      } catch (error) {
+        console.warn('Failed to cancel expired Supabase order:', error?.message || error);
+      }
+      if (order.orderId) orderRepository.updateByOrderId(order.orderId, { status: 'cancelled', updatedAt: new Date().toISOString() });
+    }
+    return res.status(410).json({ message: 'Payment window has expired.' });
+  }
 
   const embeddedItems = [
     ...parseJsonArray(order.order_items),
