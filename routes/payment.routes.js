@@ -7,6 +7,8 @@ router.post('/create-snap-token', paymentController.createSnapToken);
 router.post('/payments/create', paymentController.createPaymentToken);
 router.post('/midtrans-notification', paymentController.midtransNotification);
 router.post('/orders', paymentController.createOrder);
+router.get('/orders', paymentController.getCustomerOrders);
+router.get('/orders/:id', paymentController.getOrderDetail);
 router.post('/orders/:id/retry-payment', paymentController.retryPayment);
 router.post('/confirm', paymentController.confirmOrder);
 router.post('/webhook', paymentController.webhook);
