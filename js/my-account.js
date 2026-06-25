@@ -246,17 +246,21 @@ document.addEventListener('alpine:init', () => {
       if (!this.user?.id) return;
 
       this.isOrderLoading = true;
-      const { data, error } = await window.supabase
-        .from('orders')
-        .select('id, order_code, created_at, status, total_amount, order_details')
-        .eq('user_id', this.user.id)
-        .order('created_at', { ascending: false });
+      try {
+        const response = await window.fetchWithDebug(window.toApiPath(`/api/orders?user_id=${encodeURIComponent(this.user.id)}`), {
+          method: 'GET',
+          skipJsonContentType: true
+        });
+        const result = await response.json().catch(() => ({}));
 
-      if (error) {
+        if (!response.ok) {
+          throw new Error(result?.message || 'Gagal mengambil riwayat pesanan.');
+        }
+
+        this.orders = Array.isArray(result?.orders) ? result.orders : [];
+      } catch (error) {
         console.error('[Account] Failed to fetch orders:', error);
         this.orders = [];
-      } else {
-        this.orders = Array.isArray(data) ? data : [];
       }
 
       this.isOrderLoading = false;
