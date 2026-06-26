@@ -112,8 +112,8 @@ window.AdminDashboardPage = (() => {
             const date = order.created_at ? new Date(order.created_at).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
             const status = normalizeStatus(order.status);
             return `<tr><td>${id}</td><td>${date}</td><td>${customer}</td><td>${window.formatRupiah(order.total_amount)}</td><td><span class="status-badge status-${status.toLowerCase().replace(/\s+/g, '-')}">${status}</span></td></tr>`;
-        }).join('') : '<tr><td colspan="5" style="text-align:center;">Belum ada order.</td></tr>';
-        if (loading) loading.style.display = 'none';
+        }).join('') : '<tr><td colspan="5" class="admin-state admin-state--empty">Belum ada order.</td></tr>';
+        if (loading) loading.hidden = true;
     }
 
     async function init() {
