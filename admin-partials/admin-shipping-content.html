@@ -1,40 +1,21 @@
-<style>
-  .shipping-header { padding: var(--spacing-lg); background: #fff; border-bottom: 1px solid #dee2e6; border-radius: 12px; }
-  .shipping-card { background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 12px; padding: var(--spacing-lg); margin-bottom: var(--spacing-md); box-shadow: 0 6px 18px rgba(15,23,42,.05); }
-  .shipping-toolbar { display:flex; flex-wrap:wrap; gap:.8rem; align-items:end; justify-content:space-between; }
-  .shipping-toolbar label { display:flex; flex-direction:column; gap:.35rem; font-weight:700; color:#475569; }
-  .shipping-toolbar input,.shipping-toolbar select { padding:.7rem .9rem; border:1px solid #d8dee4; border-radius:999px; min-width:190px; }
-  .shipping-table-wrap { overflow-x:auto; }
-  .shipping-table { width: 100%; border-collapse: collapse; min-width: 680px; }
-  .shipping-table th, .shipping-table td { border-bottom: 1px solid #e9ecef; padding: 0.8rem; text-align: left; vertical-align:middle; }
-  .shipping-table th { background:#f8fafc; color:#334155; }
-  .price-editor { display:flex; gap:.45rem; align-items:center; }
-  .price-editor select,.price-editor input { border:1px solid #d8dee4; border-radius:10px; padding:.55rem; }
-  .price-editor input { width:120px; }
-  .btn-action { border: none; border-radius: 999px; padding: 0.6rem 1rem; cursor: pointer; font-weight: 800; }
-  .btn-primary { background: #1b5e20; color: #fff; }
-  .btn-secondary { background:#e8f5e9; color:#1b5e20; }
-  .shipping-notice { margin-top: .75rem; padding: .7rem .9rem; border-radius: 10px; display:none; }
-  .shipping-notice.show { display:block; background:#e8f5e9; color:#1b5e20; }
-  .shipping-notice.error { background:#fce8e6; color:#c5221f; }
-</style>
+
 <div class="container content-wrapper" id="shipping-admin-root">
-  <div class="shipping-header section">
+  <div class="admin-page-header section">
     <h1>Manajemen Ongkos Kirim</h1>
     <p>Kelola harga zona ongkir checkout langsung dari tabel <code>shipping_zones</code>.</p>
   </div>
-  <div class="shipping-card">
-    <div class="shipping-toolbar">
+  <div class="admin-card shipping-card">
+    <div class="admin-toolbar shipping-toolbar">
       <label>Search zone <input id="shipping-zone-search" type="search" placeholder="Zona / wilayah"></label>
       <label>Sort zone <select id="shipping-zone-sort"><option value="asc">Zona terkecil</option><option value="desc">Zona terbesar</option></select></label>
-      <button id="seed-shipping-zones-btn" class="btn-action btn-secondary" type="button">Buat Zona Default</button>
+      <button id="seed-shipping-zones-btn" class="admin-button admin-button--secondary btn-action btn-secondary" type="button">Buat Zona Default</button>
     </div>
-    <div id="shipping-admin-notice" class="shipping-notice"></div>
+    <div id="shipping-admin-notice" class="shipping-notice" role="status" aria-live="polite"></div>
   </div>
-  <div class="shipping-card">
-    <h3 style="margin-top:0;">Daftar Zona Ongkir</h3>
-    <div class="shipping-table-wrap">
-      <table class="shipping-table">
+  <div class="admin-card shipping-card">
+    <h3>Daftar Zona Ongkir</h3>
+    <div class="admin-table-wrap shipping-table-wrap">
+      <table class="admin-table shipping-table">
         <thead><tr><th>Zona</th><th>Wilayah</th><th>Harga</th><th>Updated At</th><th>Aksi</th></tr></thead>
         <tbody id="shipping-rates-tbody"></tbody>
       </table>

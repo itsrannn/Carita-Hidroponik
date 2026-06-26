@@ -73,13 +73,13 @@ window.AdminOrdersPage = (() => {
                 <p>${message}</p>
             </div>
         `;
-        container.style.display = 'block';
+        container.hidden = false;
     }
 
     function hideAdminMessage(container) {
         if (container) {
             container.innerHTML = '';
-            container.style.display = 'none';
+            container.hidden = true;
         }
     }
 
@@ -146,7 +146,7 @@ window.AdminOrdersPage = (() => {
     async function fetchOrders(state) {
         try {
             state.loadingMessage.textContent = 'Memuat pesanan...';
-            state.loadingMessage.style.display = 'block';
+            state.loadingMessage.hidden = false;
             hideAdminMessage(state.adminMessageContainer);
 
             const { data, error } = await window.supabase
@@ -158,7 +158,7 @@ window.AdminOrdersPage = (() => {
             allOrders = normalizeOrdersPayload(data);
             updateStats(state);
             applySortAndFilter(state);
-            state.loadingMessage.style.display = 'none';
+            state.loadingMessage.hidden = true;
         } catch (error) {
             console.error('[ADMIN ORDER LOAD ERROR]', error);
             state.loadingMessage.textContent = 'Gagal memuat pesanan.';

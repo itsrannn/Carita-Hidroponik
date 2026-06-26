@@ -7,140 +7,44 @@
     <link rel="icon" type="image/x-icon" href="img/Logo.jpg" />
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/mobile.css" media="(max-width: 768px)" />
-    <style>
-        :root {
-            --admin-bg: #f6f8fb;
-            --admin-surface: #ffffff;
-            --admin-surface-2: #f8fafc;
-            --admin-border: #e5e7eb;
-            --admin-text: #0f172a;
-            --admin-muted: #64748b;
-            --admin-primary: #15803d;
-            --admin-primary-soft: #dcfce7;
-            --admin-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
-            --sidebar-width: 280px;
-            --sidebar-collapsed-width: 84px;
-            --topbar-height: 76px;
-            --spacing-xs: 8px;
-            --spacing-sm: 12px;
-            --spacing-md: 16px;
-            --spacing-lg: 24px;
-            --spacing-xl: 32px;
-        }
-
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --admin-bg: #020617;
-                --admin-surface: #0f172a;
-                --admin-surface-2: #111827;
-                --admin-border: #1f2937;
-                --admin-text: #f8fafc;
-                --admin-muted: #94a3b8;
-                --admin-primary-soft: rgba(34, 197, 94, 0.16);
-                --admin-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
-            }
-        }
-
-        * { box-sizing: border-box; }
-        html, body { min-height: 100%; }
-        body {
-            margin: 0;
-            color: var(--admin-text);
-            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background: var(--admin-bg);
-            overflow: hidden;
-        }
-
-        .admin-shell { min-height: 100vh; background: radial-gradient(circle at top left, rgba(21,128,61,.08), transparent 32rem), var(--admin-bg); }
-        .sidebar {
-            position: fixed; inset: 0 auto 0 0; width: var(--sidebar-width); z-index: 30;
-            display: flex; flex-direction: column; gap: 18px; padding: 18px;
-            background: rgba(255,255,255,.88); border-right: 1px solid var(--admin-border); backdrop-filter: blur(18px);
-        }
-        @media (prefers-color-scheme: dark) { .sidebar { background: rgba(15,23,42,.86); } }
-        .admin-shell.sidebar-collapsed { --sidebar-width: var(--sidebar-collapsed-width); }
-        .sidebar-brand { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 18px; color: inherit; text-decoration: none; }
-        .sidebar-brand img { width: 42px; height: 42px; border-radius: 14px; object-fit: cover; box-shadow: 0 10px 24px rgba(21,128,61,.25); }
-        .brand-copy strong, .brand-copy span { display: block; white-space: nowrap; }
-        .brand-copy strong { font-size: .96rem; letter-spacing: -.01em; }
-        .brand-copy span { color: var(--admin-muted); font-size: .78rem; margin-top: 2px; }
-        .sidebar-toggle { margin-left: auto; border: 1px solid var(--admin-border); background: var(--admin-surface); color: var(--admin-muted); width: 34px; height: 34px; border-radius: 12px; cursor: pointer; }
-        .sidebar-nav { display: flex; flex-direction: column; gap: 6px; flex: 1; }
-        .sidebar-link {
-            display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px;
-            border-radius: 14px; color: var(--admin-muted); text-decoration: none; font-weight: 700; font-size: .92rem;
-            cursor: pointer; transition: .18s ease;
-        }
-        .sidebar-link:hover { background: var(--admin-surface-2); color: var(--admin-text); }
-        .sidebar-link.active { background: var(--admin-primary-soft); color: var(--admin-primary); box-shadow: inset 0 0 0 1px rgba(21,128,61,.16); }
-        .sidebar-link.logout { margin-top: auto; color: #dc2626; }
-        .admin-shell.sidebar-collapsed .brand-copy, .admin-shell.sidebar-collapsed .sidebar-label { display: none; }
-        .admin-shell.sidebar-collapsed .sidebar { align-items: center; }
-        .admin-shell.sidebar-collapsed .sidebar-link { justify-content: center; width: 48px; padding: 0; }
-        .admin-shell.sidebar-collapsed .sidebar-toggle { margin-left: 0; }
-
-        .main-content { margin-left: var(--sidebar-width); height: 100vh; overflow: auto; transition: margin-left .2s ease; }
-        .topbar {
-            position: sticky; top: 0; z-index: 20; min-height: var(--topbar-height); display: flex; align-items: center; justify-content: space-between; gap: 16px;
-            padding: 14px 28px; border-bottom: 1px solid var(--admin-border); background: rgba(246,248,251,.82); backdrop-filter: blur(18px);
-        }
-        @media (prefers-color-scheme: dark) { .topbar { background: rgba(2,6,23,.78); } }
-        .breadcrumb { color: var(--admin-muted); font-size: .86rem; font-weight: 700; }
-        .breadcrumb strong { color: var(--admin-text); }
-        .topbar-actions { display: flex; align-items: center; gap: 10px; }
-        .global-search { display: flex; align-items: center; gap: 8px; min-width: min(36vw, 420px); padding: 10px 14px; border: 1px solid var(--admin-border); border-radius: 999px; background: var(--admin-surface); color: var(--admin-muted); }
-        .global-search input { border: 0; outline: 0; background: transparent; color: var(--admin-text); width: 100%; }
-        .icon-btn, .profile-menu { border: 1px solid var(--admin-border); background: var(--admin-surface); color: var(--admin-text); min-height: 40px; border-radius: 999px; display: inline-flex; align-items: center; gap: 8px; padding: 0 12px; font-weight: 800; cursor: pointer; }
-        .profile-avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--admin-primary); color: #fff; display: grid; place-items: center; font-size: .78rem; }
-        #content-container { max-width: 1440px; margin: 0 auto; padding: 28px; transition: opacity .2s ease; }
-        #content-container.is-loading { opacity: .55; }
-        .loading-indicator, .admin-empty-panel { background: var(--admin-surface); border: 1px solid var(--admin-border); border-radius: 22px; box-shadow: var(--admin-shadow); padding: 24px; color: var(--admin-muted); }
-        .content-wrapper { max-width: none; margin: 0; }
-        .section { margin-bottom: 22px; }
-        .card, .content-card, .chart-container, .analytics-card, .dashboard-header, .shipping-card, .shipping-header { background: var(--admin-surface) !important; border: 1px solid var(--admin-border) !important; border-radius: 22px !important; box-shadow: var(--admin-shadow) !important; color: var(--admin-text); }
-        .page-title, .section-title { letter-spacing: -.03em; }
-        .status-badge, .cms-badge { display: inline-flex; align-items: center; border-radius: 999px; padding: .28rem .65rem; font-size: .76rem; font-weight: 800; }
-        @media (max-width: 900px) {
-            body { overflow: auto; }
-            .sidebar { transform: translateX(-100%); }
-            .main-content { margin-left: 0; height: auto; min-height: 100vh; }
-            .topbar { padding: 12px 16px; align-items: flex-start; flex-direction: column; }
-            .global-search { min-width: 100%; }
-            #content-container { padding: 16px; }
-        }
-    </style>
+    <link rel="stylesheet" href="css/admin.css" />
 </head>
-<body x-data x-init="$store.i18n.init()">
+<body class="admin-body" x-data x-init="$store.i18n.init()">
 
-    <div id="header-include" style="display: none;"></div>
+    <div id="header-include" hidden></div>
 
     <div class="admin-shell" id="admin-dashboard-shell">
-        <aside class="sidebar" aria-label="Admin navigation">
+        <button class="admin-sidebar-overlay" id="admin-sidebar-overlay" type="button" aria-label="Close admin navigation"></button>
+        <aside class="admin-sidebar" id="admin-sidebar" aria-label="Admin navigation">
             <div class="sidebar-brand">
                 <img src="img/Logo.jpg" alt="Carita Hidroponik">
                 <div class="brand-copy">
                     <strong>Carita Admin</strong>
                     <span>CMS Dashboard</span>
                 </div>
-                <button class="sidebar-toggle" type="button" id="sidebar-toggle" aria-label="Collapse sidebar"><i data-feather="sidebar"></i></button>
+                <button class="sidebar-toggle" type="button" id="sidebar-toggle" aria-label="Collapse sidebar" aria-expanded="true"><i data-feather="sidebar"></i></button>
+                <button class="sidebar-close" type="button" id="sidebar-close" aria-label="Close admin navigation"><i data-feather="x"></i></button>
             </div>
             <nav class="sidebar-nav">
-                <a class="sidebar-link active" data-page="admin-dashboard" data-source="admin-partials/admin-dashboard-content.html" data-title="Dashboard"><i data-feather="home"></i><span class="sidebar-label">Dashboard</span></a>
-                <a class="sidebar-link" data-page="admin-products" data-source="admin-partials/admin-products-content.html" data-title="Products" data-tab="products"><i data-feather="shopping-bag"></i><span class="sidebar-label">Products</span></a>
-                <a class="sidebar-link" data-page="admin-orders" data-source="admin-partials/admin-orders-content.html" data-title="Orders"><i data-feather="package"></i><span class="sidebar-label">Orders</span></a>
-                <a class="sidebar-link" data-page="admin-products" data-source="admin-partials/admin-products-content.html" data-title="News" data-tab="news"><i data-feather="file-text"></i><span class="sidebar-label">News</span></a>
-                <a class="sidebar-link" data-page="admin-grow-lab" data-title="Grow Lab"><i data-feather="activity"></i><span class="sidebar-label">Grow Lab</span></a>
-                <a class="sidebar-link" data-page="admin-dashboard" data-source="admin-partials/admin-dashboard-content.html" data-title="Analytics"><i data-feather="bar-chart-2"></i><span class="sidebar-label">Analytics</span></a>
-                <a class="sidebar-link" data-page="admin-shipping" data-source="admin-partials/admin-shipping-content.html" data-title="Settings"><i data-feather="settings"></i><span class="sidebar-label">Settings</span></a>
+                <a href="#dashboard" class="sidebar-link active" data-route="dashboard" data-page="admin-dashboard" data-source="admin-partials/admin-dashboard-content.html" data-title="Dashboard"><i data-feather="home"></i><span class="sidebar-label">Dashboard</span></a>
+                <a href="#products" class="sidebar-link" data-route="products" data-page="admin-products" data-source="admin-partials/admin-products-content.html" data-title="Products" data-tab="products"><i data-feather="shopping-bag"></i><span class="sidebar-label">Products</span></a>
+                <a href="#orders" class="sidebar-link" data-route="orders" data-page="admin-orders" data-source="admin-partials/admin-orders-content.html" data-title="Orders"><i data-feather="package"></i><span class="sidebar-label">Orders</span></a>
+                <a href="#news" class="sidebar-link" data-route="news" data-page="admin-products" data-source="admin-partials/admin-products-content.html" data-title="News" data-tab="news"><i data-feather="file-text"></i><span class="sidebar-label">News</span></a>
+                <a href="#analytics" class="sidebar-link" data-route="analytics" data-page="admin-analytics" data-title="Analytics"><i data-feather="bar-chart-2"></i><span class="sidebar-label">Analytics</span></a>
+                <a href="#shipping" class="sidebar-link" data-route="shipping" data-page="admin-shipping" data-source="admin-partials/admin-shipping-content.html" data-title="Shipping"><i data-feather="truck"></i><span class="sidebar-label">Shipping</span></a>
+                <a href="#settings" class="sidebar-link" data-route="settings" data-page="admin-settings" data-title="Settings"><i data-feather="settings"></i><span class="sidebar-label">Settings</span></a>
                 <a class="sidebar-link logout" href="#" id="admin-logout-link"><i data-feather="log-out"></i><span class="sidebar-label">Logout</span></a>
             </nav>
         </aside>
 
-        <main class="main-content">
-            <header class="topbar">
-                <div>
-                    <div class="breadcrumb">Admin / <strong id="breadcrumb-current">Dashboard</strong></div>
-                    <div style="color: var(--admin-muted); font-size: .86rem; margin-top: 4px;">Manage storefront content, orders, and insights.</div>
+        <main class="admin-main">
+            <header class="admin-topbar">
+                <div class="topbar-left">
+                    <button class="admin-menu-button" type="button" id="admin-menu-button" aria-label="Open admin navigation" aria-controls="admin-sidebar" aria-expanded="false"><i data-feather="menu"></i></button>
+                    <div>
+                        <div class="breadcrumb">Admin / <strong id="breadcrumb-current">Dashboard</strong></div>
+                        <div class="topbar-subtitle">Manage storefront content, orders, shipping, and insights.</div>
+                    </div>
                 </div>
                 <div class="topbar-actions">
                     <label class="global-search" for="admin-global-search"><i data-feather="search"></i><input id="admin-global-search" type="search" placeholder="Search current page..."></label>
@@ -152,7 +56,7 @@
         </main>
     </div>
 
-    <div id="footer-include" style="display: none;"></div>
+    <div id="footer-include" hidden></div>
 
     <script src="https://unpkg.com/feather-icons"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -166,82 +70,108 @@
     <script src="js/admin-shipping.js"></script>
     <script>
         const contentContainer = document.getElementById('content-container');
+        const shell = document.getElementById('admin-dashboard-shell');
+        const menuButton = document.getElementById('admin-menu-button');
+        const closeButton = document.getElementById('sidebar-close');
+        const overlay = document.getElementById('admin-sidebar-overlay');
+        const routeFallback = 'dashboard';
+
+        function openSidebar() {
+            shell?.classList.add('sidebar-open');
+            document.body.classList.add('admin-sidebar-open');
+            menuButton?.setAttribute('aria-expanded', 'true');
+        }
+
+        function closeSidebar() {
+            shell?.classList.remove('sidebar-open');
+            document.body.classList.remove('admin-sidebar-open');
+            menuButton?.setAttribute('aria-expanded', 'false');
+        }
 
         function setActiveMenu(activeLink) {
-            document.querySelectorAll('.sidebar-link').forEach((link) => {
-                link.classList.toggle('active', link === activeLink);
+            document.querySelectorAll('.sidebar-link[data-page]').forEach((link) => {
+                const active = link === activeLink;
+                link.classList.toggle('active', active);
+                if (active) link.setAttribute('aria-current', 'page');
+                else link.removeAttribute('aria-current');
             });
             const title = activeLink?.dataset?.title || 'Dashboard';
             const crumb = document.getElementById('breadcrumb-current');
             if (crumb) crumb.textContent = title;
+            document.title = `${title} | Carita Admin`;
+        }
+
+        function renderPlaceholder(title, description, ctaRoute, ctaLabel) {
+            contentContainer.innerHTML = `
+                <section class="admin-empty-panel admin-state admin-state--empty" role="status" aria-live="polite">
+                    <h1>${title}</h1>
+                    <p>${description}</p>
+                    ${ctaRoute ? `<a class="admin-button admin-button--primary" href="#${ctaRoute}">${ctaLabel}</a>` : ''}
+                </section>`;
         }
 
         function initializeLoadedPage(page, activeLink) {
-            if (page === 'admin-grow-lab') {
-                contentContainer.innerHTML = '<div class="admin-empty-panel"><h2>Grow Lab</h2><p>Grow Lab management is ready in the navigation shell. No existing admin endpoint was changed or invented for this section.</p></div>';
+            if (page === 'admin-analytics') {
+                renderPlaceholder('Analytics belum dipisahkan', 'Ringkasan analytics saat ini tersedia di Dashboard. Gunakan CTA ini agar navigasi tetap jujur sampai halaman analytics khusus dibuat.', 'dashboard', 'Buka Dashboard');
             }
-
-            if (page === 'admin-orders' && window.AdminOrdersPage) {
-                window.AdminOrdersPage.init();
+            if (page === 'admin-settings') {
+                renderPlaceholder('Settings Center', 'Pengaturan umum belum memiliki modul khusus. Pengaturan ongkir tersedia di halaman Shipping.', 'shipping', 'Kelola Shipping');
             }
-
-            if (page === 'admin-dashboard' && window.AdminDashboardPage) {
-                window.AdminDashboardPage.init();
-            }
-
-            if (page === 'admin-shipping' && window.AdminShippingPage) {
-                window.AdminShippingPage.init();
-            }
-
+            if (page === 'admin-orders' && window.AdminOrdersPage) window.AdminOrdersPage.init();
+            if (page === 'admin-dashboard' && window.AdminDashboardPage) window.AdminDashboardPage.init();
+            if (page === 'admin-shipping' && window.AdminShippingPage) window.AdminShippingPage.init();
             if (window.Alpine) {
+                window.AdminInitialContentTab = activeLink?.dataset?.tab || 'products';
                 window.Alpine.initTree(contentContainer);
-                if (activeLink?.dataset?.tab) {
-                    window.AdminInitialContentTab = activeLink.dataset.tab;
-                }
             }
-
-            if (window.feather) {
-                window.safeFeatherReplace && window.safeFeatherReplace();
-            }
+            if (window.feather) window.safeFeatherReplace ? window.safeFeatherReplace() : window.feather.replace();
         }
 
         function loadContent(page, source, activeLink) {
             contentContainer.classList.add('is-loading');
-            contentContainer.innerHTML = '<div class="loading-indicator">Loading content...</div>';
+            contentContainer.innerHTML = '<div class="loading-indicator admin-state admin-state--loading" role="status" aria-live="polite">Loading content...</div>';
             setActiveMenu(activeLink);
+            closeSidebar();
             if (!source) {
-                window.AdminInitialContentTab = activeLink?.dataset?.tab || 'products';
                 initializeLoadedPage(page, activeLink);
                 contentContainer.classList.remove('is-loading');
                 return;
             }
-
             window.AdminInitialContentTab = activeLink?.dataset?.tab || 'products';
             fetch(source)
                 .then((response) => {
-                    if (!response.ok) {
-                        throw new Error('Failed to fetch content');
-                    }
+                    if (!response.ok) throw new Error('Failed to fetch content');
                     return response.text();
                 })
                 .then((html) => {
                     const parsed = new DOMParser().parseFromString(html, 'text/html');
-                    const bodyContent = parsed.body ? parsed.body.innerHTML : html;
-                    contentContainer.innerHTML = bodyContent;
+                    contentContainer.innerHTML = parsed.body ? parsed.body.innerHTML : html;
                     setActiveMenu(activeLink);
                     initializeLoadedPage(page, activeLink);
                 })
                 .catch((error) => {
-                    contentContainer.innerHTML = '<p>Error loading content</p>';
+                    contentContainer.innerHTML = '<div class="admin-state admin-state--error" role="alert">Error loading content. Please refresh and try again.</div>';
                     console.error(error);
                 })
-                .finally(() => {
-                    contentContainer.classList.remove('is-loading');
-                });
+                .finally(() => contentContainer.classList.remove('is-loading'));
+        }
+
+        function routeFromHash() { return (window.location.hash || `#${routeFallback}`).replace('#', '') || routeFallback; }
+        function navigateToCurrentHash() {
+            const link = document.querySelector(`.sidebar-link[data-route="${routeFromHash()}"]`) || document.querySelector(`.sidebar-link[data-route="${routeFallback}"]`);
+            if (link) loadContent(link.dataset.page, link.dataset.source, link);
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('sidebar-toggle')?.addEventListener('click', () => document.getElementById('admin-dashboard-shell')?.classList.toggle('sidebar-collapsed'));
+            document.getElementById('sidebar-toggle')?.addEventListener('click', () => {
+                shell?.classList.toggle('sidebar-collapsed');
+                const collapsed = shell?.classList.contains('sidebar-collapsed');
+                document.getElementById('sidebar-toggle')?.setAttribute('aria-expanded', String(!collapsed));
+            });
+            menuButton?.addEventListener('click', openSidebar);
+            closeButton?.addEventListener('click', closeSidebar);
+            overlay?.addEventListener('click', closeSidebar);
+            document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeSidebar(); });
             document.getElementById('admin-global-search')?.addEventListener('input', (event) => {
                 window.dispatchEvent(new CustomEvent('admin:global-search', { detail: event.target.value }));
             });
@@ -251,15 +181,16 @@
                 else window.location.href = 'login.html';
             });
             document.querySelectorAll('.sidebar-link[data-page]').forEach((link) => {
-                link.addEventListener('click', () => {
-                    loadContent(link.dataset.page, link.dataset.source, link);
+                link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    const route = link.dataset.route || routeFallback;
+                    if (window.location.hash !== `#${route}`) window.location.hash = route;
+                    else loadContent(link.dataset.page, link.dataset.source, link);
                 });
             });
-
-            const defaultLink = document.querySelector('.sidebar-link.active') || document.querySelector('.sidebar-link');
-            if (defaultLink) {
-                loadContent(defaultLink.dataset.page, defaultLink.dataset.source, defaultLink);
-            }
+            window.addEventListener('hashchange', navigateToCurrentHash);
+            if (!window.location.hash) window.history.replaceState(null, '', `#${routeFallback}`);
+            navigateToCurrentHash();
         });
     </script>
 </body>
