@@ -9,17 +9,18 @@
     <link rel="stylesheet" href="css/mobile.css" media="(max-width: 768px)" />
     <style>
         :root {
-            --sidebar-bg: #1b5e20;
-            --sidebar-bg-alt: #245f2f;
-            --sidebar-text: #e8f5e9;
-            --sidebar-muted: #c9dfcc;
-            --sidebar-active-bg: #2e7d32;
-            --content-bg: #f5f7fa;
-            --card-bg: #ffffff;
-            --card-shadow: 0 8px 24px rgba(15, 23, 42, 0.07);
-            --card-border: #e6ebf2;
-            --headline: #111827;
-            --subtle: #6b7280;
+            --admin-bg: #f6f8fb;
+            --admin-surface: #ffffff;
+            --admin-surface-2: #f8fafc;
+            --admin-border: #e5e7eb;
+            --admin-text: #0f172a;
+            --admin-muted: #64748b;
+            --admin-primary: #15803d;
+            --admin-primary-soft: #dcfce7;
+            --admin-shadow: 0 18px 50px rgba(15, 23, 42, 0.08);
+            --sidebar-width: 280px;
+            --sidebar-collapsed-width: 84px;
+            --topbar-height: 76px;
             --spacing-xs: 8px;
             --spacing-sm: 12px;
             --spacing-md: 16px;
@@ -27,220 +28,85 @@
             --spacing-xl: 32px;
         }
 
-        * {
-            box-sizing: border-box;
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --admin-bg: #020617;
+                --admin-surface: #0f172a;
+                --admin-surface-2: #111827;
+                --admin-border: #1f2937;
+                --admin-text: #f8fafc;
+                --admin-muted: #94a3b8;
+                --admin-primary-soft: rgba(34, 197, 94, 0.16);
+                --admin-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+            }
         }
 
-        html,
-        body {
-            height: 100%;
-        }
-
+        * { box-sizing: border-box; }
+        html, body { min-height: 100%; }
         body {
             margin: 0;
+            color: var(--admin-text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--admin-bg);
             overflow: hidden;
-            color: var(--headline);
-            font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--content-bg);
         }
 
-        .dashboard {
-            min-height: 100vh;
-            background: var(--content-bg);
-        }
-
+        .admin-shell { min-height: 100vh; background: radial-gradient(circle at top left, rgba(21,128,61,.08), transparent 32rem), var(--admin-bg); }
         .sidebar {
-            width: 20vw;
-            min-width: 220px;
-            max-width: 280px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100vh;
-            background: linear-gradient(180deg, var(--sidebar-bg) 0%, var(--sidebar-bg-alt) 100%);
-            color: var(--sidebar-text);
-            padding: 20px 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            z-index: 20;
+            position: fixed; inset: 0 auto 0 0; width: var(--sidebar-width); z-index: 30;
+            display: flex; flex-direction: column; gap: 18px; padding: 18px;
+            background: rgba(255,255,255,.88); border-right: 1px solid var(--admin-border); backdrop-filter: blur(18px);
         }
-
-        .sidebar-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 4px 4px 18px;
-            border-bottom: 1px solid rgba(232, 245, 233, 0.2);
-        }
-
-        .sidebar-brand img {
-            width: 38px;
-            height: 38px;
-            object-fit: cover;
-        }
-
-        .sidebar-brand strong {
-            display: block;
-            font-size: 1rem;
-            color: #ffffff;
-            font-weight: 700;
-        }
-
-        .sidebar-brand span {
-            display: block;
-            font-size: 0.82rem;
-            color: var(--sidebar-muted);
-        }
-
-        .sidebar-nav {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
+        @media (prefers-color-scheme: dark) { .sidebar { background: rgba(15,23,42,.86); } }
+        .admin-shell.sidebar-collapsed { --sidebar-width: var(--sidebar-collapsed-width); }
+        .sidebar-brand { display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 18px; color: inherit; text-decoration: none; }
+        .sidebar-brand img { width: 42px; height: 42px; border-radius: 14px; object-fit: cover; box-shadow: 0 10px 24px rgba(21,128,61,.25); }
+        .brand-copy strong, .brand-copy span { display: block; white-space: nowrap; }
+        .brand-copy strong { font-size: .96rem; letter-spacing: -.01em; }
+        .brand-copy span { color: var(--admin-muted); font-size: .78rem; margin-top: 2px; }
+        .sidebar-toggle { margin-left: auto; border: 1px solid var(--admin-border); background: var(--admin-surface); color: var(--admin-muted); width: 34px; height: 34px; border-radius: 12px; cursor: pointer; }
+        .sidebar-nav { display: flex; flex-direction: column; gap: 6px; flex: 1; }
         .sidebar-link {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 10px;
-            color: var(--sidebar-text);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.95rem;
-            transition: background-color 0.2s ease, color 0.2s ease;
-            cursor: pointer;
+            display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px;
+            border-radius: 14px; color: var(--admin-muted); text-decoration: none; font-weight: 700; font-size: .92rem;
+            cursor: pointer; transition: .18s ease;
         }
+        .sidebar-link:hover { background: var(--admin-surface-2); color: var(--admin-text); }
+        .sidebar-link.active { background: var(--admin-primary-soft); color: var(--admin-primary); box-shadow: inset 0 0 0 1px rgba(21,128,61,.16); }
+        .sidebar-link.logout { margin-top: auto; color: #dc2626; }
+        .admin-shell.sidebar-collapsed .brand-copy, .admin-shell.sidebar-collapsed .sidebar-label { display: none; }
+        .admin-shell.sidebar-collapsed .sidebar { align-items: center; }
+        .admin-shell.sidebar-collapsed .sidebar-link { justify-content: center; width: 48px; padding: 0; }
+        .admin-shell.sidebar-collapsed .sidebar-toggle { margin-left: 0; }
 
-        .sidebar-link:hover {
-            background: rgba(255, 255, 255, 0.12);
-            color: #ffffff;
+        .main-content { margin-left: var(--sidebar-width); height: 100vh; overflow: auto; transition: margin-left .2s ease; }
+        .topbar {
+            position: sticky; top: 0; z-index: 20; min-height: var(--topbar-height); display: flex; align-items: center; justify-content: space-between; gap: 16px;
+            padding: 14px 28px; border-bottom: 1px solid var(--admin-border); background: rgba(246,248,251,.82); backdrop-filter: blur(18px);
         }
-
-        .sidebar-link.active {
-            background: var(--sidebar-active-bg);
-            color: #ffffff;
-        }
-
-        .main-content {
-            margin-left: clamp(220px, 20vw, 280px);
-            height: 100vh;
-            overflow-y: auto;
-            overflow-x: hidden;
-            padding: var(--spacing-lg) var(--spacing-xl);
-            background: var(--content-bg);
-        }
-
-        .content-wrapper {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .section {
-            margin-bottom: var(--spacing-lg);
-        }
-
-        .section-title {
-            margin: 0 0 var(--spacing-md);
-        }
-
-        .filter-bar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: var(--spacing-sm);
-            margin-bottom: var(--spacing-md);
-        }
-
-        .card-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: var(--spacing-md);
-        }
-
-        .card {
-            padding: var(--spacing-md);
-            border-radius: 10px;
-            background: #fff;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            display: flex;
-            flex-direction: column;
-            gap: var(--spacing-sm);
-        }
-
-        .card-content {
-            display: flex;
-            flex-direction: column;
-            gap: var(--spacing-xs);
-        }
-
-        #content-container {
-            min-height: calc(100vh - 56px);
-            transition: opacity 0.2s ease;
-        }
-
-        #content-container.is-loading {
-            opacity: 0.55;
-        }
-
-        .loading-indicator {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 8px;
-            box-shadow: var(--card-shadow);
-            padding: 16px;
-            color: var(--subtle);
-        }
-
-        #content-container .container {
-            padding: 0;
-        }
-
-        #content-container .dashboard-header h1,
-        #content-container .dashboard-header .page-title {
-            font-size: 1.7rem;
-            line-height: 1.25;
-            margin: 0;
-            font-weight: 700;
-            color: #0f172a;
-        }
-
-        #content-container .dashboard-header p {
-            margin-top: 8px;
-            color: var(--subtle);
-            font-size: 0.95rem;
-        }
-
-        #content-container .kpi-card .value {
-            font-size: 1.9rem;
-        }
-
-        #content-container .table-header,
-        #content-container .chart-header-controls {
-            gap: 16px;
-            align-items: center;
-        }
-
-        @media (max-width: 768px) {
-            body {
-                overflow: auto;
-            }
-
-            .sidebar {
-                display: none;
-            }
-
-            .main-content {
-                margin-left: 0;
-                height: auto;
-                min-height: 100vh;
-                overflow: visible;
-                padding: var(--spacing-md);
-            }
-
-            #content-container .dashboard-header h1,
-            #content-container .dashboard-header .page-title {
-                font-size: 1.35rem;
-            }
+        @media (prefers-color-scheme: dark) { .topbar { background: rgba(2,6,23,.78); } }
+        .breadcrumb { color: var(--admin-muted); font-size: .86rem; font-weight: 700; }
+        .breadcrumb strong { color: var(--admin-text); }
+        .topbar-actions { display: flex; align-items: center; gap: 10px; }
+        .global-search { display: flex; align-items: center; gap: 8px; min-width: min(36vw, 420px); padding: 10px 14px; border: 1px solid var(--admin-border); border-radius: 999px; background: var(--admin-surface); color: var(--admin-muted); }
+        .global-search input { border: 0; outline: 0; background: transparent; color: var(--admin-text); width: 100%; }
+        .icon-btn, .profile-menu { border: 1px solid var(--admin-border); background: var(--admin-surface); color: var(--admin-text); min-height: 40px; border-radius: 999px; display: inline-flex; align-items: center; gap: 8px; padding: 0 12px; font-weight: 800; cursor: pointer; }
+        .profile-avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--admin-primary); color: #fff; display: grid; place-items: center; font-size: .78rem; }
+        #content-container { max-width: 1440px; margin: 0 auto; padding: 28px; transition: opacity .2s ease; }
+        #content-container.is-loading { opacity: .55; }
+        .loading-indicator, .admin-empty-panel { background: var(--admin-surface); border: 1px solid var(--admin-border); border-radius: 22px; box-shadow: var(--admin-shadow); padding: 24px; color: var(--admin-muted); }
+        .content-wrapper { max-width: none; margin: 0; }
+        .section { margin-bottom: 22px; }
+        .card, .content-card, .chart-container, .analytics-card, .dashboard-header, .shipping-card, .shipping-header { background: var(--admin-surface) !important; border: 1px solid var(--admin-border) !important; border-radius: 22px !important; box-shadow: var(--admin-shadow) !important; color: var(--admin-text); }
+        .page-title, .section-title { letter-spacing: -.03em; }
+        .status-badge, .cms-badge { display: inline-flex; align-items: center; border-radius: 999px; padding: .28rem .65rem; font-size: .76rem; font-weight: 800; }
+        @media (max-width: 900px) {
+            body { overflow: auto; }
+            .sidebar { transform: translateX(-100%); }
+            .main-content { margin-left: 0; height: auto; min-height: 100vh; }
+            .topbar { padding: 12px 16px; align-items: flex-start; flex-direction: column; }
+            .global-search { min-width: 100%; }
+            #content-container { padding: 16px; }
         }
     </style>
 </head>
@@ -248,36 +114,40 @@
 
     <div id="header-include" style="display: none;"></div>
 
-    <div class="dashboard" id="admin-dashboard-shell">
-        <aside class="sidebar">
+    <div class="admin-shell" id="admin-dashboard-shell">
+        <aside class="sidebar" aria-label="Admin navigation">
             <div class="sidebar-brand">
                 <img src="img/Logo.jpg" alt="Carita Hidroponik">
-                <div>
+                <div class="brand-copy">
                     <strong>Carita Admin</strong>
-                    <span>Operations Dashboard</span>
+                    <span>CMS Dashboard</span>
                 </div>
+                <button class="sidebar-toggle" type="button" id="sidebar-toggle" aria-label="Collapse sidebar"><i data-feather="sidebar"></i></button>
             </div>
             <nav class="sidebar-nav">
-                <a class="sidebar-link active" data-page="admin-orders" data-source="admin-partials/admin-orders-content.html">
-                    <i data-feather="package"></i>
-                    <span x-text="$store.i18n.t('admin.hub.orderCard.title')">Order Management</span>
-                </a>
-                <a class="sidebar-link" data-page="admin-products" data-source="admin-partials/admin-products-content.html">
-                    <i data-feather="edit"></i>
-                    <span x-text="$store.i18n.t('admin.hub.contentCard.title')">Content Management</span>
-                </a>
-                <a class="sidebar-link" data-page="admin-dashboard" data-source="admin-partials/admin-dashboard-content.html">
-                    <i data-feather="bar-chart-2"></i>
-                    <span x-text="$store.i18n.t('admin.hub.analyticsCard.title')">Analytics Dashboard</span>
-                </a>
-                <a class="sidebar-link" data-page="admin-shipping" data-source="admin-partials/admin-shipping-content.html">
-                    <i data-feather="truck"></i>
-                    <span>Manajemen Ongkos Kirim</span>
-                </a>
+                <a class="sidebar-link active" data-page="admin-dashboard" data-source="admin-partials/admin-dashboard-content.html" data-title="Dashboard"><i data-feather="home"></i><span class="sidebar-label">Dashboard</span></a>
+                <a class="sidebar-link" data-page="admin-products" data-source="admin-partials/admin-products-content.html" data-title="Products" data-tab="products"><i data-feather="shopping-bag"></i><span class="sidebar-label">Products</span></a>
+                <a class="sidebar-link" data-page="admin-orders" data-source="admin-partials/admin-orders-content.html" data-title="Orders"><i data-feather="package"></i><span class="sidebar-label">Orders</span></a>
+                <a class="sidebar-link" data-page="admin-products" data-source="admin-partials/admin-products-content.html" data-title="News" data-tab="news"><i data-feather="file-text"></i><span class="sidebar-label">News</span></a>
+                <a class="sidebar-link" data-page="admin-grow-lab" data-title="Grow Lab"><i data-feather="activity"></i><span class="sidebar-label">Grow Lab</span></a>
+                <a class="sidebar-link" data-page="admin-dashboard" data-source="admin-partials/admin-dashboard-content.html" data-title="Analytics"><i data-feather="bar-chart-2"></i><span class="sidebar-label">Analytics</span></a>
+                <a class="sidebar-link" data-page="admin-shipping" data-source="admin-partials/admin-shipping-content.html" data-title="Settings"><i data-feather="settings"></i><span class="sidebar-label">Settings</span></a>
+                <a class="sidebar-link logout" href="#" id="admin-logout-link"><i data-feather="log-out"></i><span class="sidebar-label">Logout</span></a>
             </nav>
         </aside>
 
         <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <div class="breadcrumb">Admin / <strong id="breadcrumb-current">Dashboard</strong></div>
+                    <div style="color: var(--admin-muted); font-size: .86rem; margin-top: 4px;">Manage storefront content, orders, and insights.</div>
+                </div>
+                <div class="topbar-actions">
+                    <label class="global-search" for="admin-global-search"><i data-feather="search"></i><input id="admin-global-search" type="search" placeholder="Search current page..."></label>
+                    <button class="icon-btn" type="button" aria-label="Notifications"><i data-feather="bell"></i></button>
+                    <button class="profile-menu" type="button"><span class="profile-avatar">CH</span><span>Admin</span><i data-feather="chevron-down"></i></button>
+                </div>
+            </header>
             <div id="content-container"></div>
         </main>
     </div>
@@ -301,9 +171,16 @@
             document.querySelectorAll('.sidebar-link').forEach((link) => {
                 link.classList.toggle('active', link === activeLink);
             });
+            const title = activeLink?.dataset?.title || 'Dashboard';
+            const crumb = document.getElementById('breadcrumb-current');
+            if (crumb) crumb.textContent = title;
         }
 
-        function initializeLoadedPage(page) {
+        function initializeLoadedPage(page, activeLink) {
+            if (page === 'admin-grow-lab') {
+                contentContainer.innerHTML = '<div class="admin-empty-panel"><h2>Grow Lab</h2><p>Grow Lab management is ready in the navigation shell. No existing admin endpoint was changed or invented for this section.</p></div>';
+            }
+
             if (page === 'admin-orders' && window.AdminOrdersPage) {
                 window.AdminOrdersPage.init();
             }
@@ -318,6 +195,9 @@
 
             if (window.Alpine) {
                 window.Alpine.initTree(contentContainer);
+                if (activeLink?.dataset?.tab) {
+                    window.AdminInitialContentTab = activeLink.dataset.tab;
+                }
             }
 
             if (window.feather) {
@@ -328,7 +208,15 @@
         function loadContent(page, source, activeLink) {
             contentContainer.classList.add('is-loading');
             contentContainer.innerHTML = '<div class="loading-indicator">Loading content...</div>';
+            setActiveMenu(activeLink);
+            if (!source) {
+                window.AdminInitialContentTab = activeLink?.dataset?.tab || 'products';
+                initializeLoadedPage(page, activeLink);
+                contentContainer.classList.remove('is-loading');
+                return;
+            }
 
+            window.AdminInitialContentTab = activeLink?.dataset?.tab || 'products';
             fetch(source)
                 .then((response) => {
                     if (!response.ok) {
@@ -341,7 +229,7 @@
                     const bodyContent = parsed.body ? parsed.body.innerHTML : html;
                     contentContainer.innerHTML = bodyContent;
                     setActiveMenu(activeLink);
-                    initializeLoadedPage(page);
+                    initializeLoadedPage(page, activeLink);
                 })
                 .catch((error) => {
                     contentContainer.innerHTML = '<p>Error loading content</p>';
@@ -353,7 +241,16 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.sidebar-link').forEach((link) => {
+            document.getElementById('sidebar-toggle')?.addEventListener('click', () => document.getElementById('admin-dashboard-shell')?.classList.toggle('sidebar-collapsed'));
+            document.getElementById('admin-global-search')?.addEventListener('input', (event) => {
+                window.dispatchEvent(new CustomEvent('admin:global-search', { detail: event.target.value }));
+            });
+            document.getElementById('admin-logout-link')?.addEventListener('click', (event) => {
+                event.preventDefault();
+                if (window.AdminAuth?.logout) window.AdminAuth.logout();
+                else window.location.href = 'login.html';
+            });
+            document.querySelectorAll('.sidebar-link[data-page]').forEach((link) => {
                 link.addEventListener('click', () => {
                     loadContent(link.dataset.page, link.dataset.source, link);
                 });

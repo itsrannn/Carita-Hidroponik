@@ -193,10 +193,25 @@ window.AdminOrdersPage = (() => {
         renderOrders(state, processedOrders);
     }
 
+    function paymentClass(status = '') {
+        const value = String(status || '').toLowerCase();
+        if (['paid', 'settlement', 'capture', 'success'].includes(value)) return 'payment-paid';
+        if (['pending', 'unpaid'].includes(value)) return 'payment-pending';
+        return '';
+    }
+
+    function paymentLabel(order) {
+        return order.payment_status || order.transaction_status || order.payment?.status || '-';
+    }
+
+    function trackingNumber(order) {
+        return order.tracking_number || order.resi || order.shipping_tracking_number || '-';
+    }
+
     function renderOrders(state, orders) {
         state.ordersGrid.innerHTML = '';
         if (!orders.length) {
-            state.ordersGrid.innerHTML = `<div class="empty-state">${AdminShared.t('admin.orders.empty', 'Tidak ada pesanan yang sesuai filter.')}</div>`;
+            state.ordersGrid.innerHTML = `<tr><td colspan="8" class="empty-state">${AdminShared.t('admin.orders.empty', 'Tidak ada pesanan yang sesuai filter.')}</td></tr>`;
             return;
         }
 
@@ -204,57 +219,27 @@ window.AdminOrdersPage = (() => {
             const customer = getCustomer(order);
             const items = getOrderItems(order);
             const orderId = order.order_code || order.id || '-';
-            const card = document.createElement('article');
-            card.className = 'admin-order-card compact-card';
-            card.id = `order-${order.id}`;
-            const isOpen = activeOrderId === order.id;
-            card.innerHTML = `
-                <button type="button" class="order-summary-toggle" aria-expanded="${isOpen}">
-                    <div>
-                        <div class="order-code">#${AdminShared.escapeHtml(orderId)}</div>
-                        <div class="order-customer">${AdminShared.escapeHtml(customer.name)}</div>
-                        <div class="order-date">${AdminShared.escapeHtml(getOrderDate(order, true))}</div>
-                    </div>
-                    <span class="status-badge status-${statusClass(order.status)}">${AdminShared.escapeHtml(statusLabel(order.status))}</span>
-                </button>
-                <div class="order-detail-panel" ${isOpen ? '' : 'hidden'}>
-                    <div class="detail-grid">
-                        <section class="detail-box">
-                            <h4>Informasi Customer</h4>
-                            <p><strong>Nama:</strong> ${AdminShared.escapeHtml(customer.name)}</p>
-                            <p><strong>Telepon:</strong> ${AdminShared.escapeHtml(customer.phone)}</p>
-                            <p><strong>Email:</strong> ${AdminShared.escapeHtml(customer.email)}</p>
-                        </section>
-                        <section class="detail-box">
-                            <h4>Informasi Pengiriman</h4>
-                            <p><strong>Alamat:</strong> ${AdminShared.escapeHtml(getAddress(order))}</p>
-                            <p><strong>Zona Ongkir:</strong> ${AdminShared.escapeHtml(getShippingZone(order))}</p>
-                        </section>
-                    </div>
-                    <section class="detail-box order-items-box">
-                        <h4>Ringkasan Pesanan</h4>
-                        <div class="order-items-table-wrap">
-                            <table class="order-items-table">
-                                <thead><tr><th>Produk</th><th>Qty</th><th>Harga</th><th>Subtotal</th></tr></thead>
-                                <tbody>${items.length ? items.map((item) => `<tr><td>${AdminShared.escapeHtml(item.name)}</td><td>${item.quantity}</td><td>${window.formatRupiah(item.price)}</td><td>${window.formatRupiah(item.subtotal)}</td></tr>`).join('') : '<tr><td colspan="4">Tidak ada item.</td></tr>'}</tbody>
-                                <tfoot><tr><td colspan="3">Total</td><td>${window.formatRupiah(order.total_amount || items.reduce((sum, item) => sum + item.subtotal, 0))}</td></tr></tfoot>
-                            </table>
-                        </div>
-                    </section>
-                    <section class="detail-box status-editor-box">
-                        <label for="status-${order.id}">Status Pesanan</label>
-                        <select id="status-${order.id}" class="order-status-select" data-order-id="${order.id}">
-                            ${STATUS_OPTIONS.map((option) => `<option value="${option.value}" ${normalizeStatus(order.status) === option.value ? 'selected' : ''}>${option.label}</option>`).join('')}
-                        </select>
-                    </section>
-                </div>
+            const row = document.createElement('tr');
+            row.id = `order-${order.id}`;
+            row.innerHTML = `
+                <td><div class="order-code">#${AdminShared.escapeHtml(orderId)}</div><div class="order-date">${AdminShared.escapeHtml(getOrderDate(order, true))}</div></td>
+                <td><button type="button" class="order-action-btn customer-drawer-btn">${AdminShared.escapeHtml(customer.name)}</button><div class="order-date">${AdminShared.escapeHtml(customer.phone)}</div></td>
+                <td>${window.formatRupiah(order.total_amount || items.reduce((sum, item) => sum + item.subtotal, 0))}</td>
+                <td><select class="order-status-select" data-order-id="${order.id}">${STATUS_OPTIONS.map((option) => `<option value="${option.value}" ${normalizeStatus(order.status) === option.value ? 'selected' : ''}>${option.label}</option>`).join('')}</select></td>
+                <td><span class="status-badge payment-badge ${paymentClass(paymentLabel(order))}">${AdminShared.escapeHtml(paymentLabel(order))}</span></td>
+                <td>${AdminShared.escapeHtml(trackingNumber(order))}</td>
+                <td>${AdminShared.escapeHtml(getOrderDate(order))}</td>
+                <td><button type="button" class="order-action-btn order-detail-btn">Detail</button></td>
             `;
-            card.querySelector('.order-summary-toggle').addEventListener('click', () => {
-                activeOrderId = activeOrderId === order.id ? null : order.id;
-                renderOrders(state, orders);
+            row.querySelector('.order-status-select')?.addEventListener('change', (event) => updateOrderStatus(state, order, event.target.value));
+            row.querySelector('.customer-drawer-btn')?.addEventListener('click', () => {
+                AdminShared.notify(`Customer: ${customer.name} · ${customer.email} · ${getAddress(order)}`);
             });
-            card.querySelector('.order-status-select')?.addEventListener('change', (event) => updateOrderStatus(state, order, event.target.value));
-            state.ordersGrid.appendChild(card);
+            row.querySelector('.order-detail-btn')?.addEventListener('click', () => {
+                const summary = items.length ? items.map((item) => `${item.name} x${item.quantity}`).join(', ') : 'Tidak ada item';
+                AdminShared.notify(`Order #${orderId}: ${summary}`);
+            });
+            state.ordersGrid.appendChild(row);
         });
     }
 
@@ -343,9 +328,22 @@ document.addEventListener('alpine:init', () => {
         isLoading: { products: false, news: false },
         errors: { products: '', news: '' },
         searchQuery: { products: '', news: '' },
+        filters: { products: { category: 'all' }, news: { status: 'all' } },
+        sort: { products: 'newest', news: 'newest' },
+        selectedProducts: [],
+        productPage: 1,
+        newsPage: 1,
+        pageSize: 8,
         bulkDiscountPercent: 10,
 
-        init() { this.switchTab('products'); },
+        init() {
+            window.addEventListener('admin:global-search', (event) => {
+                this.searchQuery[this.activeTab] = event.detail || '';
+                this.productPage = 1;
+                this.newsPage = 1;
+            });
+            this.switchTab(window.AdminInitialContentTab || 'products');
+        },
         async switchTab(tab) {
             this.activeTab = tab;
             if (tab === 'products' && this.products.length === 0 && !this.isLoading.products) await this.loadProducts();
@@ -355,7 +353,7 @@ document.addEventListener('alpine:init', () => {
             this.isLoading.products = true; this.errors.products = '';
             try { this.products = await loadContentItems('products', 'products', 'products'); }
             catch (err) { this.products = []; this.errors.products = err?.message || 'Gagal memuat produk.'; }
-            finally { this.isLoading.products = false; }
+            finally { this.isLoading.products = false; this.selectedProducts = this.selectedProducts.filter((id) => this.products.some((product) => product.id === id)); }
         },
         async loadNews() {
             this.isLoading.news = true; this.errors.news = '';
@@ -363,22 +361,80 @@ document.addEventListener('alpine:init', () => {
             catch (err) { this.news = []; this.errors.news = err?.message || 'Gagal memuat berita.'; }
             finally { this.isLoading.news = false; }
         },
+        displayName(value, fallback = '-') { return AdminShared.getLocalized(value, fallback); },
+        isPublished(item) {
+            if (typeof item?.is_published === 'boolean') return item.is_published;
+            if (typeof item?.published === 'boolean') return item.published;
+            const status = String(item?.status || '').toLowerCase();
+            return status ? ['published', 'active', 'publish'].includes(status) : true;
+        },
+        get productCategories() {
+            return [...new Set(this.products.map((product) => product?.category).filter(Boolean))].sort();
+        },
         get filteredProducts() {
             const query = this.searchQuery.products.trim().toLowerCase();
-            if (!query) return this.products;
-            return this.products.filter((product) => {
+            let rows = this.products.filter((product) => {
                 const name = AdminShared.getLocalized(product?.name, '');
-                return String(name).toLowerCase().includes(query) || String(product?.category || '').toLowerCase().includes(query);
+                const matchesQuery = !query || String(name).toLowerCase().includes(query) || String(product?.category || '').toLowerCase().includes(query);
+                const matchesCategory = this.filters.products.category === 'all' || product?.category === this.filters.products.category;
+                return matchesQuery && matchesCategory;
             });
+            rows = [...rows].sort((a, b) => {
+                if (this.sort.products === 'name') return this.displayName(a.name, '').localeCompare(this.displayName(b.name, ''));
+                if (this.sort.products === 'priceAsc') return Number(a.price || 0) - Number(b.price || 0);
+                if (this.sort.products === 'priceDesc') return Number(b.price || 0) - Number(a.price || 0);
+                if (this.sort.products === 'stockAsc') return Number(a.stock ?? a.quantity ?? 0) - Number(b.stock ?? b.quantity ?? 0);
+                return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+            });
+            return rows;
         },
+        get productTotalPages() { return Math.max(1, Math.ceil(this.filteredProducts.length / this.pageSize)); },
+        get paginatedProducts() {
+            if (this.productPage > this.productTotalPages) this.productPage = this.productTotalPages;
+            const start = (this.productPage - 1) * this.pageSize;
+            return this.filteredProducts.slice(start, start + this.pageSize);
+        },
+        get pageProductIds() { return this.paginatedProducts.map((product) => product.id); },
         get filteredNews() {
             const query = this.searchQuery.news.trim().toLowerCase();
-            if (!query) return this.news;
-            return this.news.filter((item) => {
+            let rows = this.news.filter((item) => {
                 const title = AdminShared.getLocalized(item?.title, '');
                 const excerpt = AdminShared.getLocalized(item?.excerpt, '');
-                return String(title).toLowerCase().includes(query) || String(excerpt).toLowerCase().includes(query);
+                const status = this.isPublished(item) ? 'published' : 'draft';
+                return (!query || String(title).toLowerCase().includes(query) || String(excerpt).toLowerCase().includes(query)) && (this.filters.news.status === 'all' || this.filters.news.status === status);
             });
+            rows = [...rows].sort((a, b) => this.sort.news === 'title' ? this.displayName(a.title, '').localeCompare(this.displayName(b.title, '')) : new Date(b.created_at || 0) - new Date(a.created_at || 0));
+            return rows;
+        },
+        get newsTotalPages() { return Math.max(1, Math.ceil(this.filteredNews.length / this.pageSize)); },
+        get paginatedNews() {
+            if (this.newsPage > this.newsTotalPages) this.newsPage = this.newsTotalPages;
+            const start = (this.newsPage - 1) * this.pageSize;
+            return this.filteredNews.slice(start, start + this.pageSize);
+        },
+        resetProductsView() { this.searchQuery.products = ''; this.filters.products.category = 'all'; this.sort.products = 'newest'; this.productPage = 1; },
+        resetNewsView() { this.searchQuery.news = ''; this.filters.news.status = 'all'; this.sort.news = 'newest'; this.newsPage = 1; },
+        toggleProductPage(checked) {
+            const ids = this.pageProductIds;
+            this.selectedProducts = checked ? [...new Set([...this.selectedProducts, ...ids])] : this.selectedProducts.filter((id) => !ids.includes(id));
+        },
+        async bulkDeleteProducts() {
+            if (!this.selectedProducts.length || !window.confirm(`Hapus ${this.selectedProducts.length} produk terpilih?`)) return;
+            const { error } = await window.supabase.from('products').delete().in('id', this.selectedProducts);
+            if (error) { AdminShared.notify(`Gagal bulk delete: ${error.message}`, true); return; }
+            this.selectedProducts = [];
+            AdminShared.notify('Produk terpilih berhasil dihapus.');
+            await this.loadProducts();
+        },
+        async bulkPublishProducts() {
+            if (!this.selectedProducts.length) return;
+            const sample = this.products.find((product) => this.selectedProducts.includes(product.id)) || {};
+            const payload = Object.prototype.hasOwnProperty.call(sample, 'is_published') ? { is_published: true } : { status: 'published' };
+            const { error } = await window.supabase.from('products').update(payload).in('id', this.selectedProducts);
+            if (error) { AdminShared.notify(`Gagal bulk publish: ${error.message}`, true); return; }
+            this.selectedProducts = [];
+            AdminShared.notify('Produk terpilih berhasil dipublish.');
+            await this.loadProducts();
         },
         async deleteItem(id, imageUrl) {
             const isNews = this.activeTab === 'news';
