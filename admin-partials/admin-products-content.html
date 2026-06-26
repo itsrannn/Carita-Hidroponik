@@ -1,69 +1,48 @@
-<div x-data="contentManager" x-init="init()">
+<div x-data="contentManager" x-init="init()" class="cms-page">
 <style>
-    .dashboard-header {
-        padding: var(--spacing-lg);
-        background-color: #fff;
-        border-bottom: 1px solid #dee2e6;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: var(--spacing-md);
-    }
-    .dashboard-header-text h1 { margin: 0; }
-    .dashboard-header-text p { margin: 0; margin-top: var(--spacing-xs); color: #6c757d; }
-    .content-card {
-        background-color: #fff;
-        border-radius: 10px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        border: 1px solid rgba(0,0,0,0.08);
-        padding: var(--spacing-lg);
-    }
-    .data-table-wrapper { overflow-x: auto; }
-    .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.95rem; }
-    .data-table thead th { padding: var(--spacing-md); background-color: #f8f9fa; font-weight: 600; color: #495057; border-bottom: 2px solid #dee2e6; }
-    .data-table tbody tr { border-bottom: 1px solid #dee2e6; }
-    .data-table tbody td { padding: var(--spacing-md); vertical-align: middle; color: #212529; }
-    .data-table .item-image { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; }
-    .data-table .action-buttons { display: flex; gap: var(--spacing-xs); }
-    .btn-edit, .btn-delete { border: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; }
-    .btn-edit { background-color: #e7f3ff; color: #0d6efd; text-decoration: none; }
-    .btn-delete { background-color: #fce8e6; color: #c5221f; }
-    .btn-add { background-color: #15803d; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; }
-    .tabs { display: flex; border-bottom: 1px solid #dee2e6; margin-bottom: var(--spacing-lg); }
-    .tab-button { padding: var(--spacing-md) var(--spacing-lg); cursor: pointer; border: none; background: none; font-size: 1rem; font-weight: 600; color: #6c757d; border-bottom: 3px solid transparent; }
-    .tab-button.active { color: var(--primary); border-bottom-color: var(--primary); }
-    .table-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-md); }
-    .table-header h2 { margin: 0; }
-    .search-input { padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #dee2e6; font-size: 0.95rem; width: 100%; max-width: 300px; }
-    .discount-badge { display: inline-block; padding: 0.2rem 0.5rem; font-size: 0.75rem; font-weight: 600; color: #fff; background-color: #15803d; border-radius: 0.5rem; margin-left: var(--spacing-xs); }
-    .bulk-discount-section { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: var(--spacing-md); margin-bottom: var(--spacing-lg); }
-    .bulk-discount-section h3,
-    .bulk-discount-section p { margin: 0; }
-    .bulk-discount-section p { margin-top: var(--spacing-xs); }
-    .bulk-discount-controls { display: flex; gap: var(--spacing-sm); align-items: center; margin-top: var(--spacing-md); }
-    .bulk-discount-controls input { padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #dee2e6; font-size: 0.95rem; width: 150px; }
-    .bulk-discount-controls button { background-color: #dc3545; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .cms-header { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; padding:24px; }
+    .cms-eyebrow { color:var(--admin-primary); font-weight:900; font-size:.76rem; text-transform:uppercase; letter-spacing:.08em; }
+    .cms-header h1 { margin:.25rem 0; font-size:clamp(1.7rem, 3vw, 2.6rem); }
+    .cms-header p { margin:0; color:var(--admin-muted); }
+    .btn-add,.btn-edit,.btn-delete,.btn-secondary,.btn-danger { border:0; border-radius:999px; padding:.68rem 1rem; font-weight:900; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:.45rem; }
+    .btn-add { background:var(--admin-text); color:var(--admin-surface); } .btn-edit { background:#e0f2fe; color:#0369a1; } .btn-delete,.btn-danger { background:#fee2e2; color:#b91c1c; } .btn-secondary { background:var(--admin-surface-2); color:var(--admin-text); border:1px solid var(--admin-border); }
+    .cms-tabs { display:flex; gap:.5rem; padding:.35rem; background:var(--admin-surface-2); border:1px solid var(--admin-border); border-radius:999px; width:max-content; margin-bottom:1rem; }
+    .tab-button { border:0; background:transparent; border-radius:999px; padding:.65rem 1rem; font-weight:900; color:var(--admin-muted); cursor:pointer; } .tab-button.active { background:var(--admin-surface); color:var(--admin-primary); box-shadow:0 8px 20px rgba(15,23,42,.08); }
+    .content-card { padding:22px; }
+    .cms-toolbar { display:grid; grid-template-columns: minmax(220px,1fr) repeat(3, max-content); gap:.75rem; align-items:center; margin-bottom:1rem; }
+    .search-input,.cms-select,.bulk-input { border:1px solid var(--admin-border); border-radius:999px; background:var(--admin-surface); color:var(--admin-text); padding:.78rem 1rem; font-weight:700; min-width:0; }
+    .data-table-wrapper { overflow:auto; border:1px solid var(--admin-border); border-radius:18px; }
+    .data-table { width:100%; border-collapse:separate; border-spacing:0; min-width:920px; font-size:.92rem; }
+    .data-table th { position:sticky; top:0; background:var(--admin-surface-2); color:var(--admin-muted); font-size:.76rem; text-transform:uppercase; letter-spacing:.04em; cursor:pointer; }
+    .data-table th,.data-table td { padding:14px 16px; border-bottom:1px solid var(--admin-border); text-align:left; vertical-align:middle; }
+    .data-table tr:last-child td { border-bottom:0; } .data-table tbody tr:hover { background:var(--admin-surface-2); }
+    .item-image { width:52px; height:52px; border-radius:14px; object-fit:cover; background:var(--admin-surface-2); }
+    .product-cell { display:flex; align-items:center; gap:.8rem; } .product-name { font-weight:900; } .product-meta { color:var(--admin-muted); font-size:.8rem; margin-top:.15rem; }
+    .cms-badge.published { background:#dcfce7; color:#166534; } .cms-badge.draft { background:#fef3c7; color:#92400e; } .cms-badge.neutral { background:#e2e8f0; color:#334155; }
+    .action-buttons { display:flex; gap:.5rem; flex-wrap:wrap; } .bulk-bar { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin:.75rem 0; color:var(--admin-muted); }
+    .pagination { display:flex; justify-content:flex-end; align-items:center; gap:.75rem; margin-top:1rem; color:var(--admin-muted); font-weight:800; }
+    .empty-state,.error-state,.skeleton-state { padding:2rem; text-align:center; color:var(--admin-muted); } .error-state { color:#b91c1c; }
+    @media(max-width:900px){ .cms-header,.cms-toolbar,.bulk-bar{display:flex; flex-direction:column; align-items:stretch;} .cms-tabs{width:100%;} }
 </style>
 <div class="container content-wrapper">
-    <div class="dashboard-header section">
-        <div class="dashboard-header-text">
-            <h1 class="page-title" x-text="$store.i18n.t('admin.products.title')">Content Management</h1>
-            <p x-text="$store.i18n.t('admin.products.description')">Manage the products and news displayed on your site.</p>
-        </div>
-        <a :href="`admin-editor.html?type=${activeTab}&action=add`" class="btn-add"><span x-show="activeTab === 'products'">+ Add Product</span><span x-show="activeTab === 'news'">+ Add News</span></a>
+    <div class="cms-header dashboard-header section">
+        <div><div class="cms-eyebrow">Modern CMS</div><h1 class="page-title">Content Management</h1><p>Manage products and news using live data from the existing admin data source.</p></div>
+        <a :href="`admin-editor.html?type=${activeTab === 'products' ? 'product' : 'news'}&action=add`" class="btn-add"><i data-feather="plus"></i><span x-text="activeTab === 'products' ? 'Create Product' : 'Create News'"></span></a>
     </div>
-
     <div class="content-card section">
-        <div class="tabs"><button type="button" @click="switchTab('products')" :class="{ 'active': activeTab === 'products' }" class="tab-button">Product Management</button><button type="button" @click="switchTab('news')" :class="{ 'active': activeTab === 'news' }" class="tab-button">News Management</button></div>
-        <div x-show="activeTab === 'products'" class="tab-content">
-            <div class="bulk-discount-section"><h3>Bulk Discount Tool</h3><p>Apply a percentage discount to all products that don't have a fixed discount price set.</p><div class="bulk-discount-controls"><input type="number" x-model.number="bulkDiscountPercent" min="1" max="90"><button @click="applyBulkDiscount()">Apply Discount</button></div></div>
-            <div class="table-header"><h2 class="section-title">Product List</h2><input type="text" x-model="searchQuery.products" placeholder="Search products..." class="search-input"></div>
-            <div class="data-table-wrapper"><table class="data-table"><thead><tr><th>Image</th><th>Product</th><th>Category</th><th>Price</th><th>Actions</th></tr></thead><tbody><template x-if="isLoading.products"><tr><td colspan="5" style="text-align: center;">Loading products...</td></tr></template><template x-if="!isLoading.products && errors.products"><tr><td colspan="5" style="text-align: center; color: #c5221f;" x-text="errors.products"></td></tr></template><template x-if="!isLoading.products && !errors.products && filteredProducts.length === 0"><tr><td colspan="5" style="text-align: center;">Tidak ada data produk.</td></tr></template><template x-for="product in filteredProducts" :key="product.id"><tr><td><img :src="window.fixImagePath(product.image_url)" :alt="(product.name && (product.name.en || product.name.id)) || product.name || 'Product'" class="item-image"></td><td><span x-text="product.name[$store.i18n.lang] || (product.name && (product.name.en || product.name.id)) || product.name || 'Product'"></span></td><td x-text="product.category"></td><td x-text="window.formatRupiah(product.price)"></td><td><div class="action-buttons"><a :href="`admin-editor.html?type=product&action=edit&id=${product.id}`" class="btn-edit">Edit</a><button type="button" class="btn-delete" @click="deleteItem(product.id, product.image_url)">Delete</button></div></td></tr></template></tbody></table></div>
-        </div>
-        <div x-show="activeTab === 'news'" class="tab-content">
-            <div class="table-header"><h2 class="section-title">News List</h2><input type="text" x-model="searchQuery.news" placeholder="Search news..." class="search-input"></div>
-            <div class="data-table-wrapper"><table class="data-table"><thead><tr><th>Image</th><th>Title</th><th>Excerpt</th><th>Actions</th></tr></thead><tbody><template x-if="isLoading.news"><tr><td colspan="4" style="text-align: center;">Loading news...</td></tr></template><template x-if="!isLoading.news && errors.news"><tr><td colspan="4" style="text-align: center; color: #c5221f;" x-text="errors.news"></td></tr></template><template x-if="!isLoading.news && !errors.news && filteredNews.length === 0"><tr><td colspan="4" style="text-align: center;">Tidak ada data berita.</td></tr></template><template x-for="item in filteredNews" :key="item.id"><tr><td><img :src="window.fixImagePath(item.image_url)" :alt="(item.title && (item.title.en || item.title.id)) || item.title || 'News'" class="item-image"></td><td x-text="item.title[$store.i18n.lang] || (item.title && (item.title.en || item.title.id)) || item.title || 'News'"></td><td x-text="(item.excerpt && typeof item.excerpt === 'object' ? (item.excerpt[$store.i18n.lang] || item.excerpt.id || item.excerpt.en) : item.excerpt)"></td><td><div class="action-buttons"><a :href="`admin-editor.html?type=news&action=edit&id=${item.id}`" class="btn-edit">Edit</a><button type="button" class="btn-delete" @click="deleteItem(item.id, item.image_url)">Delete</button></div></td></tr></template></tbody></table></div>
-        </div>
+        <div class="cms-tabs"><button type="button" @click="switchTab('products')" :class="{ active: activeTab === 'products' }" class="tab-button">Products</button><button type="button" @click="switchTab('news')" :class="{ active: activeTab === 'news' }" class="tab-button">News</button></div>
+        <template x-if="activeTab === 'products'"><section>
+            <div class="cms-toolbar"><input type="search" x-model="searchQuery.products" placeholder="Search product or category..." class="search-input"><select x-model="filters.products.category" class="cms-select"><option value="all">All categories</option><template x-for="category in productCategories" :key="category"><option :value="category" x-text="category"></option></template></select><select x-model="sort.products" class="cms-select"><option value="newest">Newest</option><option value="name">Name</option><option value="priceAsc">Price ↑</option><option value="priceDesc">Price ↓</option><option value="stockAsc">Stock ↑</option></select><button class="btn-secondary" type="button" @click="resetProductsView()">Reset</button></div>
+            <div class="bulk-bar"><span x-text="`${selectedProducts.length} selected · ${paginatedProducts.length} shown`"></span><div class="action-buttons"><button class="btn-secondary" type="button" @click="bulkPublishProducts()" :disabled="!selectedProducts.length">Bulk publish</button><button class="btn-danger" type="button" @click="bulkDeleteProducts()" :disabled="!selectedProducts.length">Bulk delete</button></div></div>
+            <div class="data-table-wrapper"><table class="data-table"><thead><tr><th><input type="checkbox" :checked="pageProductIds.length && pageProductIds.every(id => selectedProducts.includes(id))" @change="toggleProductPage($event.target.checked)"></th><th>Image</th><th @click="sort.products='name'">Product</th><th>Category</th><th @click="sort.products = sort.products === 'priceAsc' ? 'priceDesc' : 'priceAsc'">Price</th><th>Discount</th><th @click="sort.products='stockAsc'">Stock</th><th>Status</th><th>Action</th></tr></thead><tbody>
+                <template x-if="isLoading.products"><tr><td colspan="9" class="skeleton-state">Loading products...</td></tr></template><template x-if="!isLoading.products && errors.products"><tr><td colspan="9" class="error-state" x-text="errors.products"></td></tr></template><template x-if="!isLoading.products && !errors.products && paginatedProducts.length === 0"><tr><td colspan="9" class="empty-state">No products match your filters.</td></tr></template>
+                <template x-for="product in paginatedProducts" :key="product.id"><tr><td><input type="checkbox" :value="product.id" x-model="selectedProducts"></td><td><img :src="window.fixImagePath(product.image_url)" :alt="displayName(product.name, 'Product')" class="item-image"></td><td><div class="product-name" x-text="displayName(product.name, 'Product')"></div><div class="product-meta" x-text="`#${String(product.id).slice(0,8)}`"></div></td><td x-text="product.category || '-'"></td><td x-text="window.formatRupiah(product.price)"></td><td><span class="cms-badge neutral" x-text="product.discount_price ? window.formatRupiah(product.discount_price) : 'No discount'"></span></td><td x-text="product.stock ?? product.quantity ?? '-'"></td><td><span class="cms-badge" :class="isPublished(product) ? 'published' : 'draft'" x-text="isPublished(product) ? 'Published' : 'Draft'"></span></td><td><div class="action-buttons"><a :href="`admin-editor.html?type=product&action=edit&id=${product.id}`" class="btn-edit">Edit</a><button type="button" class="btn-delete" @click="deleteItem(product.id, product.image_url)">Delete</button></div></td></tr></template>
+            </tbody></table></div><div class="pagination"><button class="btn-secondary" @click="productPage=Math.max(1,productPage-1)">Prev</button><span x-text="`Page ${productPage} of ${productTotalPages}`"></span><button class="btn-secondary" @click="productPage=Math.min(productTotalPages,productPage+1)">Next</button></div>
+        </section></template>
+        <template x-if="activeTab === 'news'"><section>
+            <div class="cms-toolbar"><input type="search" x-model="searchQuery.news" placeholder="Search title or excerpt..." class="search-input"><select x-model="filters.news.status" class="cms-select"><option value="all">All status</option><option value="published">Published</option><option value="draft">Draft</option></select><select x-model="sort.news" class="cms-select"><option value="newest">Newest</option><option value="title">Title</option></select><button class="btn-secondary" type="button" @click="resetNewsView()">Reset</button></div>
+            <div class="data-table-wrapper"><table class="data-table"><thead><tr><th>Image</th><th>Title</th><th>Excerpt</th><th>Status</th><th>Action</th></tr></thead><tbody><template x-if="isLoading.news"><tr><td colspan="5" class="skeleton-state">Loading news...</td></tr></template><template x-if="!isLoading.news && errors.news"><tr><td colspan="5" class="error-state" x-text="errors.news"></td></tr></template><template x-if="!isLoading.news && !errors.news && paginatedNews.length === 0"><tr><td colspan="5" class="empty-state">No news articles match your filters.</td></tr></template><template x-for="item in paginatedNews" :key="item.id"><tr><td><img :src="window.fixImagePath(item.image_url)" :alt="displayName(item.title, 'News')" class="item-image"></td><td><div class="product-name" x-text="displayName(item.title, 'News')"></div></td><td x-text="displayName(item.excerpt, '-')"></td><td><span class="cms-badge" :class="isPublished(item) ? 'published' : 'draft'" x-text="isPublished(item) ? 'Published' : 'Draft'"></span></td><td><div class="action-buttons"><a :href="`admin-editor.html?type=news&action=edit&id=${item.id}`" class="btn-edit">Edit</a><button type="button" class="btn-delete" @click="deleteItem(item.id, item.image_url)">Delete</button></div></td></tr></template></tbody></table></div><div class="pagination"><button class="btn-secondary" @click="newsPage=Math.max(1,newsPage-1)">Prev</button><span x-text="`Page ${newsPage} of ${newsTotalPages}`"></span><button class="btn-secondary" @click="newsPage=Math.min(newsTotalPages,newsPage+1)">Next</button></div>
+        </section></template>
     </div>
 </div>
 </div>

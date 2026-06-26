@@ -11,7 +11,8 @@
     .filter-group label { font-size: .8rem; color: #475569; font-weight: 700; }
     .filter-select, .filter-input { padding: .72rem .9rem; border-radius: 999px; border: 1px solid #d8dee4; background: #f8fafc; font-weight: 600; min-width: 0; }
     .reset-filter-btn { border: 0; border-radius: 999px; background: #e8f5e9; color: #1b5e20; padding: .78rem 1rem; font-weight: 800; cursor: pointer; }
-    .order-management-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 1rem; margin-bottom: 3rem; }
+    .order-management-grid { display: block; overflow:auto; background:#fff; border:1px solid #e6ebf2; border-radius:18px; box-shadow:0 8px 24px rgba(15,23,42,.07); margin-bottom:3rem; }
+    .orders-table { width:100%; min-width:940px; border-collapse:collapse; } .orders-table th,.orders-table td{ padding:14px 16px; border-bottom:1px solid #e6ebf2; text-align:left; vertical-align:middle;} .orders-table th{background:#f8fafc;color:#64748b;font-size:.76rem;text-transform:uppercase;letter-spacing:.04em;} .orders-table tr:hover{background:#f8fafc;} .order-action-btn{border:0;border-radius:999px;padding:.55rem .85rem;font-weight:800;cursor:pointer;background:#e0f2fe;color:#0369a1;} .payment-badge{background:#e2e8f0;color:#334155;} .payment-paid{background:#dcfce7;color:#166534;} .payment-pending{background:#fef3c7;color:#92400e;}
     .admin-order-card { background: #fff; border: 1px solid #e6ebf2; border-radius: 16px; box-shadow: 0 8px 24px rgba(15,23,42,.07); overflow: hidden; }
     .order-summary-toggle { width: 100%; border: 0; background: #fff; padding: 1rem; display: flex; justify-content: space-between; gap: .8rem; text-align: left; cursor: pointer; }
     .order-summary-toggle:hover { background: #f8fafc; }
@@ -54,6 +55,6 @@
         <div class="filter-group"><label for="sort-time">Sort By Date</label><select id="sort-time" class="filter-select"><option value="newest">Terbaru</option><option value="oldest">Terlama</option></select></div>
         <button type="button" id="reset-order-filters" class="reset-filter-btn">Reset Filter</button>
     </div>
-    <div id="orders-grid" class="order-management-grid"></div>
+    <div class="order-management-grid"><table class="orders-table"><thead><tr><th>Order</th><th>Customer</th><th>Total</th><th>Status</th><th>Payment</th><th>Tracking</th><th>Updated</th><th>Action</th></tr></thead><tbody id="orders-grid"></tbody></table></div>
     <p id="loading-message">Memuat pesanan...</p>
 </div>
