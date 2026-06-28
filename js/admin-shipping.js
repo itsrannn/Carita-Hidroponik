@@ -23,6 +23,8 @@ window.AdminShippingPage = (() => {
       region_name: z.region_name || z.zone_name || [z.district_match, z.province_match].filter(Boolean).join(', ') || '-',
       price: Number(z.price ?? z.base_rate ?? 0),
       currency: z.currency || (z.is_international ? 'USD' : 'IDR'),
+      province: z.province_match || z.province || '-',
+      district: z.district_match || z.district || z.subdistrict || '',
       updated_at: z.updated_at
     };
   }
@@ -50,12 +52,13 @@ window.AdminShippingPage = (() => {
     const tbody = el('shipping-rates-tbody'); if (!tbody) return;
     const list = filteredZones();
     tbody.innerHTML = list.length ? list.map((z) => `<tr>
-      <td><strong>${z.zone_code}</strong></td>
-      <td>${z.region_name}</td>
+      <td><strong>${z.region_name}</strong><div class="product-meta">Zona ${z.zone_code}</div></td>
+      <td>${z.province || '-'}</td>
+      <td>${z.district || z.region_name}</td>
       <td><div class="price-editor"><select data-currency-id="${z.id}"><option value="IDR" ${z.currency === 'IDR' ? 'selected' : ''}>IDR</option><option value="USD" ${z.currency === 'USD' ? 'selected' : ''}>USD</option></select><input type="number" min="0" step="${z.currency === 'USD' ? '0.01' : '1'}" value="${z.price}" data-price-id="${z.id}"></div><small>${fmt(z)}</small></td>
-      <td>${z.updated_at ? new Date(z.updated_at).toLocaleString('id-ID') : '-'}</td>
-      <td><button class="btn-action btn-primary" data-save-id="${z.id}">Save</button></td>
-    </tr>`).join('') : '<tr><td colspan="5">Belum ada zona ongkir. Jalankan migration seed shipping_zones.</td></tr>';
+      <td><span class="admin-badge admin-badge--completed">Aktif</span><div class="product-meta">${z.updated_at ? new Date(z.updated_at).toLocaleString('id-ID') : '-'}</div></td>
+      <td><button class="admin-button admin-button--primary btn-action btn-primary" data-save-id="${z.id}">Simpan Pengaturan</button></td>
+    </tr>`).join('') : '<tr><td colspan="6">Belum ada zona ongkir. Jalankan migration seed shipping_zones.</td></tr>';
   }
 
   async function saveZone(id) {

@@ -43,7 +43,7 @@ window.AdminDashboardPage = (() => {
         const revenueOrders = completed.length ? completed : orders.filter((order) => !['Dibatalkan'].includes(normalizeStatus(order.status)));
         const productCounts = {};
         orders.forEach((order) => itemsOf(order).forEach((item) => {
-            const name = localized(item.name || item.product_name, 'Produk');
+            const name = localized(item.name || item.product_name || item.title, 'Produk tidak diketahui');
             productCounts[name] = (productCounts[name] || 0) + number(item.quantity || item.qty);
         }));
         const topProducts = Object.entries(productCounts).sort((a, b) => b[1] - a[1]);
@@ -66,7 +66,8 @@ window.AdminDashboardPage = (() => {
         setText('total-revenue', window.formatRupiah(analytics.totalRevenue));
         setText('pending-orders', analytics.pendingOrders);
         setText('completed-orders', analytics.completedOrders);
-        setText('best-selling-product', analytics.topProducts[0] ? `${analytics.topProducts[0][0]} (${analytics.topProducts[0][1]})` : '-');
+        setText('best-selling-product', analytics.topProducts[0] ? analytics.topProducts[0][0] : 'Produk tidak diketahui');
+        setText('best-selling-product-note', analytics.topProducts[0] ? `Terjual ${analytics.topProducts[0][1]} item` : 'Belum ada data penjualan');
     }
 
     function renderRevenueChart(orders) {
@@ -82,7 +83,7 @@ window.AdminDashboardPage = (() => {
         if (revenueChart) revenueChart.destroy();
         revenueChart = new Chart(canvas, {
             type: 'line',
-            data: { labels, datasets: [{ label: 'Revenue', data: labels.map((label) => monthly.get(label)), borderColor: '#15803d', backgroundColor: 'rgba(21,128,61,.15)', tension: .25, fill: true }] },
+            data: { labels, datasets: [{ label: 'Pendapatan', data: labels.map((label) => monthly.get(label)), borderColor: '#15803d', backgroundColor: 'rgba(21,128,61,.15)', tension: .25, fill: true }] },
             options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: (v) => window.formatRupiah(v) } } } }
         });
     }
@@ -95,8 +96,41 @@ window.AdminDashboardPage = (() => {
         statusChart = new Chart(canvas, {
             type: 'doughnut',
             data: { labels, datasets: [{ data: labels.map((label) => analytics.statusCounts[label]), backgroundColor: ['#f59e0b', '#0ea5e9', '#6366f1', '#16a34a', '#dc2626'] }] },
-            options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, font: { size: 11 } } } } }
         });
+    }
+
+
+    async function fetchFollowUpData() {
+        const result = { products: [], news: [], shipping: [] };
+        const [products, news, shipping] = await Promise.allSettled([
+            window.supabase.from('products').select('*').limit(500),
+            window.supabase.from('news').select('*').limit(500),
+            window.supabase.from('shipping_zones').select('*').limit(100)
+        ]);
+        if (products.status === 'fulfilled') result.products = products.value.data || [];
+        if (news.status === 'fulfilled') result.news = news.value.data || [];
+        if (shipping.status === 'fulfilled') result.shipping = shipping.value.data || [];
+        return result;
+    }
+
+    function renderActionableInsights(analytics, extra) {
+        const target = document.getElementById('actionable-insights');
+        if (!target) return;
+        const productWithoutImage = extra.products.filter((p) => !p.image_url).length;
+        const lowStock = extra.products.filter((p) => Number(p.stock ?? p.quantity ?? 999) <= 5).length;
+        const draftNews = extra.news.filter((n) => !(n.is_published ?? n.published ?? ['published', 'active'].includes(String(n.status || '').toLowerCase()))).length;
+        const shippingMissing = extra.shipping.length === 0;
+        const items = [
+            { count: analytics.pendingOrders, label: 'pesanan menunggu proses', href: '#pesanan' },
+            { count: productWithoutImage, label: 'produk tanpa gambar', href: '#produk' },
+            { count: lowStock, label: 'produk stok rendah', href: '#produk' },
+            { count: draftNews, label: 'berita masih draf', href: '#berita' },
+            { count: shippingMissing ? 1 : 0, label: 'pengaturan pengiriman belum lengkap', href: '#pengiriman' }
+        ].filter((item) => item.count > 0);
+        target.className = 'insight-list';
+        target.innerHTML = items.length ? items.map((item) => `<a class="insight-item" href="${item.href}"><strong>${item.count}</strong><span>${item.label}</span><i data-feather="arrow-right"></i></a>`).join('') : '<div class="admin-state admin-state--empty">Tidak ada tindakan mendesak. Semua terlihat rapi.</div>';
+        if (window.feather) window.safeFeatherReplace ? window.safeFeatherReplace() : window.feather.replace();
     }
 
     function renderRecentOrders(orders) {
@@ -107,12 +141,12 @@ window.AdminDashboardPage = (() => {
         const recent = [...orders].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 8);
         body.innerHTML = recent.length ? recent.map((order) => {
             const profile = order.profiles || order.profile || {};
-            const customer = order.customer_name || order.user_fullname || profile.full_name || order.shipping_address?.name || 'Customer';
+            const customer = order.customer_name || order.user_fullname || profile.full_name || order.shipping_address?.name || 'Pelanggan';
             const id = order.order_code ? `#${order.order_code}` : `#${String(order.id || '').slice(0, 8)}`;
             const date = order.created_at ? new Date(order.created_at).toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
             const status = normalizeStatus(order.status);
             return `<tr><td>${id}</td><td>${date}</td><td>${customer}</td><td>${window.formatRupiah(order.total_amount)}</td><td><span class="status-badge status-${status.toLowerCase().replace(/\s+/g, '-')}">${status}</span></td></tr>`;
-        }).join('') : '<tr><td colspan="5" class="admin-state admin-state--empty">Belum ada order.</td></tr>';
+        }).join('') : '<tr><td colspan="5" class="admin-state admin-state--empty">Belum ada pesanan.</td></tr>';
         if (loading) loading.hidden = true;
     }
 
@@ -129,6 +163,8 @@ window.AdminDashboardPage = (() => {
             renderRevenueChart(orders.filter((order) => normalizeStatus(order.status) !== 'Dibatalkan'));
             renderStatusChart(analytics);
             renderRecentOrders(orders);
+            const extra = await fetchFollowUpData();
+            renderActionableInsights(analytics, extra);
         } catch (error) {
             console.error('[ADMIN ANALYTICS ERROR]', error);
             setText('total-revenue', 'Gagal memuat data');

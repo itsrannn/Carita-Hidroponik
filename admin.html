@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Center | Carita Hidroponik</title>
+    <title>Pusat Admin | Carita Hidroponik</title>
     <link rel="icon" type="image/x-icon" href="img/Logo.jpg" />
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/mobile.css" media="(max-width: 768px)" />
@@ -14,41 +14,41 @@
     <div id="header-include" hidden></div>
 
     <div class="admin-shell" id="admin-dashboard-shell">
-        <button class="admin-sidebar-overlay" id="admin-sidebar-overlay" type="button" aria-label="Close admin navigation"></button>
-        <aside class="admin-sidebar" id="admin-sidebar" aria-label="Admin navigation">
+        <button class="admin-sidebar-overlay" id="admin-sidebar-overlay" type="button" aria-label="Tutup navigasi admin"></button>
+        <aside class="admin-sidebar" id="admin-sidebar" aria-label="Navigasi admin">
             <div class="sidebar-brand">
                 <img src="img/Logo.jpg" alt="Carita Hidroponik">
                 <div class="brand-copy">
                     <strong>Carita Admin</strong>
-                    <span>CMS Dashboard</span>
+                    <span>Dasbor CMS</span>
                 </div>
-                <button class="sidebar-toggle" type="button" id="sidebar-toggle" aria-label="Collapse sidebar" aria-expanded="true"><i data-feather="sidebar"></i></button>
-                <button class="sidebar-close" type="button" id="sidebar-close" aria-label="Close admin navigation"><i data-feather="x"></i></button>
+                <button class="sidebar-toggle" type="button" id="sidebar-toggle" aria-label="Ciutkan sidebar" aria-expanded="true"><i data-feather="sidebar"></i></button>
+                <button class="sidebar-close" type="button" id="sidebar-close" aria-label="Tutup navigasi admin"><i data-feather="x"></i></button>
             </div>
             <nav class="sidebar-nav">
-                <a href="#dashboard" class="sidebar-link active" data-route="dashboard" data-page="admin-dashboard" data-source="admin-partials/admin-dashboard-content.html" data-title="Dashboard"><i data-feather="home"></i><span class="sidebar-label">Dashboard</span></a>
-                <a href="#products" class="sidebar-link" data-route="products" data-page="admin-products" data-source="admin-partials/admin-products-content.html" data-title="Products" data-tab="products"><i data-feather="shopping-bag"></i><span class="sidebar-label">Products</span></a>
-                <a href="#orders" class="sidebar-link" data-route="orders" data-page="admin-orders" data-source="admin-partials/admin-orders-content.html" data-title="Orders"><i data-feather="package"></i><span class="sidebar-label">Orders</span></a>
-                <a href="#news" class="sidebar-link" data-route="news" data-page="admin-products" data-source="admin-partials/admin-products-content.html" data-title="News" data-tab="news"><i data-feather="file-text"></i><span class="sidebar-label">News</span></a>
-                <a href="#analytics" class="sidebar-link" data-route="analytics" data-page="admin-analytics" data-title="Analytics"><i data-feather="bar-chart-2"></i><span class="sidebar-label">Analytics</span></a>
-                <a href="#shipping" class="sidebar-link" data-route="shipping" data-page="admin-shipping" data-source="admin-partials/admin-shipping-content.html" data-title="Shipping"><i data-feather="truck"></i><span class="sidebar-label">Shipping</span></a>
-                <a href="#settings" class="sidebar-link" data-route="settings" data-page="admin-settings" data-title="Settings"><i data-feather="settings"></i><span class="sidebar-label">Settings</span></a>
-                <a class="sidebar-link logout" href="#" id="admin-logout-link"><i data-feather="log-out"></i><span class="sidebar-label">Logout</span></a>
+                <a href="#dasbor" class="sidebar-link active" data-route="dasbor" data-page="admin-dashboard" data-source="admin-partials/admin-dashboard-content.html" data-title="Dasbor"><i data-feather="home"></i><span class="sidebar-label">Dasbor</span></a>
+                <a href="#produk" class="sidebar-link" data-route="produk" data-page="admin-products" data-source="admin-partials/admin-products-content.html" data-title="Produk" data-tab="products"><i data-feather="shopping-bag"></i><span class="sidebar-label">Produk</span></a>
+                <a href="#pesanan" class="sidebar-link" data-route="pesanan" data-page="admin-orders" data-source="admin-partials/admin-orders-content.html" data-title="Pesanan"><i data-feather="package"></i><span class="sidebar-label">Pesanan</span></a>
+                <a href="#berita" class="sidebar-link" data-route="berita" data-page="admin-products" data-source="admin-partials/admin-products-content.html" data-title="Berita" data-tab="news"><i data-feather="file-text"></i><span class="sidebar-label">Berita</span></a>
+                <a href="#analitik" class="sidebar-link" data-route="analitik" data-page="admin-analytics" data-title="Analitik"><i data-feather="bar-chart-2"></i><span class="sidebar-label">Analitik</span></a>
+                <a href="#pengiriman" class="sidebar-link" data-route="pengiriman" data-page="admin-shipping" data-source="admin-partials/admin-shipping-content.html" data-title="Pengiriman"><i data-feather="truck"></i><span class="sidebar-label">Pengiriman</span></a>
+                <a href="#pengaturan" class="sidebar-link" data-route="pengaturan" data-page="admin-settings" data-title="Pengaturan"><i data-feather="settings"></i><span class="sidebar-label">Pengaturan</span></a>
+                <a class="sidebar-link logout" href="#" id="admin-logout-link"><i data-feather="log-out"></i><span class="sidebar-label">Keluar</span></a>
             </nav>
         </aside>
 
         <main class="admin-main">
             <header class="admin-topbar">
                 <div class="topbar-left">
-                    <button class="admin-menu-button" type="button" id="admin-menu-button" aria-label="Open admin navigation" aria-controls="admin-sidebar" aria-expanded="false"><i data-feather="menu"></i></button>
+                    <button class="admin-menu-button" type="button" id="admin-menu-button" aria-label="Buka navigasi admin" aria-controls="admin-sidebar" aria-expanded="false"><i data-feather="menu"></i></button>
                     <div>
-                        <div class="breadcrumb">Admin / <strong id="breadcrumb-current">Dashboard</strong></div>
-                        <div class="topbar-subtitle">Manage storefront content, orders, shipping, and insights.</div>
+                        <div class="breadcrumb">Admin / <strong id="breadcrumb-current">Dasbor</strong></div>
+                        <div class="topbar-subtitle">Kelola konten toko, pesanan, pengiriman, dan insight.</div>
                     </div>
                 </div>
                 <div class="topbar-actions">
-                    <label class="global-search" for="admin-global-search"><i data-feather="search"></i><input id="admin-global-search" type="search" placeholder="Search current page..."></label>
-                    <button class="icon-btn" type="button" aria-label="Notifications"><i data-feather="bell"></i></button>
+                    <label class="global-search" for="admin-global-search"><i data-feather="search"></i><input id="admin-global-search" type="search" placeholder="Cari di halaman ini..."></label>
+                    <button class="icon-btn" type="button" aria-label="Notifikasi"><i data-feather="bell"></i></button>
                     <button class="profile-menu" type="button"><span class="profile-avatar">CH</span><span>Admin</span><i data-feather="chevron-down"></i></button>
                 </div>
             </header>
@@ -74,7 +74,7 @@
         const menuButton = document.getElementById('admin-menu-button');
         const closeButton = document.getElementById('sidebar-close');
         const overlay = document.getElementById('admin-sidebar-overlay');
-        const routeFallback = 'dashboard';
+        const routeFallback = 'dasbor';
 
         function openSidebar() {
             shell?.classList.add('sidebar-open');
@@ -95,10 +95,10 @@
                 if (active) link.setAttribute('aria-current', 'page');
                 else link.removeAttribute('aria-current');
             });
-            const title = activeLink?.dataset?.title || 'Dashboard';
+            const title = activeLink?.dataset?.title || 'Dasbor';
             const crumb = document.getElementById('breadcrumb-current');
             if (crumb) crumb.textContent = title;
-            document.title = `${title} | Carita Admin`;
+            document.title = `${title} | Admin Carita`;
         }
 
         function renderPlaceholder(title, description, ctaRoute, ctaLabel) {
@@ -112,10 +112,10 @@
 
         function initializeLoadedPage(page, activeLink) {
             if (page === 'admin-analytics') {
-                renderPlaceholder('Analytics belum dipisahkan', 'Ringkasan analytics saat ini tersedia di Dashboard. Gunakan CTA ini agar navigasi tetap jujur sampai halaman analytics khusus dibuat.', 'dashboard', 'Buka Dashboard');
+                renderPlaceholder('Analitik', 'Ringkasan analitik tersedia di Dasbor. Modul analitik lanjutan disiapkan untuk tren produk, kanal penjualan, dan performa konten.', 'dasbor', 'Buka Dasbor');
             }
             if (page === 'admin-settings') {
-                renderPlaceholder('Settings Center', 'Pengaturan umum belum memiliki modul khusus. Pengaturan ongkir tersedia di halaman Shipping.', 'shipping', 'Kelola Shipping');
+                renderPlaceholder('Pengaturan Umum', 'Pengaturan umum disiapkan untuk profil toko, preferensi notifikasi, dan konfigurasi operasional. Pengaturan biaya kirim tersedia di halaman Pengiriman.', 'pengiriman', 'Kelola Pengiriman');
             }
             if (page === 'admin-orders' && window.AdminOrdersPage) window.AdminOrdersPage.init();
             if (page === 'admin-dashboard' && window.AdminDashboardPage) window.AdminDashboardPage.init();
@@ -129,7 +129,7 @@
 
         function loadContent(page, source, activeLink) {
             contentContainer.classList.add('is-loading');
-            contentContainer.innerHTML = '<div class="loading-indicator admin-state admin-state--loading" role="status" aria-live="polite">Loading content...</div>';
+            contentContainer.innerHTML = '<div class="loading-indicator admin-state admin-state--loading" role="status" aria-live="polite">Memuat konten...</div>';
             setActiveMenu(activeLink);
             closeSidebar();
             if (!source) {
@@ -140,7 +140,7 @@
             window.AdminInitialContentTab = activeLink?.dataset?.tab || 'products';
             fetch(source)
                 .then((response) => {
-                    if (!response.ok) throw new Error('Failed to fetch content');
+                    if (!response.ok) throw new Error('Gagal mengambil konten');
                     return response.text();
                 })
                 .then((html) => {
@@ -150,7 +150,7 @@
                     initializeLoadedPage(page, activeLink);
                 })
                 .catch((error) => {
-                    contentContainer.innerHTML = '<div class="admin-state admin-state--error" role="alert">Error loading content. Please refresh and try again.</div>';
+                    contentContainer.innerHTML = '<div class="admin-state admin-state--error" role="alert">Terjadi kesalahan saat memuat konten. Silakan muat ulang halaman.</div>';
                     console.error(error);
                 })
                 .finally(() => contentContainer.classList.remove('is-loading'));

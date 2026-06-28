@@ -1,24 +1,5 @@
-
 <div class="container content-wrapper" id="shipping-admin-root">
-  <div class="admin-page-header section">
-    <h1>Manajemen Ongkos Kirim</h1>
-    <p>Kelola harga zona ongkir checkout langsung dari tabel <code>shipping_zones</code>.</p>
-  </div>
-  <div class="admin-card shipping-card">
-    <div class="admin-toolbar shipping-toolbar">
-      <label>Search zone <input id="shipping-zone-search" type="search" placeholder="Zona / wilayah"></label>
-      <label>Sort zone <select id="shipping-zone-sort"><option value="asc">Zona terkecil</option><option value="desc">Zona terbesar</option></select></label>
-      <button id="seed-shipping-zones-btn" class="admin-button admin-button--secondary btn-action btn-secondary" type="button">Buat Zona Default</button>
-    </div>
-    <div id="shipping-admin-notice" class="shipping-notice" role="status" aria-live="polite"></div>
-  </div>
-  <div class="admin-card shipping-card">
-    <h3>Daftar Zona Ongkir</h3>
-    <div class="admin-table-wrap shipping-table-wrap">
-      <table class="admin-table shipping-table">
-        <thead><tr><th>Zona</th><th>Wilayah</th><th>Harga</th><th>Updated At</th><th>Aksi</th></tr></thead>
-        <tbody id="shipping-rates-tbody"></tbody>
-      </table>
-    </div>
-  </div>
+  <div class="admin-page-header section"><div><h1>Pengaturan Pengiriman</h1><p>Kelola biaya zona pengiriman checkout langsung dari tabel <code>shipping_zones</code>.</p></div><button id="seed-shipping-zones-btn" class="admin-button admin-button--primary" type="button">Tambah Zona Pengiriman</button></div>
+  <div class="admin-card shipping-card"><div class="admin-toolbar shipping-toolbar"><label for="shipping-zone-search">Cari wilayah <input id="shipping-zone-search" type="search" placeholder="Cari wilayah pengiriman..."></label><label for="shipping-zone-sort">Urutkan wilayah <select id="shipping-zone-sort"><option value="asc">Zona terkecil</option><option value="desc">Zona terbesar</option></select></label></div><div id="shipping-admin-notice" class="shipping-notice" role="status" aria-live="polite"></div></div>
+  <div class="admin-card shipping-card"><h3>Daftar Zona Pengiriman</h3><div class="admin-table-wrap shipping-table-wrap"><table class="admin-table shipping-table"><thead><tr><th>Wilayah</th><th>Provinsi</th><th>Kecamatan</th><th>Biaya</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="shipping-rates-tbody"></tbody></table></div></div>
 </div>
