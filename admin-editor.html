@@ -1,79 +1,88 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Content Editor | Carita Hidroponik</title>
-    <link rel="icon" type="image/x-icon" href="img/Logo.jpg" />
-    <link rel="stylesheet" href="css/style.css" />
-    <link rel="stylesheet" href="css/mobile.css" media="(max-width: 768px)" />
-    <style>
-        body { background-color: #f8f9fa; }
-        .editor-header { padding: 1.5rem; background-color: white; border-bottom: 1px solid #dee2e6; margin-bottom: 2rem; border-radius: 12px; }
-        .editor-header h1 { margin: 0; }
-        .back-link { display: block; margin-bottom: 1rem; color: var(--primary); text-decoration: none; font-weight: 600; }
-        .content-card { background-color: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.08); padding: 2rem; }
-        .form-footer { padding-top: 1.5rem; border-top: 1px solid #dee2e6; display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; }
-        .btn-cancel { border: 1px solid #ccc; background-color: #fff; color: #333; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; }
-        .btn-submit { background-color: #15803d; color: white; border: none; padding: 0.7rem 1.2rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
-        .form-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
-        @media (min-width: 768px) { .form-grid { grid-template-columns: repeat(2, 1fr); } .grid-col-span-2 { grid-column: span 2; } }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group label { font-weight: 600; margin-bottom: 0.5rem; color: #333; }
-        .form-group input, .form-group select, .form-group textarea { padding: 0.75rem; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
-        .form-group textarea { min-height: 140px; resize: vertical; }
-        .related-news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.6rem 1rem; max-height: 260px; overflow: auto; border: 1px solid #e5e7eb; border-radius: 10px; padding: 0.8rem; background: #fafafa; }
-        .related-news-item { display: flex; align-items: flex-start; gap: 0.5rem; font-size: 0.9rem; line-height: 1.4; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editor Admin | Carita Hidroponik</title>
+  <link rel="icon" type="image/x-icon" href="img/Logo.jpg" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/mobile.css" media="(max-width: 768px)" />
+  <link rel="stylesheet" href="css/admin.css" />
 </head>
-<body x-data="editorPage" x-init="init(); $store.i18n.init()">
-    <div id="header-include"></div>
-    <main class="main-content">
-        <div class="container">
-            <div class="editor-header">
-                <a href="admin-products.html" class="back-link">&larr; Back to Content Management</a>
-                <h1 x-text="title">Loading...</h1>
+<body class="admin-body" x-data="editorPage" x-init="init(); $store.i18n?.init?.()">
+  <div id="header-include" hidden></div>
+  <div class="admin-shell" id="admin-editor-shell">
+    <button class="admin-sidebar-overlay" id="admin-sidebar-overlay" type="button" aria-label="Tutup navigasi admin" @click="closeSidebar()"></button>
+    <aside class="admin-sidebar" id="admin-sidebar" aria-label="Navigasi admin">
+      <div class="sidebar-brand">
+        <img src="img/Logo.jpg" alt="Carita Hidroponik">
+        <div class="brand-copy"><strong>Carita Admin</strong><span>Dasbor CMS</span></div>
+        <button class="sidebar-toggle" type="button" aria-label="Ciutkan sidebar" @click="toggleCollapse()"><i data-feather="sidebar"></i></button>
+        <button class="sidebar-close" type="button" aria-label="Tutup navigasi admin" @click="closeSidebar()"><i data-feather="x"></i></button>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="admin.html#dasbor" class="sidebar-link"><i data-feather="home"></i><span class="sidebar-label">Dasbor</span></a>
+        <a href="admin.html#produk" class="sidebar-link" :class="{ active: type === 'product' }"><i data-feather="shopping-bag"></i><span class="sidebar-label">Produk</span></a>
+        <a href="admin.html#pesanan" class="sidebar-link"><i data-feather="package"></i><span class="sidebar-label">Pesanan</span></a>
+        <a href="admin.html#berita" class="sidebar-link" :class="{ active: type === 'news' }"><i data-feather="file-text"></i><span class="sidebar-label">Berita</span></a>
+        <a href="admin.html#analitik" class="sidebar-link"><i data-feather="bar-chart-2"></i><span class="sidebar-label">Analitik</span></a>
+        <a href="admin.html#pengiriman" class="sidebar-link"><i data-feather="truck"></i><span class="sidebar-label">Pengiriman</span></a>
+        <a href="admin.html#pengaturan" class="sidebar-link"><i data-feather="settings"></i><span class="sidebar-label">Pengaturan</span></a>
+        <a class="sidebar-link logout" href="#" @click.prevent="logout()"><i data-feather="log-out"></i><span class="sidebar-label">Keluar</span></a>
+      </nav>
+    </aside>
+    <main class="admin-main">
+      <header class="admin-topbar">
+        <div class="topbar-left"><button class="admin-menu-button" type="button" aria-label="Buka navigasi admin" @click="openSidebar()"><i data-feather="menu"></i></button><div><div class="breadcrumb">Admin / <strong x-text="type === 'product' ? 'Produk' : 'Berita'"></strong> / <strong x-text="pageTitle"></strong></div><div class="topbar-subtitle">Kelola konten Carita Hidroponik dengan aman melalui endpoint admin.</div></div></div>
+        <div class="topbar-actions"><a class="admin-button admin-button--secondary" :href="backUrl"><i data-feather="arrow-left"></i>Kembali</a><button class="profile-menu" type="button"><span class="profile-avatar">CH</span><span>Admin</span></button></div>
+      </header>
+      <div id="content-container" class="admin-editor-page">
+        <nav class="editor-breadcrumb" aria-label="Breadcrumb"><a href="admin.html#dasbor">Dasbor</a><span>/</span><a :href="backUrl" x-text="type === 'product' ? 'Produk' : 'Berita'"></a><span>/</span><strong x-text="pageTitle"></strong></nav>
+        <section class="admin-page-header editor-page-header"><div><div class="cms-eyebrow" x-text="type === 'product' ? 'Editor Produk' : 'Editor Berita'"></div><h1 x-text="pageTitle">Memuat data...</h1><p x-text="pageSubtitle"></p></div><div class="admin-header-actions"><a class="admin-button admin-button--secondary" :href="backUrl">Kembali ke Manajemen Konten</a></div></section>
+        <div class="editor-toast" x-show="toast.message" x-transition :class="toast.type" :role="toast.type === 'error' ? 'alert' : 'status'" x-text="toast.message"></div>
+        <template x-if="isLoading"><div class="editor-skeleton" role="status" aria-live="polite"><div></div><div></div><div></div><span>Memuat data...</span></div></template>
+        <template x-if="loadState === 'error' || loadState === 'not-found' || loadState === 'auth'"><section class="admin-state editor-empty-state" role="alert"><i data-feather="alert-triangle"></i><h2 x-text="loadState === 'not-found' ? 'Data tidak ditemukan' : 'Terjadi kesalahan'"></h2><p x-text="errorMessage || 'Terjadi kesalahan saat memuat data.'"></p><div class="admin-table-actions"><button class="admin-button admin-button--primary" type="button" @click="retryLoad()">Coba Lagi</button><a class="admin-button admin-button--secondary" :href="backUrl">Kembali</a></div></section></template>
+        <form x-show="!isLoading && loadState === 'ready'" @submit.prevent="submitForm" class="editor-layout" novalidate>
+          <section class="admin-card editor-form-card">
+            <h2>Informasi Utama</h2>
+            <div class="form-grid" x-show="type === 'product'">
+              <label>Nama Produk (Indonesia) *<input id="name_id" x-model="item.name_id" :aria-describedby="fieldErrors.name_id ? 'name_id_error' : null"><small id="name_id_error" class="field-error" x-text="fieldErrors.name_id"></small></label>
+              <label>Nama Produk (English)<input x-model="item.name_en"></label>
+              <label>Kategori *<input x-model="item.category" list="product-categories"><datalist id="product-categories"><option value="Benih"><option value="Nutrisi"><option value="Media Tanam"><option value="Peralatan"><option value="Promo"></datalist><small class="field-error" x-text="fieldErrors.category"></small></label>
+              <label>Harga (IDR) *<input type="number" min="0" x-model.number="item.price"><small class="field-error" x-text="fieldErrors.price"></small></label>
+              <label>Stok *<input type="number" min="0" x-model.number="item.stock"><small class="field-error" x-text="fieldErrors.stock"></small></label>
+              <label>Jenis Diskon<select x-model="item.discountType"><option value="none">Tidak Ada</option><option value="percent">Persen</option><option value="fixed">Harga Tetap</option></select></label>
+              <label>Nilai Diskon<input type="number" min="0" x-model.number="item.discountValue"><small class="field-error" x-text="fieldErrors.discountValue"></small></label>
+              <label>Status<select x-model="item.status"><option value="active">Aktif</option><option value="inactive">Tidak Aktif</option></select><small class="field-error" x-text="fieldErrors.status"></small></label>
+              <label class="span-2">Deskripsi Produk (Indonesia)<textarea x-model="item.description_id"></textarea></label>
+              <label class="span-2">Deskripsi Produk (English)<textarea x-model="item.description_en"></textarea></label>
+              <label class="span-2">Karakteristik Produk<textarea x-model="item.char_json" placeholder='{"ukuran":"1 kg","manfaat":["Pertumbuhan vegetatif"]}'></textarea><small class="help-text">Gunakan JSON valid, contoh: {"ukuran":"1 kg","manfaat":["Pertumbuhan vegetatif"]}</small><small class="field-error" x-text="fieldErrors.char_json"></small></label>
             </div>
-            <div class="content-card">
-                <template x-if="isError"><div class="text-center" style="padding: 2rem;"><p>Data tidak ditemukan atau gagal dimuat.</p><a href="admin-products.html" class="btn-submit" style="text-decoration: none;">Kembali</a></div></template>
-                <p x-show="isLoading && !isError">Loading...</p>
-                <form id="editor-form" @submit.prevent="submitForm" x-show="!isError && !isLoading">
-                    <div class="form-grid" x-show="type === 'product'">
-                        <div class="form-group"><label for="product-name_en">Nama Produk (English)</label><input id="product-name_en" type="text" x-model="item.name_en"></div>
-                        <div class="form-group"><label for="product-name_id">Nama Produk (Indonesia) *</label><input id="product-name_id" type="text" x-model="item.name_id"></div>
-                        <div class="form-group"><label for="product-category">Kategori</label><select id="product-category" x-model="item.category"><option value="">Pilih Kategori</option><option value="benih">Benih</option><option value="nutrisi">Nutrisi</option><option value="media">Media Tanam</option><option value="peralatan">Peralatan</option><option value="promo">Promo</option></select></div>
-                        <div class="form-group"><label for="product-price">Harga (IDR) *</label><input id="product-price" type="number" min="0" x-model.number="item.price"></div>
-                        <div class="form-group"><label for="product-stock">Stok *</label><input id="product-stock" type="number" min="0" x-model.number="item.stock"></div>
-                        <div class="form-group"><label for="product-image_url">Image URL</label><input id="product-image_url" type="text" x-model="item.image_url" @input="imagePreviewUrl = item.image_url"><img :src="imagePreviewUrl" x-show="imagePreviewUrl" alt="Preview" style="max-width: 200px; margin-top: 1rem; border-radius: 8px;"></div>
-                        <div class="form-group"><label>Diskon</label><select x-model="discount_type"><option value="percent">Persen</option><option value="price">Harga Diskon</option></select><input type="number" min="0" x-model.number="discount_value" placeholder="Nilai diskon" style="margin-top:.5rem;"></div>
-                        <div class="form-group grid-col-span-2"><label>Karakteristik (EN)</label><textarea x-model="item.char_en"></textarea></div>
-                        <div class="form-group grid-col-span-2"><label>Karakteristik (ID)</label><textarea x-model="item.char_id"></textarea></div>
-                        <div class="form-group grid-col-span-2"><label>Deskripsi (EN)</label><textarea x-model="item.description_en"></textarea></div>
-                        <div class="form-group grid-col-span-2"><label>Deskripsi (ID)</label><textarea x-model="item.description_id"></textarea></div>
-                        <div class="form-group grid-col-span-2"><label>Related News</label><div class="related-news-grid"><template x-if="allNews.length === 0"><p>Belum ada berita.</p></template><template x-for="news in allNews" :key="news.id"><label class="related-news-item"><input type="checkbox" :value="news.id" x-model="relatedNewsIds"><span x-text="(news.title && (news.title[$store.i18n.lang] || news.title.id || news.title.en)) || 'Untitled News'"></span></label></template></div></div>
-                    </div>
-                    <div class="form-grid" x-show="type === 'news'">
-                        <div class="form-group"><label for="news-title_en">Judul (English)</label><input id="news-title_en" type="text" x-model="item.title_en"></div>
-                        <div class="form-group"><label for="news-title_id">Judul (Indonesia) *</label><input id="news-title_id" type="text" x-model="item.title_id"></div>
-                        <div class="form-group grid-col-span-2"><label for="news-image_url">Image URL</label><input id="news-image_url" type="text" x-model="item.image_url" @input="imagePreviewUrl = item.image_url"><img :src="imagePreviewUrl" x-show="imagePreviewUrl" alt="Preview" style="max-width: 200px; margin-top: 1rem; border-radius: 8px;"></div>
-                        <div class="form-group"><label>Excerpt (EN)</label><textarea x-model="item.excerpt_en"></textarea></div>
-                        <div class="form-group"><label>Excerpt (ID)</label><textarea x-model="item.excerpt_id"></textarea></div>
-                        <div class="form-group grid-col-span-2"><label>Konten (EN)</label><textarea x-model="item.body_en"></textarea></div>
-                        <div class="form-group grid-col-span-2"><label>Konten (ID) *</label><textarea x-model="item.body_id"></textarea></div>
-                        <div class="form-group grid-col-span-2"><label>Related Products</label><div class="related-news-grid"><template x-if="allProducts.length === 0"><p>Belum ada produk.</p></template><template x-for="product in allProducts" :key="product.id"><label class="related-news-item"><input type="checkbox" :value="product.id" x-model="relatedProductIds"><span x-text="(product.name && (product.name[$store.i18n.lang] || product.name.id || product.name.en)) || 'Untitled Product'"></span></label></template></div></div>
-                    </div>
-                    <div class="form-footer"><a href="admin-products.html" class="btn-cancel">Cancel</a><button type="submit" class="btn-submit" x-text="submitButtonText">Save</button></div>
-                </form>
+            <div class="form-grid" x-show="type === 'news'">
+              <label>Judul Berita (Indonesia) *<input x-model="item.title_id" @input="maybeGenerateSlug()"><small class="field-error" x-text="fieldErrors.title_id"></small></label>
+              <label>Judul Berita (English)<input x-model="item.title_en"></label>
+              <label>Slug *<input x-model="item.slug" @input="slugTouched=true"><small class="field-error" x-text="fieldErrors.slug"></small></label>
+              <label>Kategori<input x-model="item.category"></label>
+              <label>Ringkasan Berita (Indonesia)<textarea x-model="item.excerpt_id"></textarea></label>
+              <label>Ringkasan Berita (English)<textarea x-model="item.excerpt_en"></textarea></label>
+              <label class="span-2">Konten Berita (Indonesia) *<textarea x-model="item.body_id" class="large-textarea"></textarea><small class="field-error" x-text="fieldErrors.body_id"></small></label>
+              <label class="span-2">Konten Berita (English)<textarea x-model="item.body_en" class="large-textarea"></textarea></label>
             </div>
-        </div>
+          </section>
+          <aside class="editor-side-panel">
+            <section class="admin-card image-upload-card"><h2 x-text="type === 'product' ? 'Gambar Produk' : 'Gambar Sampul'"></h2><div class="upload-dropzone" tabindex="0" role="button" @click="$refs.fileInput.click()" @keydown.enter.prevent="$refs.fileInput.click()" @keydown.space.prevent="$refs.fileInput.click()" @dragover.prevent="dragging=true" @dragleave.prevent="dragging=false" @drop.prevent="handleDrop($event)" :class="{ dragging }"><input x-ref="fileInput" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" hidden @change="handleFile($event.target.files[0]); $event.target.value='' "><template x-if="imagePreviewUrl"><img :src="imagePreviewUrl" alt="Preview gambar" class="image-preview"></template><template x-if="!imagePreviewUrl"><div class="upload-placeholder"><i data-feather="image"></i><strong>Unggah Gambar</strong><span>Tarik gambar ke sini atau klik untuk memilih.</span></div></template></div><div class="upload-progress" x-show="upload.isUploading"><span :style="`width:${upload.progress}%`"></span></div><p class="upload-status" x-text="upload.message"></p><p class="field-error" x-text="upload.error"></p><div class="admin-table-actions"><button type="button" class="admin-button admin-button--secondary" @click="$refs.fileInput.click()">Ganti Gambar</button><button type="button" class="admin-button admin-button--danger" @click="removeImage()" :disabled="!item.imageUrl">Hapus Gambar</button></div><details class="manual-url"><summary>Gunakan URL manual</summary><label>URL Gambar<input type="url" x-model="item.imageUrl" @input="setManualImage()"></label></details><small class="help-text">Format JPG, PNG, atau WEBP. Ukuran maksimal 5 MB.</small></section>
+            <section class="admin-card"><h2 x-text="type === 'news' ? 'Publikasi' : 'Status Produk'"></h2><template x-if="type === 'news'"><div class="side-fields"><label>Status<select x-model="item.status"><option value="draft">Draf</option><option value="published">Terbit</option><option value="archived">Diarsipkan</option></select><small class="field-error" x-text="fieldErrors.status"></small></label><label>Tanggal Terbit<input type="datetime-local" x-model="item.publishedAtLocal"></label><button type="button" class="admin-button admin-button--secondary" @click="saveDraft()">Simpan sebagai Draf</button></div></template><template x-if="type === 'product'"><p class="help-text">Produk aktif akan ditampilkan sesuai aturan backend dan website publik.</p></template></section>
+          </aside>
+          <div class="editor-action-bar"><a class="admin-button admin-button--secondary" :href="backUrl">Batal</a><button x-show="action === 'edit'" type="button" class="admin-button admin-button--danger" @click="confirmDelete()">Hapus</button><button type="submit" class="admin-button admin-button--primary" :disabled="isSaving || upload.isUploading"><span x-text="isSaving ? 'Menyimpan data...' : 'Simpan'"></span></button></div>
+        </form>
+      </div>
     </main>
-    <div id="footer-include"></div>
-    <script src="https://unpkg.com/feather-icons"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js?nounit=true" defer></script>
-    <script src="js/supabase-client.js"></script>
-    <script src="js/admin-auth.js"></script>
-    <script src="js/main.js"></script>
-    <script src="js/admin-product-editor.js"></script>
+  </div>
+  <div class="modal-backdrop" x-show="deleteModal" x-transition><div class="confirm-modal" role="dialog" aria-modal="true"><h2>Konfirmasi Hapus</h2><p x-text="type === 'product' ? 'Produk ini akan dihapus. Tindakan ini tidak dapat dibatalkan.' : 'Berita ini akan dihapus. Tindakan ini tidak dapat dibatalkan.'"></p><div class="admin-table-actions"><button class="admin-button admin-button--secondary" @click="deleteModal=false">Batal</button><button class="admin-button admin-button--danger" @click="deleteItem()">Hapus</button></div></div></div>
+  <div id="footer-include" hidden></div>
+  <script src="https://unpkg.com/feather-icons"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.10/dist/cdn.min.js?nounit=true" defer></script>
+  <script src="js/supabase-client.js"></script><script src="js/admin-auth.js"></script><script src="js/main.js"></script><script src="js/admin-product-editor.js"></script>
 </body>
 </html>

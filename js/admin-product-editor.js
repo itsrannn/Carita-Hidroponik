@@ -1,144 +1,55 @@
-// js/admin-product-editor.js
+// Admin product/news editor. Uses backend admin endpoints only; image upload goes through Supabase Storage backend proxy.
 document.addEventListener('alpine:init', () => {
-    Alpine.data('editorPage', () => ({
-        id: null,
-        type: 'product',
-        action: 'add',
-        item: {
-            name_en: '', name_id: '', category: '', price: null, stock: 0, image_url: '', description_en: '', description_id: '', char_en: '', char_id: '',
-            title_en: '', title_id: '', excerpt_en: '', excerpt_id: '', body_en: '', body_id: ''
-        },
-        allNews: [], allProducts: [], relatedNewsIds: [], relatedProductIds: [],
-        discount_type: 'percent', discount_value: null,
-        title: 'Loading...', submitButtonText: 'Save', isLoading: true, isError: false, imagePreviewUrl: null,
-
-        async init() {
-            const params = new URLSearchParams(window.location.search);
-            this.id = params.get('id');
-            this.type = params.get('type') === 'news' ? 'news' : 'product';
-            this.action = params.get('action') || (this.id ? 'edit' : 'add');
-            this.title = this.type === 'news'
-                ? (this.id ? 'Edit News' : 'Tambah News')
-                : (this.id ? 'Edit Produk' : 'Tambah Produk');
-            try {
-                if (this.type === 'product') await this.fetchAllNews();
-                if (this.type === 'news') await this.fetchAllProducts();
-                if (this.id) await (this.type === 'news' ? this.fetchNewsData() : this.fetchProductData());
-                this.isLoading = false;
-            } catch (error) {
-                console.error('[ADMIN EDITOR LOAD ERROR]', error);
-                this.isError = true; this.isLoading = false;
-            }
-        },
-
-        async fetchAllNews() {
-            const { data, error } = await window.supabase.from('news').select('id, title, created_at').order('created_at', { ascending: false });
-            if (error) throw error;
-            this.allNews = data || [];
-        },
-        async fetchAllProducts() {
-            const { data, error } = await window.supabase.from('products').select('id, name, created_at').order('created_at', { ascending: false });
-            if (error) throw error;
-            this.allProducts = data || [];
-        },
-        getLocalized(value, key) {
-            if (value && typeof value === 'object') return value[key] || '';
-            return key === 'en' ? (value || '') : '';
-        },
-        async fetchProductData() {
-            const { data, error } = await window.supabase.from('products').select('*').eq('id', this.id).single();
-            if (error || !data) throw error || new Error('Produk tidak ditemukan.');
-            this.item.name_en = this.getLocalized(data.name, 'en'); this.item.name_id = this.getLocalized(data.name, 'id');
-            this.item.description_en = this.getLocalized(data.description, 'en'); this.item.description_id = this.getLocalized(data.description, 'id');
-            this.item.char_en = this.getLocalized(data.characteristics, 'en'); this.item.char_id = this.getLocalized(data.characteristics, 'id');
-            this.item.category = data.category || ''; this.item.price = data.price ?? null; this.item.stock = data.stock ?? data.quantity ?? 0; this.item.image_url = data.image_url || ''; this.imagePreviewUrl = window.fixImagePath(data.image_url);
-            this.discount_value = data.discount_percent || (data.discount || 0);
-            if (data.discount_price) { this.discount_type = 'price'; this.discount_value = data.discount_price; }
-            const links = await window.supabase.from('news_related_products').select('news_id').eq('product_id', this.id);
-            this.relatedNewsIds = links.error ? [] : (links.data || []).map((link) => link.news_id);
-        },
-        async fetchNewsData() {
-            const { data, error } = await window.supabase.from('news').select('*, news_related_products(product_id)').eq('id', this.id).single();
-            if (error || !data) throw error || new Error('News tidak ditemukan.');
-            this.item.title_en = this.getLocalized(data.title, 'en'); this.item.title_id = this.getLocalized(data.title, 'id');
-            this.item.excerpt_en = this.getLocalized(data.excerpt, 'en'); this.item.excerpt_id = this.getLocalized(data.excerpt, 'id');
-            this.item.body_en = this.getLocalized(data.body || data.content, 'en'); this.item.body_id = this.getLocalized(data.body || data.content, 'id');
-            this.item.image_url = data.image_url || ''; this.imagePreviewUrl = window.fixImagePath(data.image_url);
-            this.relatedProductIds = (data.news_related_products || []).map((link) => link.product_id);
-        },
-        validateProduct() {
-            if (!this.item.name_en.trim() && !this.item.name_id.trim()) return 'Nama produk wajib diisi.';
-            if (!Number.isFinite(Number(this.item.price)) || Number(this.item.price) <= 0) return 'Harga produk wajib lebih dari 0.';
-            if (!Number.isFinite(Number(this.item.stock)) || Number(this.item.stock) < 0) return 'Stok produk wajib diisi dan tidak boleh negatif.';
-            return '';
-        },
-        validateNews() {
-            if (!this.item.title_en.trim() && !this.item.title_id.trim()) return 'Judul news wajib diisi.';
-            if (!this.item.body_en.trim() && !this.item.body_id.trim()) return 'Konten news wajib diisi.';
-            return '';
-        },
-        async submitForm() {
-            const validationError = this.type === 'news' ? this.validateNews() : this.validateProduct();
-            if (validationError) { (window.showNotification || window.showSiteNotification || alert)(validationError, true); return; }
-            this.isLoading = true; this.submitButtonText = 'Saving...';
-            try {
-                if (this.type === 'news') await this.saveNews(); else await this.saveProduct();
-                (window.showNotification || window.showSiteNotification || alert)(this.type === 'news' ? 'News berhasil disimpan.' : 'Produk berhasil disimpan.');
-                window.location.href = 'admin-products.html';
-            } catch (error) {
-                console.error('[ADMIN EDITOR SAVE ERROR]', error);
-                (window.showNotification || window.showSiteNotification || alert)(`Gagal menyimpan data: ${error.message}`, true);
-            } finally {
-                this.isLoading = false; this.submitButtonText = 'Save';
-            }
-        },
-        productPayload() {
-            const payload = {
-                name: { en: this.item.name_en.trim() || this.item.name_id.trim(), id: this.item.name_id.trim() || this.item.name_en.trim() },
-                description: { en: this.item.description_en, id: this.item.description_id },
-                characteristics: { en: this.item.char_en, id: this.item.char_id },
-                category: this.item.category,
-                price: Number(this.item.price),
-                stock: Number(this.item.stock),
-                image_url: this.item.image_url || null
-            };
-            if (this.discount_type === 'price') payload.discount_price = Number(this.discount_value || 0);
-            else payload.discount_percent = Number(this.discount_value || 0);
-            return payload;
-        },
-        newsPayload() {
-            const title = { en: this.item.title_en.trim() || this.item.title_id.trim(), id: this.item.title_id.trim() || this.item.title_en.trim() };
-            const body = { en: this.item.body_en.trim() || this.item.body_id.trim(), id: this.item.body_id.trim() || this.item.body_en.trim() };
-            const excerpt = { en: this.item.excerpt_en || body.en.slice(0, 160), id: this.item.excerpt_id || body.id.slice(0, 160) };
-            return { title, body, content: body, excerpt, image_url: this.item.image_url || null };
-        },
-        async saveProduct() {
-            const payload = this.productPayload();
-            const query = this.id
-                ? window.supabase.from('products').update(payload).eq('id', this.id).select('id').single()
-                : window.supabase.from('products').insert(payload).select('id').single();
-            const { data, error } = await query;
-            if (error) throw error;
-            const productId = this.id || data.id;
-            await window.supabase.from('news_related_products').delete().eq('product_id', productId);
-            if (this.relatedNewsIds.length) {
-                const { error: relError } = await window.supabase.from('news_related_products').insert(this.relatedNewsIds.map((newsId) => ({ news_id: newsId, product_id: productId })));
-                if (relError) throw relError;
-            }
-        },
-        async saveNews() {
-            const payload = this.newsPayload();
-            const query = this.id
-                ? window.supabase.from('news').update(payload).eq('id', this.id).select('id').single()
-                : window.supabase.from('news').insert(payload).select('id').single();
-            const { data, error } = await query;
-            if (error) throw error;
-            const newsId = this.id || data.id;
-            await window.supabase.from('news_related_products').delete().eq('news_id', newsId);
-            if (this.relatedProductIds.length) {
-                const { error: relError } = await window.supabase.from('news_related_products').insert(this.relatedProductIds.map((productId) => ({ news_id: newsId, product_id: productId })));
-                if (relError) throw relError;
-            }
-        }
-    }));
+  Alpine.data('editorPage', () => ({
+    id: null, type: 'product', action: 'add', isLoading: true, isSaving: false, loadState: 'ready', errorMessage: '', dragging: false, deleteModal: false, slugTouched: false,
+    toast: { message: '', type: 'success' }, fieldErrors: {}, imagePreviewUrl: '',
+    upload: { isUploading: false, progress: 0, message: '', error: '' },
+    item: { name_id:'', name_en:'', title_id:'', title_en:'', slug:'', category:'', price:0, stock:0, discountType:'none', discountValue:0, imageUrl:'', imagePath:'', description_id:'', description_en:'', char_json:'{}', excerpt_id:'', excerpt_en:'', body_id:'', body_en:'', status:'active', publishedAtLocal:'' },
+    get pageTitle() { return this.type === 'news' ? (this.action === 'edit' ? 'Ubah Berita' : 'Tambah Berita') : (this.action === 'edit' ? 'Ubah Produk' : 'Tambah Produk'); },
+    get pageSubtitle() { if (this.type === 'news') return this.action === 'edit' ? 'Perbarui konten berita yang sudah tersedia.' : 'Buat artikel atau berita baru untuk ditampilkan di website.'; return this.action === 'edit' ? 'Perbarui informasi produk yang sudah tersedia.' : 'Tambahkan produk baru ke katalog Carita Hidroponik.'; },
+    get backUrl() { return this.type === 'news' ? 'admin.html#berita' : 'admin.html#produk'; },
+    async init() {
+      const params = new URLSearchParams(window.location.search);
+      this.type = params.get('type') === 'news' ? 'news' : 'product';
+      this.action = params.get('action') === 'edit' ? 'edit' : 'add';
+      this.id = params.get('id');
+      if (this.type === 'news') this.item.status = 'draft';
+      if (this.action === 'edit' && !this.id) return this.setLoadError('not-found', 'Data tidak ditemukan. ID konten tidak tersedia.');
+      document.title = `${this.pageTitle} | Admin Carita`;
+      this.bindDirtyWarning(); this.refreshIcons();
+      if (this.action === 'add') { this.isLoading = false; this.loadState = 'ready'; return; }
+      await this.fetchItem();
+    },
+    refreshIcons() { this.$nextTick(() => window.safeFeatherReplace ? window.safeFeatherReplace() : window.feather?.replace?.()); },
+    openSidebar(){ document.getElementById('admin-editor-shell')?.classList.add('sidebar-open'); document.body.classList.add('admin-sidebar-open'); },
+    closeSidebar(){ document.getElementById('admin-editor-shell')?.classList.remove('sidebar-open'); document.body.classList.remove('admin-sidebar-open'); },
+    toggleCollapse(){ document.getElementById('admin-editor-shell')?.classList.toggle('sidebar-collapsed'); },
+    async logout(){ await window.supabase?.auth?.signOut?.(); window.location.href = 'login-page.html'; },
+    bindDirtyWarning(){ window.addEventListener('beforeunload', (e) => { if (this.loadState === 'ready' && !this.isSaving) { e.preventDefault(); e.returnValue = 'Perubahan belum disimpan.'; } }); },
+    async authHeaders(json = true) { const { data } = await window.supabase.auth.getSession(); const token = data?.session?.access_token; if (!token) throw Object.assign(new Error('Silakan masuk terlebih dahulu.'), { status: 401 }); return { ...(json ? { 'Content-Type':'application/json' } : {}), Authorization: `Bearer ${token}` }; },
+    async adminRequest(path, options = {}) { const headers = await this.authHeaders(options.json !== false); const res = await fetch(path, { ...options, headers: { ...headers, ...(options.headers || {}) } }); let body = null; try { body = await res.json(); } catch (_) {} if (!res.ok || body?.success === false) throw Object.assign(new Error(body?.error || body?.message || 'Terjadi kesalahan.'), { status: res.status, body }); return body?.data ?? body; },
+    handleAuthError(error) { if (error.status === 401) return 'Sesi Anda telah berakhir. Silakan masuk kembali.'; if (error.status === 403) return 'Akses ditolak. Akun Anda tidak memiliki izin admin.'; return error.message; },
+    setLoadError(state, message){ this.isLoading=false; this.loadState=state; this.errorMessage=message; this.refreshIcons(); },
+    async retryLoad(){ this.isLoading=true; this.loadState='ready'; await this.fetchItem(); },
+    async fetchItem(){ try { const data = await this.adminRequest(`/api/admin/${this.type === 'news' ? 'news' : 'products'}/${encodeURIComponent(this.id)}`); if (!data) return this.setLoadError('not-found', 'Data tidak ditemukan.'); this.fillForm(data); this.isLoading=false; this.loadState='ready'; } catch (e) { console.error('[ADMIN EDITOR LOAD ERROR]', e); this.setLoadError(e.status === 404 ? 'not-found' : (e.status === 401 || e.status === 403 ? 'auth' : 'error'), e.status === 404 ? 'Data tidak ditemukan.' : (e.status ? this.handleAuthError(e) : 'Terjadi kesalahan saat memuat data.')); } },
+    getLocalized(value, lang){ return value && typeof value === 'object' ? (value[lang] || '') : (lang === 'id' ? (value || '') : ''); },
+    fillForm(data){ const img = data.imageUrl || data.image_url || data.coverImageUrl || data.cover_image_url || ''; this.item.imageUrl = img; this.item.imagePath = data.imagePath || data.image_path || ''; this.imagePreviewUrl = window.fixImagePath ? window.fixImagePath(img) : img; this.item.category = data.category || ''; this.item.status = data.status || (this.type === 'news' ? 'draft' : 'active'); if (this.type === 'product') { this.item.name_id=this.getLocalized(data.name,'id'); this.item.name_en=this.getLocalized(data.name,'en'); this.item.price=Number(data.price||0); this.item.stock=Number(data.stock ?? data.quantity ?? 0); this.item.description_id=this.getLocalized(data.description,'id'); this.item.description_en=this.getLocalized(data.description,'en'); this.item.char_json=JSON.stringify(data.char || data.characteristics || {}, null, 2); this.item.discountType=data.discountType || data.discount_type || (data.discount_percent ? 'percent' : data.discount_price ? 'fixed' : 'none'); this.item.discountValue=Number(data.discountValue ?? data.discount_value ?? data.discount_percent ?? data.discount_price ?? 0); } else { this.item.title_id=this.getLocalized(data.title,'id'); this.item.title_en=this.getLocalized(data.title,'en'); this.item.slug=data.slug || ''; this.item.excerpt_id=this.getLocalized(data.excerpt,'id'); this.item.excerpt_en=this.getLocalized(data.excerpt,'en'); const content=data.content || data.body; this.item.body_id=this.getLocalized(content,'id'); this.item.body_en=this.getLocalized(content,'en'); this.item.publishedAtLocal=this.toLocalInput(data.publishedAt || data.published_at); } },
+    toLocalInput(value){ if (!value) return ''; const d = new Date(value); return Number.isNaN(d.getTime()) ? '' : new Date(d.getTime() - d.getTimezoneOffset()*60000).toISOString().slice(0,16); },
+    showToast(message, type='success'){ this.toast={message,type}; setTimeout(() => { if (this.toast.message === message) this.toast.message=''; }, 4500); },
+    validateImage(file){ if (!file) return 'Gambar tidak ditemukan.'; if (!['image/jpeg','image/png','image/webp'].includes(file.type)) return 'Format gambar harus JPG, PNG, atau WEBP.'; if (file.size > 5 * 1024 * 1024) return 'Ukuran gambar maksimal 5 MB.'; return ''; },
+    handleDrop(e){ this.dragging=false; this.handleFile(e.dataTransfer.files[0]); },
+    async handleFile(file){ const err=this.validateImage(file); this.upload.error=''; if (err) { this.upload.error=err; this.showToast(err,'error'); return; } this.imagePreviewUrl = URL.createObjectURL(file); await this.uploadImage(file); },
+    async uploadImage(file){ this.upload={isUploading:true,progress:10,message:'Mengunggah gambar...',error:''}; try { const form = new FormData(); form.append('file', file); form.append('folder', this.type === 'news' ? 'news' : 'products'); const headers = await this.authHeaders(false); const xhr = new XMLHttpRequest(); const result = await new Promise((resolve, reject) => { xhr.open('POST','/api/admin/uploads/images'); Object.entries(headers).forEach(([k,v]) => xhr.setRequestHeader(k,v)); xhr.upload.onprogress = (ev) => { if (ev.lengthComputable) this.upload.progress = Math.max(10, Math.round((ev.loaded / ev.total) * 90)); }; xhr.onload = () => { let body={}; try { body=JSON.parse(xhr.responseText || '{}'); } catch (_) {} xhr.status >= 200 && xhr.status < 300 && body.success !== false ? resolve(body.data || body) : reject(Object.assign(new Error(body.error || 'Gambar gagal diunggah. Silakan coba lagi.'), { status:xhr.status })); }; xhr.onerror = () => reject(new Error('Gambar gagal diunggah. Silakan coba lagi.')); xhr.send(form); }); this.item.imageUrl=result.imageUrl || result.image_url; this.item.imagePath=result.imagePath || result.image_path; this.imagePreviewUrl=this.item.imageUrl; this.upload={isUploading:false,progress:100,message:'Gambar berhasil diunggah.',error:''}; this.showToast('Gambar berhasil diunggah.'); } catch(e){ this.upload={isUploading:false,progress:0,message:'',error:(e.status ? this.handleAuthError(e) : 'Gambar gagal diunggah. Silakan coba lagi.')}; this.showToast(this.upload.error,'error'); } },
+    setManualImage(){ this.item.imagePath=''; this.imagePreviewUrl=this.item.imageUrl; },
+    removeImage(){ this.item.imageUrl=''; this.item.imagePath=''; this.imagePreviewUrl=''; this.upload.message='Gambar dihapus dari form.'; },
+    maybeGenerateSlug(){ if (!this.slugTouched && this.action === 'add') this.item.slug=this.slugify(this.item.title_id); },
+    slugify(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); },
+    validate(){ const e={}; if (this.type === 'product') { if (!this.item.name_id.trim()) e.name_id='Nama Produk (Indonesia) wajib diisi.'; if (!this.item.category.trim()) e.category='Kategori wajib diisi.'; if (!Number.isFinite(Number(this.item.price)) || Number(this.item.price) < 0) e.price='Harga wajib angka minimal 0.'; if (!Number.isFinite(Number(this.item.stock)) || Number(this.item.stock) < 0) e.stock='Stok wajib angka minimal 0.'; if (!this.item.status) e.status='Status wajib dipilih.'; if (this.item.discountType === 'percent' && (Number(this.item.discountValue) < 0 || Number(this.item.discountValue) > 100)) e.discountValue='Diskon persen harus 0 sampai 100.'; if (this.item.discountType === 'fixed' && Number(this.item.discountValue) > Number(this.item.price)) e.discountValue='Diskon harga tetap tidak boleh lebih besar dari harga.'; try { JSON.parse(this.item.char_json || '{}'); } catch (_) { e.char_json='Format JSON karakteristik tidak valid.'; } } else { if (!this.item.title_id.trim()) e.title_id='Judul Berita (Indonesia) wajib diisi.'; if (!this.item.slug.trim()) e.slug='Slug wajib diisi.'; else if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(this.item.slug)) e.slug='Slug harus URL-safe, contoh: judul-berita.'; if (!this.item.body_id.trim()) e.body_id='Konten Berita (Indonesia) wajib diisi.'; if (!this.item.status) e.status='Status wajib dipilih.'; } this.fieldErrors=e; return Object.keys(e).length === 0; },
+    productPayload(){ const char=JSON.parse(this.item.char_json || '{}'); return { name:{ id:this.item.name_id.trim(), en:this.item.name_en.trim() }, category:this.item.category.trim(), price:Number(this.item.price), stock:Number(this.item.stock), imageUrl:this.item.imageUrl || null, imagePath:this.item.imagePath || null, discountType:this.item.discountType, discountValue:Number(this.item.discountValue || 0), description:{ id:this.item.description_id, en:this.item.description_en }, char, status:this.item.status }; },
+    newsPayload(){ const publishedAt = this.item.status === 'published' ? (this.item.publishedAtLocal ? new Date(this.item.publishedAtLocal).toISOString() : new Date().toISOString()) : (this.item.publishedAtLocal ? new Date(this.item.publishedAtLocal).toISOString() : null); return { title:{ id:this.item.title_id.trim(), en:this.item.title_en.trim() }, slug:this.item.slug.trim(), category:this.item.category.trim(), excerpt:{ id:this.item.excerpt_id, en:this.item.excerpt_en }, content:{ id:this.item.body_id, en:this.item.body_en }, coverImageUrl:this.item.imageUrl || null, imagePath:this.item.imagePath || null, status:this.item.status, publishedAt }; },
+    async submitForm(){ if (!this.validate()) { this.showToast('Periksa kembali field yang wajib diisi.','error'); return; } if (!this.item.imageUrl) this.showToast('Gambar belum diisi. Anda tetap dapat menyimpan data.', 'warning'); this.isSaving=true; try { const resource=this.type === 'news' ? 'news' : 'products'; const path=this.action === 'edit' ? `/api/admin/${resource}/${encodeURIComponent(this.id)}` : `/api/admin/${resource}`; await this.adminRequest(path, { method:this.action === 'edit' ? 'PATCH' : 'POST', body:JSON.stringify(this.type === 'news' ? this.newsPayload() : this.productPayload()) }); this.showToast('Data berhasil disimpan.'); window.onbeforeunload=null; setTimeout(() => { window.location.href=this.backUrl; }, 600); } catch(e){ console.error('[ADMIN EDITOR SAVE ERROR]', e); this.showToast(e.status ? this.handleAuthError(e) : 'Data gagal disimpan.', 'error'); } finally { this.isSaving=false; } },
+    async saveDraft(){ this.item.status='draft'; await this.submitForm(); },
+    confirmDelete(){ this.deleteModal=true; },
+    async deleteItem(){ try { const resource=this.type === 'news' ? 'news' : 'products'; await this.adminRequest(`/api/admin/${resource}/${encodeURIComponent(this.id)}`, { method:'DELETE' }); this.showToast('Data berhasil dihapus.'); window.location.href=this.backUrl; } catch(e){ this.showToast(e.status ? this.handleAuthError(e) : 'Data gagal dihapus.', 'error'); } finally { this.deleteModal=false; } }
+  }));
 });
