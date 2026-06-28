@@ -45,7 +45,7 @@ window.AdminOrdersPage = (() => {
     let activeOrderId = null;
 
     const STATUS_OPTIONS = [
-        { value: 'Pending', label: 'Pending', aliases: ['Pending', 'pending', 'Menunggu Konfirmasi'] },
+        { value: 'Pending', label: 'Menunggu', aliases: ['Pending', 'pending', 'Menunggu Konfirmasi'] },
         { value: 'Diproses', label: 'Diproses', aliases: ['Diproses', 'processing'] },
         { value: 'Dikirim', label: 'Dikirim', aliases: ['Dikirim', 'Dalam Pengiriman', 'shipped'] },
         { value: 'Selesai', label: 'Selesai', aliases: ['Selesai', 'completed'] },
@@ -98,11 +98,11 @@ window.AdminOrdersPage = (() => {
         }));
     }
 
-    function getCustomer(order) {
+    function getPelanggan(order) {
         const profile = order?.profiles || order?.profile || {};
         const address = order?.shipping_address || {};
         return {
-            name: order?.customer_name || order?.user_fullname || profile.full_name || address.name || address.recipient_name || 'Customer',
+            name: order?.customer_name || order?.user_fullname || profile.full_name || address.name || address.recipient_name || 'Pelanggan',
             phone: order?.customer_phone || profile.phone_number || address.phone || address.phone_number || '-',
             email: order?.customer_email || profile.email || order?.email || '-'
         };
@@ -170,14 +170,14 @@ window.AdminOrdersPage = (() => {
         if (!state.ordersGrid) return;
         let processedOrders = [...allOrders];
         const orderQuery = (state.searchOrderInput?.value || '').trim().toLowerCase();
-        const customerQuery = (state.searchCustomerInput?.value || '').trim().toLowerCase();
+        const customerQuery = (state.searchPelangganInput?.value || '').trim().toLowerCase();
         const statusFilter = state.filterStatusSelect?.value || 'all';
 
         if (orderQuery) {
             processedOrders = processedOrders.filter((order) => String(order.order_code || order.id || '').toLowerCase().includes(orderQuery));
         }
         if (customerQuery) {
-            processedOrders = processedOrders.filter((order) => getCustomer(order).name.toLowerCase().includes(customerQuery));
+            processedOrders = processedOrders.filter((order) => getPelanggan(order).name.toLowerCase().includes(customerQuery));
         }
         if (statusFilter !== 'all') {
             processedOrders = processedOrders.filter((order) => normalizeStatus(order.status) === statusFilter);
@@ -216,7 +216,7 @@ window.AdminOrdersPage = (() => {
         }
 
         orders.forEach((order) => {
-            const customer = getCustomer(order);
+            const customer = getPelanggan(order);
             const items = getOrderItems(order);
             const orderId = order.order_code || order.id || '-';
             const row = document.createElement('tr');
@@ -233,11 +233,11 @@ window.AdminOrdersPage = (() => {
             `;
             row.querySelector('.order-status-select')?.addEventListener('change', (event) => updateOrderStatus(state, order, event.target.value));
             row.querySelector('.customer-drawer-btn')?.addEventListener('click', () => {
-                AdminShared.notify(`Customer: ${customer.name} · ${customer.email} · ${getAddress(order)}`);
+                AdminShared.notify(`Pelanggan: ${customer.name} · ${customer.email} · ${getAddress(order)}`);
             });
             row.querySelector('.order-detail-btn')?.addEventListener('click', () => {
                 const summary = items.length ? items.map((item) => `${item.name} x${item.quantity}`).join(', ') : 'Tidak ada item';
-                AdminShared.notify(`Order #${orderId}: ${summary}`);
+                AdminShared.notify(`Pesanan #${orderId}: ${summary}`);
             });
             state.ordersGrid.appendChild(row);
         });
@@ -266,7 +266,7 @@ window.AdminOrdersPage = (() => {
 
     function resetFilters(state) {
         if (state.searchOrderInput) state.searchOrderInput.value = '';
-        if (state.searchCustomerInput) state.searchCustomerInput.value = '';
+        if (state.searchPelangganInput) state.searchPelangganInput.value = '';
         if (state.filterStatusSelect) state.filterStatusSelect.value = 'all';
         if (state.sortTimeSelect) state.sortTimeSelect.value = 'newest';
         applySortAndFilter(state);
@@ -283,12 +283,12 @@ window.AdminOrdersPage = (() => {
             sortTimeSelect: document.getElementById('sort-time'),
             filterStatusSelect: document.getElementById('filter-status'),
             searchOrderInput: document.getElementById('search-order-id'),
-            searchCustomerInput: document.getElementById('search-customer'),
+            searchPelangganInput: document.getElementById('search-customer'),
             resetButton: document.getElementById('reset-order-filters')
         };
         if (!state.ordersGrid || !state.loadingMessage) return;
 
-        [state.sortTimeSelect, state.filterStatusSelect, state.searchOrderInput, state.searchCustomerInput].forEach((control) => {
+        [state.sortTimeSelect, state.filterStatusSelect, state.searchOrderInput, state.searchPelangganInput].forEach((control) => {
             if (control && !control.dataset.listenerBound) {
                 control.addEventListener(control.tagName === 'INPUT' ? 'input' : 'change', () => applySortAndFilter(state));
                 control.dataset.listenerBound = 'true';
@@ -421,7 +421,7 @@ document.addEventListener('alpine:init', () => {
         async bulkDeleteProducts() {
             if (!this.selectedProducts.length || !window.confirm(`Hapus ${this.selectedProducts.length} produk terpilih?`)) return;
             const { error } = await window.supabase.from('products').delete().in('id', this.selectedProducts);
-            if (error) { AdminShared.notify(`Gagal bulk delete: ${error.message}`, true); return; }
+            if (error) { AdminShared.notify(`Gagal menghapus massal: ${error.message}`, true); return; }
             this.selectedProducts = [];
             AdminShared.notify('Produk terpilih berhasil dihapus.');
             await this.loadProducts();
@@ -433,7 +433,7 @@ document.addEventListener('alpine:init', () => {
             const { error } = await window.supabase.from('products').update(payload).in('id', this.selectedProducts);
             if (error) { AdminShared.notify(`Gagal bulk publish: ${error.message}`, true); return; }
             this.selectedProducts = [];
-            AdminShared.notify('Produk terpilih berhasil dipublish.');
+            AdminShared.notify('Produk terpilih berhasil diterbitkan.');
             await this.loadProducts();
         },
         async deleteItem(id, imageUrl) {

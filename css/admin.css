@@ -154,3 +154,20 @@ button:disabled { opacity:.5; cursor:not-allowed; }
   .admin-grid, .kpi-grid, .order-stats-grid { grid-template-columns:1fr; }
   .admin-card, .card, .content-card, .chart-container, .analytics-card, .shipping-card, .admin-page-header, .dashboard-header, .shipping-header, .cms-header { padding:16px; }
 }
+.admin-page-header { display:flex; justify-content:space-between; align-items:center; gap:16px; }
+.admin-page-header--compact { padding-block:18px; }
+.admin-header-actions { display:flex; gap:10px; flex-wrap:wrap; }
+.admin-stat-card { position:relative; display:grid; gap:6px; min-height:142px; }
+.admin-stat-card .stat-icon { width:40px; height:40px; display:grid; place-items:center; border-radius:14px; background:var(--admin-primary-soft, #e8f5e9); font-size:1.2rem; }
+.admin-stat-card small { color:var(--admin-muted); font-weight:700; line-height:1.45; }
+.insight-list { display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; }
+.insight-item { display:flex; align-items:center; gap:12px; padding:14px; border:1px solid var(--admin-border); border-radius:var(--admin-radius-sm); color:var(--admin-text); text-decoration:none; background:var(--admin-surface-2); }
+.insight-item strong { width:34px; height:34px; border-radius:999px; display:grid; place-items:center; background:var(--admin-primary); color:#fff; }
+.admin-badge--pending { background:#fef3c7; color:#92400e; }
+.admin-badge--processing { background:#e0f2fe; color:#0369a1; }
+.admin-badge--shipped { background:#e0e7ff; color:#3730a3; }
+.admin-badge--completed { background:#dcfce7; color:#166534; }
+.admin-badge--cancelled { background:#fee2e2; color:#991b1b; }
+.admin-alert { padding:1rem; border-radius:var(--admin-radius-sm); border:1px solid var(--admin-border); }
+.admin-alert--error { color:#991b1b; background:#fef2f2; border-color:#fecaca; }
+@media (max-width: 700px) { .admin-page-header { align-items:stretch; flex-direction:column; } .admin-header-actions .admin-button { flex:1; } }

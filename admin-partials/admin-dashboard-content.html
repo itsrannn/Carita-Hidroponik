@@ -1,53 +1,19 @@
-
 <div class="container content-wrapper">
-    <div class="admin-page-header section">
-        <h1 class="page-title section-title" x-text="$store.i18n.t('admin.dashboard.title')">Analytics Dashboard</h1>
-        <p x-text="$store.i18n.t('admin.dashboard.description')">Analyze sales trends and product performance.</p>
-    </div>
-
-    <div id="kpi-grid" class="admin-grid section">
-        <div class="admin-stat-card"><div class="label" x-text="$store.i18n.t('admin.dashboard.kpi.totalRevenue')">Total Revenue</div><div class="value" id="total-revenue">Loading...</div></div>
-        <div class="admin-stat-card"><div class="label">Total Orders</div><div class="value" id="total-orders">Loading...</div></div>
-        <div class="admin-stat-card"><div class="label">Pending Orders</div><div class="value" id="pending-orders">Loading...</div></div>
-        <div class="admin-stat-card"><div class="label">Completed Orders</div><div class="value" id="completed-orders">Loading...</div></div>
-        <div class="admin-stat-card"><div class="label" x-text="$store.i18n.t('admin.dashboard.kpi.bestSelling')">Best Selling Product</div><div class="value" id="best-selling-product">Loading...</div></div>
-    </div>
-
-    <div class="analytics-row section">
-        <div class="admin-card analytics-card">
-            <h3 class="section-title" x-text="$store.i18n.t('admin.dashboard.revenueTrend.title')">Revenue Trend</h3>
-            <div class="chart-header-controls">
-                <div class="chart-title-nav">
-                    <div class="nav-buttons"><button id="prev-period">&lt;</button><button id="next-period">&gt;</button></div>
-                    <h4 id="chart-date-range">Loading...</h4>
-                </div>
-                <div class="filter-controls">
-                    <select id="revenue-period-filter" class="filter-select">
-                        <option value="daily" x-text="$store.i18n.t('admin.dashboard.revenueTrend.daily')">Daily</option>
-                        <option value="weekly" x-text="$store.i18n.t('admin.dashboard.revenueTrend.weekly')">Weekly</option>
-                        <option value="monthly" x-text="$store.i18n.t('admin.dashboard.revenueTrend.monthly')">Monthly</option>
-                    </select>
-                </div>
-            </div>
-            <canvas id="salesTrendChart"></canvas>
-        </div>
-
-        <div class="admin-card analytics-card" id="product-sales-chart-container">
-            <div class="chart-header-controls">
-                <h3 x-text="$store.i18n.t('admin.dashboard.productSales.title')">Sales by Product</h3>
-                <div class="filter-controls">
-                    <select id="product-chart-type" class="filter-select"><option value="bar">Bar Chart</option><option value="pie">Pie Chart</option></select>
-                    <select id="product-period-filter" class="filter-select"><option value="total">Total Sales</option><option value="monthly">By Month</option></select>
-                    <select id="product-month-filter" class="filter-select" hidden></select>
-                </div>
-            </div>
-            <div class="chart-canvas-wrapper"><canvas id="productSalesChart"></canvas></div>
-        </div>
-    </div>
-
-    <div class="admin-card section">
-        <h3 class="section-title" x-text="$store.i18n.t('admin.dashboard.transactions.title')">Recent Transactions</h3>
-        <table class="admin-table"><thead><tr><th>Order ID</th><th>Date</th><th>Customer</th><th>Total</th><th>Status</th></tr></thead><tbody id="recent-transactions-body"></tbody></table>
-        <p id="loading-transactions" class="admin-state admin-state--loading" role="status" aria-live="polite" hidden>Loading transactions...</p>
-    </div>
+  <div class="admin-page-header section admin-page-header--compact">
+    <div><p class="cms-eyebrow">Ringkasan Toko</p><h1 class="page-title section-title">Dasbor Admin</h1><p>Ringkasan performa toko, pesanan, produk, dan konten.</p></div>
+    <div class="admin-header-actions"><a class="admin-button admin-button--primary" href="#produk">Tambah Produk</a><a class="admin-button admin-button--secondary" href="#pesanan">Lihat Pesanan</a></div>
+  </div>
+  <div id="kpi-grid" class="admin-grid section">
+    <div class="admin-stat-card"><div class="stat-icon">💰</div><span>Total Pendapatan</span><strong id="total-revenue">Memuat data...</strong><small>Pendapatan dari pesanan valid</small></div>
+    <div class="admin-stat-card"><div class="stat-icon">📦</div><span>Total Pesanan</span><strong id="total-orders">Memuat data...</strong><small>Semua pesanan yang tercatat</small></div>
+    <div class="admin-stat-card"><div class="stat-icon">⏳</div><span>Pesanan Menunggu</span><strong id="pending-orders">Memuat data...</strong><small>Pesanan yang perlu diproses</small></div>
+    <div class="admin-stat-card"><div class="stat-icon">✅</div><span>Pesanan Selesai</span><strong id="completed-orders">Memuat data...</strong><small>Pesanan yang sudah selesai</small></div>
+    <div class="admin-stat-card"><div class="stat-icon">🌿</div><span>Produk Terlaris</span><strong id="best-selling-product">Memuat data...</strong><small id="best-selling-product-note">Berdasarkan item terjual</small></div>
+  </div>
+  <div class="analytics-row section">
+    <div class="admin-card analytics-card"><div class="chart-header-controls"><h3 class="section-title">Tren Pendapatan</h3><select id="revenue-period-filter" class="filter-select" aria-label="Periode pendapatan"><option value="monthly">Bulanan</option><option value="weekly">Mingguan</option><option value="daily">Harian</option></select></div><canvas id="salesTrendChart" aria-label="Grafik tren pendapatan"></canvas></div>
+    <div class="admin-card analytics-card"><div class="chart-header-controls"><h3>Distribusi Status Pesanan</h3></div><div class="chart-canvas-wrapper limit-chart-width"><canvas id="productSalesChart" aria-label="Diagram distribusi status pesanan"></canvas></div></div>
+  </div>
+  <div class="admin-card section"><h3>Perlu Ditindaklanjuti</h3><div id="actionable-insights" class="insight-list admin-state admin-state--loading" role="status">Memuat insight...</div></div>
+  <div class="admin-card section"><h3 class="section-title">Transaksi Terbaru</h3><div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Nomor Pesanan</th><th>Tanggal</th><th>Pelanggan</th><th>Total</th><th>Status</th></tr></thead><tbody id="recent-transactions-body"></tbody></table></div><p id="loading-transactions" class="admin-state admin-state--loading" role="status" aria-live="polite">Memuat transaksi...</p></div>
 </div>
